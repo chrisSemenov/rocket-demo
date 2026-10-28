@@ -19,7 +19,7 @@ A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/tempe
 
 ## BMP280 connection (I²C2)
 
-The chosen bus is **I²C2** because both signals land on the PF expansion header next to 3.3 V and GND, and it does not disturb the PC13 LED or the SWD pins:
+The chosen bus is **I²C2** because both signals land on the PF expansion header next to 3.3 V and GND.
 
 | BMP280 signal | Olimex connection | Chip pin |
 |---|---|---|
