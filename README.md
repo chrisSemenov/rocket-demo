@@ -39,11 +39,21 @@ There is no USB-UART adapter, so `printk()` goes to a **SEGGER RTT** ring buffer
 After flashing, start an OpenOCD session that serves RTT channel 0 on TCP port 9090:
 
 ```powershell
-& 'C:\zephyr-sdk-1.0.1\hosttools\openocd\bin\openocd.exe' -f C:\SCAE\projects\rocket-demo\openocd-stlink.cfg `
-  -c "init" -c "reset run" `
-  -c "rtt setup 0x20000000 0x1000 `"SEGGER RTT`"" `
-  -c "rtt start" -c "rtt server start 9090 0"
+& 'C:\zephyr-sdk-1.0.1\hosttools\openocd\bin\openocd.exe' `
+  -f 'C:\SCAE\projects\rocket-demo\openocd-stlink.cfg' `
+  -c 'init' `
+  -c 'program C:/SCAE/projects/rocket-demo/build/primary/zephyr/zephyr.elf verify' `
+  -c 'reset run' `
+  -c 'sleep 1000' `
+  -c 'stm32f4x.cpu rtt setup 0x20000000 0x1000 {SEGGER RTT}' `
+  -c 'stm32f4x.cpu rtt start' `
+  -c 'rtt server start 9090 0'
 ```
+
+Two details of this OpenOCD build (verified locally, SDK 1.0.1, OpenOCD 0.12.0-g91bd278):
+
+- `rtt setup/start/stop/channels` are **target** commands, so they need the `stm32f4x.cpu` prefix; only `rtt server` is a top-level command. Bare `rtt setup` just prints the `rtt server` help.
+- They refuse to run before `init` (`The 'stm32f4x.cpu rtt start' command must be used after 'init'`).
 
 Then, in a second terminal, read the stream:
 
@@ -58,7 +68,7 @@ BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, sampling every 1000 ms
 [     1 s] seq=0  P=100412 Pa  T=22.31 C
 ```
 
-If the sensor is not detected the firmware prints a wiring hint and stops sampling rather than reporting fake values. These OpenOCD RTT commands were **not yet exercised on this board**; the RTT configuration and control block were verified statically in the build.
+If the sensor is not detected the firmware prints a wiring hint and stops sampling rather than reporting fake values. The command sequence above was validated against this OpenOCD build's command set, but it has **not** been run end-to-end on the board yet; the RTT configuration and control block layout were verified statically in the build.
 
 
 Hardware source: [Olimex STM32-H407 schematic, revision B](https://www.olimex.com/Products/ARM/ST/STM32-H407/resources/STM32-H407_Rev_B_sch.pdf).
