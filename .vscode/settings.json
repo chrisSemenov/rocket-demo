@@ -3,7 +3,9 @@
     {
       "name": "primary",
       "board": "olimex_stm32_h407",
-      "active": "true"
+      "active": "true",
+      "default-runner": "openocd",
+      "custom-args": "-- --config \"${workspaceFolder}/openocd-stlink.cfg\""
     }
   ],
   "zephyr-workbench.westWorkspace": "${workspaceFolder}/../../../Users/ChristianSemenov/zephyrproject",
@@ -11,5 +13,6 @@
   "zephyr-workbench.sdk": "${workspaceFolder}/../../../zephyr-sdk-1.0.1",
   "zephyr-workbench.intellisense.provider": "cpptools",
   "cmake.configureOnOpen": false,
-  "cmake.enableAutomaticKitScan": false
+  "cmake.enableAutomaticKitScan": false,
+  "terminal.integrated.stickyScroll.enabled": false
 }

@@ -1,0 +1,4 @@
+/* Olimex STM32-H407 rev B: user LED is on PC13, active-low. */
+&green_led_2 {
+	gpios = <&gpioc 13 GPIO_ACTIVE_LOW>;
+};
