@@ -164,11 +164,17 @@ may lose old lines but never corrupt the stream.
 
 ## Expected output
 
+Line shape of the 50 ms build (every 10th sample is logged, plus a `stats:` line every 100
+samples):
+
 ```
 *** Booting Zephyr OS build v4.4.2 ***
-BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, sampling every 1000 ms
-[     0 s] seq=0  P=94940 Pa  T=26.86 C
-[     1 s] seq=1  P=94940 Pa  T=26.84 C
+BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x, 50 ms period
+[      0.05 s] seq=0  P=95005 Pa  T=24.22 C  fetch=42 ms  dt=42 ms
+[      0.53 s] seq=10  P=95009 Pa  T=24.31 C  fetch=24 ms  dt=50 ms
+[      1.03 s] seq=20  P=95008 Pa  T=24.32 C  fetch=24 ms  dt=50 ms
+...
+stats: 100 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0
 ```
 
 Sanity checks that distinguish real data from a dead bus:
@@ -177,7 +183,7 @@ Sanity checks that distinguish real data from a dead bus:
   a sea-level bench reads closer to 101325 Pa.
 - Temperature plausible for the room and drifting smoothly, not jumping randomly.
 - `P` changes by a few pascals when you move the sensor; `T` rises if you pinch it.
-- `seq` increments once per second without gaps.
+- `seq` increments on every sample and `dt` stays at 50 ms; `overruns` should stay 0.
 
 If the sensor does not answer, the firmware prints the wiring hint and stops sampling
 instead of reporting invented values:
@@ -217,7 +223,7 @@ Info : rtt: Control block found at 0x20000810
 Info : Listening on port 9090 for rtt connections
 ```
 
-Live stream, 27 consecutive samples at 1 Hz:
+Live stream from the earlier 1 Hz build, 27 consecutive samples:
 
 ```
 BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, sampling every 1000 ms
@@ -232,3 +238,21 @@ confirming the firmware was restarted rather than modified.
 
 The sensor is genuine rather than a lucky register read: the driver only reports the
 device ready after reading and validating the BMP280 chip ID over I²C at address `0x76`.
+
+## 20 Hz verification (2026-10-28)
+
+The 8× / 2× forced-mode build was flashed with the same procedure and streamed for
+~15 minutes. Fifteen consecutive 100-sample reports were identical:
+
+```
+stats: 100 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0
+```
+
+`fetch` is a flat 24 ms against the 24.8 ms datasheet conversion time and the driver's
+23 ms sample-time constant, so one sample uses 24 ms of the 50 ms period and 26 ms are
+idle. `dt` never left 50 ms and no deadline was missed. The first fetch after boot takes
+42 ms because it starts the first conversion; every later fetch is 24 ms.
+
+An earlier revision reported stack garbage in the first `stats:` line because the
+min/avg/max accumulators `max`, `sum` and `count` were left uninitialized; they now have
+initializers and the first report is correct.
