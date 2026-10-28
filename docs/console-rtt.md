@@ -164,17 +164,20 @@ may lose old lines but never corrupt the stream.
 
 ## Expected output
 
-Line shape of the 50 ms build (every 10th sample is logged, plus a `stats:` line every 100
-samples):
+Line shape of the threaded 50 ms build (telemetry logs every 500 ms, `diag` every 1 s, and
+the `stats:` line is printed every 10 s from a 200-sample window):
 
 ```
 *** Booting Zephyr OS build v4.4.2 ***
 BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x, 50 ms period
-[      0.05 s] seq=0  P=95005 Pa  T=24.22 C  fetch=42 ms  dt=42 ms
-[      0.53 s] seq=10  P=95009 Pa  T=24.31 C  fetch=24 ms  dt=50 ms
-[      1.03 s] seq=20  P=95008 Pa  T=24.32 C  fetch=24 ms  dt=50 ms
+threads: sensor(prio 5) telemetry(8) diag(9); stale timeout 250 ms
+telemetry: no valid measurement yet (error=0)
+diag:  seq=0  age=-1 ms  valid=0  published=0
+[      0.51 s] seq=10  P=95041 Pa  T=22.60 C  age=26 ms
+[      1.01 s] seq=20  P=95043 Pa  T=22.62 C  age=26 ms
+diag:  seq=20  age=26 ms  valid=1  published=20
 ...
-stats: 100 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0
+stats: 200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=390
 ```
 
 Sanity checks that distinguish real data from a dead bus:
@@ -184,12 +187,14 @@ Sanity checks that distinguish real data from a dead bus:
 - Temperature plausible for the room and drifting smoothly, not jumping randomly.
 - `P` changes by a few pascals when you move the sensor; `T` rises if you pinch it.
 - `seq` increments on every sample and `dt` stays at 50 ms; `overruns` should stay 0.
+- `age` is small (tens of ms) and `published` matches the sequence the readers see; a
+  growing `age` or `valid=0` means the producer has stalled.
 
 If the sensor does not answer, the firmware prints the wiring hint and stops sampling
 instead of reporting invented values:
 
 ```
-ERROR: bmp280@76 not ready. Check 3V3, GND, SDA=PF0, SCL=PF1, CSB->3V3, SDO->GND (address 0x76).
+ERROR: bmp280@76 not ready. Check 3V3, GND, SDA=PF0, SCL=PF1, CSB->3V3, SDO->GND (address 0x76 = SDO low, 0x77 = SDO high).
 ```
 
 ## Troubleshooting
@@ -242,16 +247,20 @@ device ready after reading and validating the BMP280 chip ID over I²C at addres
 ## 20 Hz verification (2026-10-28)
 
 The 8× / 2× forced-mode build was flashed with the same procedure and streamed for
-~15 minutes. Fifteen consecutive 100-sample reports were identical:
+~2.5 minutes in the threaded M5 build. Twelve consecutive 200-sample reports were
+identical:
 
 ```
-stats: 100 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0
+stats: 200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=390
+...
+stats: 2400 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=2590
 ```
 
 `fetch` is a flat 24 ms against the 24.8 ms datasheet conversion time and the driver's
 23 ms sample-time constant, so one sample uses 24 ms of the 50 ms period and 26 ms are
-idle. `dt` never left 50 ms and no deadline was missed. The first fetch after boot takes
-42 ms because it starts the first conversion; every later fetch is 24 ms.
+idle. `dt` never left 50 ms and no deadline was missed. The first two samples are excluded
+from the counters because the first fetch (42 ms) starts the first conversion and the
+schedule is only established by the second.
 
 An earlier revision reported stack garbage in the first `stats:` line because the
 min/avg/max accumulators `max`, `sum` and `count` were left uninitialized; they now have

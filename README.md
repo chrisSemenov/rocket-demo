@@ -1,6 +1,6 @@
 # Rocket Flight Controller Demo
 
-A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/temperature sensor, and Zephyr RTOS. The planned application uses separate threads for sensor acquisition, altitude, apogee detection, and temperature monitoring; it uses synchronized shared memory and a single LED manager for output priority. Deployment is simulated **only by the board LED**; this is not flight-ready or safety-certified firmware.
+A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/temperature sensor, and Zephyr RTOS. Sensor acquisition, altitude, apogee detection and temperature monitoring are separate threads; measurement data moves through synchronized shared memory, and a single LED manager owns the output priority. Acquisition and the shared-memory contract are implemented and verified; the flight logic is not yet. Deployment is simulated **only by the board LED**; this is not flight-ready or safety-certified firmware.
 
 ## Current status
 
@@ -9,7 +9,9 @@ A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/tempe
 - The project includes the PC13 LED overlay, ST-Link flash settings, and a VS Code debug launch configuration. These were based on the separate working `C:\SCAE\projects\blinky` reference project.
 - **BMP280 sensor working (verified on hardware, 2026-10-28):** `app.overlay` enables `i2c2` on PF1 (SCL) and PF0 (SDA) with a `bosch,bme280` node at address `0x76`. Flash programming verified OK, OpenOCD found the RTT control block at `0x20000810`, and live samples were captured (≈94 940 Pa, ≈26 °C). 94.9 kPa is consistent with roughly 550 m elevation, and the driver only reports the device ready after validating the chip ID over I²C at `0x76`.
 - **Sampling reworked for the descent test:** the sensor runs 8× pressure / 2× temperature in forced mode on a 50 ms deadline-based loop, so the 750 ms velocity window contains a full set of samples. The loop reports its own fetch duration, inter-sample interval and deadline overruns on the console. See [Sampling design](#sampling-design).
-- **Not implemented yet:** the planned acquisition/altitude/apogee/temperature threads, shared-memory synchronisation, LED priority manager, and acceptance tests.
+- **Acquisition is its own thread (M4, verified on hardware):** `sensor` owns the BMP280 and the only I²C traffic, fetches on a 50 ms absolute deadline, and publishes a complete snapshot. Measured over 2 750 samples: fetch 24 ms, interval 50 ms, zero overruns, zero errors. Evidence: [docs/verification/at-02-live-acquisition.md](docs/verification/at-02-live-acquisition.md); the failure path is covered in [m4-absent-sensor.md](docs/verification/m4-absent-sensor.md).
+- **Shared memory is synchronized (M5, verified on hardware):** readers copy a `Measurement` out of `SensorDataStore` under a mutex and never consume it, so the 500 ms telemetry consumer and an independent 1 s reader observe the same sequence at their own rates. Evidence: [docs/verification/m5-shared-memory.md](docs/verification/m5-shared-memory.md).
+- **Not implemented yet:** altitude, apogee detection, temperature monitoring, the LED priority manager, and the acceptance test suite.
 
 ## Hardware and known board detail
 
@@ -32,6 +34,8 @@ The chosen bus is **I²C2** because both signals land on the PF expansion header
 | `SDO` / `SA0` | GND (selects address `0x76`) | — |
 
 The PF header pin numbers are connector contacts, not MCU package pins. The Zephyr I²C controller uses internal pull-ups only weakly, so the bus normally relies on the breakout's own pull-ups; check them before adding more. `CSB` must not float, and `SDO` selects `0x76` (to GND) or `0x77` (to 3.3 V).
+
+Hardware source: [Olimex STM32-H407 schematic, revision B](https://www.olimex.com/Products/ARM/ST/STM32-H407/resources/STM32-H407_Rev_B_sch.pdf).
 
 ## Sampling design
 
@@ -101,34 +105,39 @@ altitude), so the overheat and altitude demonstrations are kept separate.
 
 ### Timing evidence
 
-The loop self-reports, so the cadence is measured rather than assumed: each logged sample
-carries `fetch=` (how long `sensor_sample_fetch()` blocked) and `dt=` (measured interval
-since the previous sample), and every 100 samples it prints
+The sensor thread measures itself, so the cadence is checked rather than assumed: it times
+`sensor_sample_fetch()` and the interval between acquisitions, and every 200 samples it
+publishes those counters as a snapshot. The console consumer prints them — the acquisition
+thread never blocks on printing:
 
 ```
-stats: 100 samples  fetch min/avg/max ms  dt min/avg/max ms  overruns=N  errors=N
+stats: 200 samples  fetch min/avg/max ms  dt min/avg/max ms  overruns=N  errors=N  seq=N
 ```
 
 A period that looks like 20 Hz but is really 14 Hz shows up as `dt` above 50 ms and
-`overruns` climbing. Record the printed `stats:` line from a long run as the evidence.
+`overruns` climbing. A failed fetch shows up as `errors` climbing while `seq` stalls.
 
-Measured on hardware (2026-10-28, fifteen consecutive 100-sample blocks):
+Measured on hardware (2026-10-28, twelve consecutive 200-sample blocks up to 2 400 samples,
+then 2 750 in total):
 
 | Quantity | Datasheet / driver expectation | Measured |
 |---|---|---|
 | `fetch` min/avg/max | 24.8 ms datasheet, 23 ms driver constant | **24 / 24 / 24 ms** |
 | `dt` min/avg/max | 50 ms | **50 / 50 / 50 ms** |
 | deadline overruns | 0 | **0** |
-| read errors | 0 | **0** |
+| fetch errors | 0 | **0** |
 
 ```
-stats: 100 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0
+stats: 200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=390
+...
+stats: 2400 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=2590
 ```
 
 One sample occupies 24 ms of the 50 ms period, leaving 26 ms idle, and the interval never
-deviated by a tick. The only outlier is the first fetch after boot (42 ms), because it
-starts the first conversion; every later fetch is 24 ms. `overruns` stayed 0 across the
-run, so the absolute-deadline loop is not drifting.
+deviated by a tick. `overruns` stayed 0 for the whole run, so the absolute-deadline loop is
+not drifting. The first two samples are excluded from the counters: the first fetch starts
+the first conversion (42 ms) and the schedule is only established by the second. That
+start-up transient was visible while tuning and is deliberately not reported as steady state.
 
 ## Console output over ST-Link only
 
@@ -149,24 +158,63 @@ python C:\SCAE\projects\rocket-demo\tools\rtt-view.py
 Captured from the board:
 
 ```
+*** Booting Zephyr OS build v4.4.2 ***
 BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x, 50 ms period
-[      0.05 s] seq=0  P=95005 Pa  T=24.22 C  fetch=42 ms  dt=42 ms
-[      0.53 s] seq=10  P=95009 Pa  T=24.31 C  fetch=24 ms  dt=50 ms
+threads: sensor(prio 5) telemetry(8) diag(9); stale timeout 250 ms
+telemetry: no valid measurement yet (error=0)
+diag:  seq=0  age=-1 ms  valid=0  published=0
+[      0.51 s] seq=10  P=95041 Pa  T=22.60 C  age=26 ms
+[      1.01 s] seq=20  P=95043 Pa  T=22.62 C  age=26 ms
+diag:  seq=20  age=26 ms  valid=1  published=20
 ...
-stats: 100 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0
+stats: 2400 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=2590
 ```
+
+Each telemetry line carries the values, the acquisition timestamp's `age` (how old the
+snapshot was when it was read) and the sequence number, so a consumer's own lag is visible.
+The `diag` line is the second, independent reader; it exists to prove that reading does not
+consume a sample.
 
 `-DryRun` prints the exact OpenOCD command line without touching hardware. The full walkthrough — what every `-c` argument does, why the RTT commands need the `stm32f4x.cpu` prefix and must follow `init`, where the `0x20000000 0x8B8` search window comes from, and why `CONFIG_UART_CONSOLE=n` is mandatory here — is in **[docs/console-rtt.md](docs/console-rtt.md)**.
 
+## Architecture and shared memory
 
-Hardware source: [Olimex STM32-H407 schematic, revision B](https://www.olimex.com/Products/ARM/ST/STM32-H407/resources/STM32-H407_Rev_B_sch.pdf).
+Acquisition, printing and diagnostics run as separate Zephyr threads. They share nothing
+except one store, and a read never removes a value, so any number of consumers can look at
+the same sample at their own rates.
+
+| Thread | Period | Priority | Stack | Responsibility |
+|---|---|---|---|---|
+| `sensor` | 50 ms, absolute deadline | 5 | 2048 B | Fetch, timestamp, publish; count errors and overruns; publish timing stats |
+| `telemetry` | 500 ms | 8 | 1024 B | Read the store, print samples and the ten-second `stats:` line |
+| `diag` | 1000 ms | 9 | 1024 B | Second independent reader (temporary; replaced by the altitude thread) |
+
+Lower number means higher priority, so the sensor thread preempts both console threads and a
+stalled `printk` under RTT back-pressure cannot push the 50 ms deadline. `main` only
+initialises the store, starts the threads and idles.
+
+The contract is small and enforced by the API rather than by convention:
+
+- `Measurement` carries pressure (Pa), temperature (milli-°C), acquisition timestamp,
+  sequence and a validity flag — one coherent snapshot, never separate fields.
+- `SensorDataStore::publish`/`read` copy a whole struct under one `k_mutex`; the lock is
+  never held across I²C, printing or arithmetic.
+- A failed fetch publishes `valid = false` with the error code and does **not** advance the
+  sequence, so a failure cannot be mistaken for a new measurement.
+- Consumers check `valid` and the age against the 250 ms stale timeout before using a value
+  for a decision.
+- Timing counters are published as a second snapshot and printed by a consumer, so the
+  acquisition thread never blocks on the console.
+
+Details and the reasoning behind each constant: **[docs/architecture.md](docs/architecture.md)**
+and **[docs/decisions.md](docs/decisions.md)**.
 
 ## Local development environment
 
 - Zephyr/West workspace: `C:\Users\ChristianSemenov\zephyrproject` (Zephyr 4.4.2 in `deps\zephyr`).
 - Toolchain: `C:\zephyr-sdk-1.0.1`; Zephyr Workbench host tools environment: `%USERPROFILE%\.zinstaller\env.ps1`.
 - Workbench application board: `olimex_stm32_h407`; configuration name: `primary`.
-- C++ source: `src/main.cpp`; `prj.conf` enables `CONFIG_CPP=y` and `CONFIG_STD_CPP17=y`.
+- C++ sources live in `src/`: `main.cpp` (startup), `shared_data.cpp` (the store), and one file per thread (`sensor_task.cpp`, `telemetry_task.cpp`, `diag_task.cpp`); `app_config.hpp` holds the timing, stack and priority constants. `prj.conf` enables `CONFIG_CPP=y` and `CONFIG_STD_CPP17=y`.
 - This repository is a freestanding application: it uses the separate West workspace and SDK; it does not contain Zephyr itself. `.vscode/settings.json` currently includes machine-specific relative paths, so a different machine must select its own workspace and SDK.
 - The existing build output under `build/` is ignored by Git and should be regenerated locally.
 
@@ -193,12 +241,22 @@ For debugging, select **Zephyr Workbench Debug [primary]** in VS Code's Run and 
 
 ## Next steps
 
-Live pressure and temperature acquisition is verified on hardware. **The next milestone is the threaded architecture.**
+Live acquisition and the synchronized shared-memory path are verified on hardware. **The
+next milestone is altitude, computed from the pressure snapshot.**
 
-1. Split acquisition, altitude calculation, apogee detection, and temperature monitoring into separate threads with synchronised shared state.
-2. Add the LED priority manager (highest-priority condition wins) and verify it by forcing each state.
-3. Add acceptance tests and record the evidence, keeping the RTT console as the observability path.
+1. Add the altitude thread: derive altitude from pressure against a `P₀` baseline averaged
+   over ~2 s while stationary, then frozen; publish altitude as its own snapshot for the
+   apogee detector.
+2. Measure a bench baseline to set the altitude, velocity and temperature thresholds that
+   are still placeholders.
+3. Add apogee detection (negative average velocity over the preceding 750 ms) and the
+   temperature monitor, then the LED priority manager with a single writer.
+4. Build the replay harness so synthetic traces enter at the measurement publisher, and
+   record the acceptance scenarios.
 
-Known limitation: only pressure and temperature are acquired; altitude, apogee detection and the LED priority manager still run in the single main loop rather than in separate threads.
+Known limitation: altitude, apogee detection, the temperature monitor and the LED manager
+are not implemented. The LED is currently a bare 500 ms heartbeat in `main`, and the `diag`
+thread is a temporary second reader rather than a real consumer. Absolute pressure accuracy
+is ±1 hPa (≈ ±8 m), so altitude is only meaningful relative to the frozen baseline.
 
 The detailed work plan and assignment/requirements currently live outside this repository at `G:\My Drive\Engineering\SCAE\Interview Test\`.
