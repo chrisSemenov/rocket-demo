@@ -16,19 +16,32 @@ store at their own rate and a read never removes anything.
                  +-------------------+        (k_mutex, copy in / copy out)
                  | SensorDataStore   |<------- telemetry thread   500 ms, prints
                  | measurement       |<------- diag thread       1000 ms, prints
-                 | stats             |<------- altitude thread   (next milestone)
-                 +-------------------+<------- temperature thread (next milestone)
+                 | stats             |<------- altitude thread    50 ms, computes
+                 +---------+---------+<------- temperature thread (next milestone)
+                           ^
+                           | read(Measurement)
+                 +---------+---------+
+                 | altitude thread   |  baseline P0 frozen after 2 s, 50 ms period
+                 | priority 6        |
+                 +---------+---------+
+                           | publish(Altitude)
+                           v
+                 +-------------------+
+                 | AltitudeStore     |<------- telemetry thread   prints
+                 | altitude_cm       |<------- apogee thread      (next milestone)
+                 | calibrated        |<------- LED manager        (next milestone)
+                 +-------------------+
 ```
 
-The store is the only path between threads. The sensor thread owns the sensor
-API exclusively; nothing else touches I²C. Altitude will publish into a second
-store, and the apogee detector will consume that one, so flight logic never
+The stores are the only path between threads. The sensor thread owns the sensor
+API exclusively; nothing else touches I²C. The altitude thread publishes into its
+own store, and the apogee detector will consume that one, so flight logic never
 depends on the sensor thread directly.
 
 Next stages, in implementation order:
 
 ```text
-Measurement ---> altitude thread ---> AltitudeStore ---> apogee detector
+Measurement ---> altitude thread ---> AltitudeStore ---> apogee detector   [altitude done]
                                                     \--> (history, 750 ms avg)
 Temperature ---> temperature monitor ---> LED request
 Apogee -------> deployment request ----> LED request
@@ -41,19 +54,21 @@ LED request ---> LED manager thread ---> PC13
 |---|---|---|---|---|
 | `main` | — | 0 | default | Initialise stores, start threads, then idle with a temporary LED heartbeat |
 | `sensor` | 50 ms, absolute deadline | 5 | 2048 B | Fetch, timestamp, publish; count errors and overruns; publish timing stats |
-| `telemetry` | 500 ms | 8 | 1024 B | Read the store, print samples and the ten-second stats line |
-| `diag` | 1000 ms | 9 | 1024 B | Independent reader proving reads do not consume; replaced by the altitude thread |
-| altitude, apogee, temperature, LED manager | — | — | — | Added in later milestones |
+| `altitude` | 50 ms, absolute deadline | 6 | 2048 B | Read a measurement copy, calibrate `P₀`, compute altitude, publish a separate snapshot; never prints |
+| `telemetry` | 500 ms | 8 | 1024 B | Read both stores, print samples, altitude and the ten-second stats line |
+| `diag` | 1000 ms | 9 | 1024 B | Independent reader proving reads do not consume; replaced by a real consumer later |
+| apogee, temperature, LED manager | — | — | — | Added in later milestones |
 
 Priority, not period, is what protects the acquisition rate: the sensor thread
-preempts both console threads, so a stalled `printk` (RTT back-pressure) cannot
-move the 50 ms deadline. The console threads are also the only ones that can
-block for a long time.
+preempts every consumer, so a stalled `printk` (RTT back-pressure) cannot move the
+50 ms deadline. The console threads are also the only ones that can block for a
+long time. Altitude sits at 6 — above the console, below the sensor — because it
+consumes every sample but never prints.
 
 ## Shared data rules
 
-1. All state lives in exactly one store and is reached through `publish` /
-   `read` copies. There is no direct access to a producer's variable.
+1. Each piece of state lives in exactly one store and is reached through
+   `publish` / `read` copies. There is no direct access to a producer's variable.
 2. Locks are held only for the struct copy — never across I²C, `printk`, or
    arithmetic.
 3. A failed acquisition publishes `valid = false` with the error code and does
@@ -62,9 +77,13 @@ block for a long time.
 4. Consumers check `valid` and the sample age against the 250 ms stale timeout
    before using a value for a decision.
 5. One lock is taken at a time; where two snapshots are needed they are copied
-   sequentially, never nested.
-6. The store is initialised from `main()` before any thread starts, so no
+   sequentially, never nested. Telemetry reads the measurement and then the
+   altitude, released in between.
+6. The stores are initialised from `main()` before any thread starts, so no
    consumer can observe a half-built store.
+7. An altitude always carries the timestamp and sequence of the measurement it
+   came from, so "how old is this height" is answerable without reading the
+   sensor store.
 
 ## Timing model
 

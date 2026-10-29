@@ -7,7 +7,9 @@ project(rocket_demo)
 target_sources(app PRIVATE
     src/main.cpp
     src/shared_data.cpp
+    src/altitude.cpp
     src/sensor_task.cpp
+    src/altitude_task.cpp
     src/telemetry_task.cpp
     src/diag_task.cpp
 )

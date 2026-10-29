@@ -18,6 +18,21 @@ struct Measurement {
 	int8_t error; /* last fetch return code, 0 when valid */
 };
 
+/*
+ * One altitude result, tagged with the measurement it was derived from. The
+ * source timestamp and sequence are copied, never regenerated, so a consumer
+ * can tell how old the pressure behind the number is.
+ */
+struct Altitude {
+	int32_t altitude_cm;
+	uint32_t source_sequence;
+	int64_t source_timestamp_ms;
+	int32_t reference_pa;     /* frozen baseline P0, 0 until calibrated */
+	uint16_t baseline_samples; /* progress while calibrating */
+	bool valid;
+	bool calibrated;
+};
+
 /* Producer-side timing counters, republished as a snapshot for the console. */
 struct SensorStats {
 	uint32_t samples;
@@ -59,3 +74,23 @@ private:
 
 /* Single owned instance: the sensor thread writes, everyone else only reads. */
 SensorDataStore &sensor_data();
+
+/*
+ * Altitude store, same contract as SensorDataStore: the altitude thread is the
+ * only writer, every other thread reads copies. It is separate from the
+ * measurement store so a consumer of altitude never depends on pressure.
+ */
+class AltitudeStore {
+public:
+	void init();
+
+	void publish(const Altitude &sample);
+	void read(Altitude &out);
+
+private:
+	struct k_mutex lock_;
+	Altitude altitude_;
+	bool ready_;
+};
+
+AltitudeStore &altitude_data();

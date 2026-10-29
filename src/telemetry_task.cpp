@@ -20,6 +20,7 @@ void telemetry_entry(void *, void *, void *)
 	int64_t next = k_uptime_get();
 	unsigned int ticks = 0;
 	unsigned int invalid_reports = 0;
+	unsigned int altitude_reports = 0;
 
 	for (;;) {
 		Measurement sample{};
@@ -45,6 +46,27 @@ void telemetry_entry(void *, void *, void *)
 			printk("telemetry: no valid measurement yet (error=%d)\n",
 			       sample.error);
 			++invalid_reports;
+		}
+
+		/* Altitude is a separate store, read independently of the above. */
+		Altitude altitude{};
+		altitude_data().read(altitude);
+
+		if (altitude.valid) {
+			const long centi = altitude.altitude_cm;
+			const bool below_zero = centi < 0;
+			const long abs_centi = below_zero ? -centi : centi;
+
+			printk("alt:  h=%s%ld.%02ld m  P0=%ld Pa  seq=%u  age=%lld ms\n",
+			       below_zero ? "-" : "", abs_centi / 100,
+			       abs_centi % 100, static_cast<long>(altitude.reference_pa),
+			       altitude.source_sequence,
+			       static_cast<long long>(now -
+						      altitude.source_timestamp_ms));
+		} else if (altitude_reports < 3) {
+			printk("alt:  not available yet (baseline %u/%u samples)\n",
+			       altitude.baseline_samples, cfg::kBaselineMinSamples);
+			++altitude_reports;
 		}
 
 		if (++ticks % kStatsEveryTicks == 0) {

@@ -8,12 +8,18 @@ namespace {
  * init() from main() before any thread starts.
  */
 SensorDataStore g_store;
+AltitudeStore g_altitude_store;
 
 } // namespace
 
 SensorDataStore &sensor_data()
 {
 	return g_store;
+}
+
+AltitudeStore &altitude_data()
+{
+	return g_altitude_store;
 }
 
 void SensorDataStore::init()
@@ -71,4 +77,31 @@ uint32_t SensorDataStore::publish_count()
 	k_mutex_unlock(&lock_);
 
 	return count;
+}
+
+void AltitudeStore::init()
+{
+	k_mutex_init(&lock_);
+
+	altitude_ = Altitude{0, 0, 0, 0, 0, false, false};
+	ready_ = true;
+}
+
+void AltitudeStore::publish(const Altitude &sample)
+{
+	k_mutex_lock(&lock_, K_FOREVER);
+	altitude_ = sample;
+	k_mutex_unlock(&lock_);
+}
+
+void AltitudeStore::read(Altitude &out)
+{
+	k_mutex_lock(&lock_, K_FOREVER);
+	out = altitude_;
+	const bool ready = ready_;
+	k_mutex_unlock(&lock_);
+
+	if (!ready) {
+		out = Altitude{0, 0, 0, 0, 0, false, false};
+	}
 }

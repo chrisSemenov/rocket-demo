@@ -30,14 +30,21 @@ the repository root.
 | Invalid publication | On fetch failure publish `valid = false` with the error code, sequence unchanged | Consumers stop trusting the store instead of inheriting the last good value |
 | Stale timeout | 250 ms (5 periods) | Short enough that a dead sensor cannot drive a decision, long enough to survive a missed sample |
 
-## Altitude (to be implemented with the altitude task)
+## Altitude
 
 | Decision | Value | Why |
 |---|---|---|
-| Model | `h = 44330 · (1 − (P/P₀)^0.1903)` m | Standard-atmosphere approximation; documented limits in README |
-| Reference | `P₀` = mean of valid samples over 2 s while stationary, then frozen | The BMP280 absolute accuracy is ±1 hPa ≈ ±8 m, so only a relative calculation is meaningful |
-| Start-up | Altitude invalid until the baseline is complete | Prevents flight decisions from a half-calibrated reference |
-| Precision | Publish cm | 1 cm resolution against ~2.4 cm of pressure noise |
+| Model | `h = 44330 · (1 − (P/P₀)^0.1903)` m | Standard-atmosphere approximation; limits documented in README |
+| Numeric form | `-44330 · expm1(0.1903 · log1p((P − P₀)/P₀))` | Near the bench `P ≈ P₀`, where `1 − pow()` subtracts two nearly equal numbers; `expm1`/`log1p` keep the small difference |
+| Input validation | 30 000–110 000 Pa, both inputs; non-finite result rejected | The BMP280's own range. A bus fault must produce an invalid altitude, not a plausible one |
+| Reference | `P₀` = mean of valid samples over 2 s while stationary, then frozen | BMP280 absolute accuracy is ±1 hPa ≈ ±8 m, so only a relative calculation is meaningful |
+| Stationarity rule | window ≥ 1 800 ms and ≥ 38 of 40 samples within 20 Pa spread; otherwise restart from the current sample | 20 Pa ≈ 1.7 m here (dP/dh ≈ 11.5 Pa/m), well above the ~8 Pa of observed noise, so picking the sensor up restarts calibration |
+| Coverage | A gap longer than the 250 ms stale timeout clears the window | Stationarity across a gap cannot be claimed |
+| Duplicate samples | Altitude is recomputed only when the source sequence changes | The thread polls at 50 ms; the same sample must not be counted twice |
+| Publication | Separate `AltitudeStore`; source timestamp and sequence copied, never regenerated | Consumers of altitude never depend on pressure, and can still measure age |
+| Failure | Publish `valid = false`, keep `P₀` | Flight decisions are inhibited upstream rather than fed a last-known height |
+| Precision | Publish cm | 1 cm against ~0.9 m of observed baseline noise |
+| Testability | Pure function in `src/altitude.cpp`, host tests in `tests/` | Checks the maths against independent references without a board |
 
 ## Flight logic (to be implemented with the apogee and temperature tasks)
 
@@ -56,8 +63,8 @@ the repository root.
 
 | Decision | Value | Why |
 |---|---|---|
-| Threads | `sensor`, `telemetry`, `diag` now; altitude, apogee, temperature, LED manager to follow | SYS-01 |
-| Priorities | sensor 5, telemetry 8, diag 9 (lower number = higher priority) | The sensor must preempt the console so printk cannot push the 50 ms deadline |
-| Stacks | sensor 2048 B, telemetry 1024 B, diag 1024 B | Sized for the driver and printk paths; see `docs/architecture.md` |
+| Threads | `sensor`, `altitude`, `telemetry`, `diag` now; apogee, temperature, LED manager to follow | SYS-01 |
+| Priorities | sensor 5, altitude 6, telemetry 8, diag 9 (lower number = higher priority) | The sensor must preempt the console so printk cannot push the 50 ms deadline; altitude consumes every sample but never prints |
+| Stacks | sensor 2048 B, altitude 2048 B, telemetry 1024 B, diag 1024 B | Sized for the driver, the 768 B baseline window and printk paths; see `docs/architecture.md`. A 1024 B altitude stack overflowed on the first flash and tripped the MPU |
 | Console logging | Producer publishes stats; a consumer prints them | The acquisition thread never blocks on RTT |
 | LED ownership | One writer only; the temporary heartbeat loop is removed when the LED manager lands | Checklist 7; prevents competing GPIO writes |

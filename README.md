@@ -1,6 +1,6 @@
 # Rocket Flight Controller Demo
 
-A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/temperature sensor, and Zephyr RTOS. Sensor acquisition, altitude, apogee detection and temperature monitoring are separate threads; measurement data moves through synchronized shared memory, and a single LED manager owns the output priority. Acquisition and the shared-memory contract are implemented and verified; the flight logic is not yet. Deployment is simulated **only by the board LED**; this is not flight-ready or safety-certified firmware.
+A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/temperature sensor, and Zephyr RTOS. Sensor acquisition, altitude, apogee detection and temperature monitoring are separate threads; measurement data moves through synchronized shared memory, and a single LED manager owns the output priority. Acquisition, the shared-memory contract and relative altitude are implemented and verified; apogee detection and the LED behaviours are not yet. Deployment is simulated **only by the board LED**; this is not flight-ready or safety-certified firmware.
 
 ## Current status
 
@@ -11,7 +11,8 @@ A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/tempe
 - **Sampling reworked for the descent test:** the sensor runs 8× pressure / 2× temperature in forced mode on a 50 ms deadline-based loop, so the 750 ms velocity window contains a full set of samples. The loop reports its own fetch duration, inter-sample interval and deadline overruns on the console. See [Sampling design](#sampling-design).
 - **Acquisition is its own thread (M4, verified on hardware):** `sensor` owns the BMP280 and the only I²C traffic, fetches on a 50 ms absolute deadline, and publishes a complete snapshot. Measured over 2 750 samples: fetch 24 ms, interval 50 ms, zero overruns, zero errors. Evidence: [docs/verification/at-02-live-acquisition.md](docs/verification/at-02-live-acquisition.md); the failure path is covered in [m4-absent-sensor.md](docs/verification/m4-absent-sensor.md).
 - **Shared memory is synchronized (M5, verified on hardware):** readers copy a `Measurement` out of `SensorDataStore` under a mutex and never consume it, so the 500 ms telemetry consumer and an independent 1 s reader observe the same sequence at their own rates. Evidence: [docs/verification/m5-shared-memory.md](docs/verification/m5-shared-memory.md).
-- **Not implemented yet:** altitude, apogee detection, temperature monitoring, the LED priority manager, and the acceptance test suite.
+- **Altitude is calculated and published (M6, verified on hardware):** a separate `altitude` thread reads the measurement snapshot, freezes a baseline `P₀` after 2 s of stationary pressure, and publishes a separate `AltitudeStore`. The maths is unit-tested on the host against independently computed references. Evidence: [docs/verification/at-03-altitude.md](docs/verification/at-03-altitude.md).
+- **Not implemented yet:** apogee detection, temperature monitoring, the LED priority manager, and the acceptance test suite.
 
 ## Hardware and known board detail
 
@@ -139,6 +140,70 @@ not drifting. The first two samples are excluded from the counters: the first fe
 the first conversion (42 ms) and the schedule is only established by the second. That
 start-up transient was visible while tuning and is deliberately not reported as steady state.
 
+## Altitude
+
+The `altitude` thread turns pressure into height using the standard-atmosphere
+approximation:
+
+```
+h = 44330 · (1 − (P / P₀)^0.1903)     metres
+```
+
+`P` is the latest pressure from the measurement snapshot, `P₀` is a reference
+pressure captured on the bench. The implementation computes it as
+
+```
+h = −44330 · expm1(0.1903 · log1p((P − P₀) / P₀))
+```
+
+which is the same curve but stays accurate when `P` is close to `P₀` — the only
+regime that matters here, where **1 hPa is about 8 m**. A plain `1 − pow()`
+subtracts two nearly equal numbers and loses most of the digits.
+
+### The reference has to be measured, not assumed
+
+An absolute pressure reading cannot give an absolute height: local weather moves
+sea-level pressure by ±20 hPa, which is ±170 m. So `P₀` is measured and then
+frozen:
+
+- collect valid, fresh samples until the window covers **2 s** (38 of the 40
+  expected samples);
+- require the pressure spread across that window to stay within **20 Pa**
+  (≈ 1.8 m here);
+- if the sensor moved, restart the window from the current sample;
+- a gap longer than the 250 ms stale timeout clears the window entirely;
+- after calibration, `P₀` never changes for the rest of the run.
+
+On the bench (≈ 626–630 m elevation) this gave `P₀ = 95 062 Pa` and altitude
+`0.00 m`. The same pressure through a *standard* atmosphere would read 535 m —
+a ~90 m error caused by the weather that day (95 062 Pa at 626 m implies a
+sea-level pressure near 102 440 Pa). That gap is the reason for measuring `P₀`.
+
+### What it reports
+
+`AltitudeStore` carries the altitude in centimetres plus the **source** sequence
+and timestamp, so a consumer can tell how old the height is without reading the
+pressure store. It also carries `calibrated` and the `P₀` used. On invalid or
+stale input the altitude is published as `valid = false` and `P₀` is kept; a
+last-known height is never presented as current.
+
+Measured while stationary: −0.62 … +0.27 m, i.e. **0.89 m peak-to-peak**, which
+is the sensor's ~±7 Pa of noise. No temperature compensation is applied; see
+[Temperature and pressure are coupled](#temperature-and-pressure-are-coupled).
+
+### Tests
+
+The calculation is a pure function in `src/altitude.cpp` with no Zephyr or
+hardware dependency, so it is tested on the workstation:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
+```
+
+Seventeen checks: seven reference pairs computed independently in 40-digit
+decimal arithmetic (1 cm tolerance), monotonicity, integer/metre agreement, and
+six rejection cases. Nothing is verified by calling the same code twice.
+
 ## Console output over ST-Link only
 
 There is no USB-UART adapter, so `printk()` goes to a **SEGGER RTT** ring buffer in RAM (`CONFIG_USE_SEGGER_RTT`, `CONFIG_RTT_CONSOLE`) that is read over the existing SWD connection. Two helper tools wrap the whole procedure: `tools\rtt-session.ps1` starts OpenOCD, and `tools\rtt-view.py` prints the stream.
@@ -160,14 +225,20 @@ Captured from the board:
 ```
 *** Booting Zephyr OS build v4.4.2 ***
 BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x, 50 ms period
-threads: sensor(prio 5) telemetry(8) diag(9); stale timeout 250 ms
+threads: sensor(prio 5) altitude(6) telemetry(8) diag(9); stale timeout 250 ms
 telemetry: no valid measurement yet (error=0)
+alt:  not available yet (baseline 0/38 samples)
 diag:  seq=0  age=-1 ms  valid=0  published=0
-[      0.51 s] seq=10  P=95041 Pa  T=22.60 C  age=26 ms
-[      1.01 s] seq=20  P=95043 Pa  T=22.62 C  age=26 ms
+[      0.51 s] seq=10  P=95062 Pa  T=22.24 C  age=26 ms
+alt:  not available yet (baseline 10/38 samples)
+[      1.01 s] seq=20  P=95062 Pa  T=22.24 C  age=26 ms
 diag:  seq=20  age=26 ms  valid=1  published=20
+alt:  baseline frozen P0=95062 Pa after 38 samples (spread 8 Pa)
+[      2.01 s] seq=40  P=95060 Pa  T=22.25 C  age=26 ms
+alt:  h=0.18 m  P0=95062 Pa  seq=40  age=26 ms
+diag:  seq=40  age=26 ms  valid=1  published=40
 ...
-stats: 2400 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=2590
+stats: 2200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=2390
 ```
 
 Each telemetry line carries the values, the acquisition timestamp's `age` (how old the
@@ -179,26 +250,30 @@ consume a sample.
 
 ## Architecture and shared memory
 
-Acquisition, printing and diagnostics run as separate Zephyr threads. They share nothing
-except one store, and a read never removes a value, so any number of consumers can look at
+Acquisition, altitude, printing and diagnostics run as separate Zephyr threads. They share nothing
+except two latest-value stores, and a read never removes a value, so any number of consumers can look at
 the same sample at their own rates.
 
 | Thread | Period | Priority | Stack | Responsibility |
 |---|---|---|---|---|
 | `sensor` | 50 ms, absolute deadline | 5 | 2048 B | Fetch, timestamp, publish; count errors and overruns; publish timing stats |
-| `telemetry` | 500 ms | 8 | 1024 B | Read the store, print samples and the ten-second `stats:` line |
-| `diag` | 1000 ms | 9 | 1024 B | Second independent reader (temporary; replaced by the altitude thread) |
+| `altitude` | 50 ms, absolute deadline | 6 | 2048 B | Read a measurement copy, calibrate `P₀`, publish altitude; never prints |
+| `telemetry` | 500 ms | 8 | 1024 B | Read both stores, print samples, altitude and the ten-second `stats:` line |
+| `diag` | 1000 ms | 9 | 1024 B | Second independent reader (temporary) |
 
-Lower number means higher priority, so the sensor thread preempts both console threads and a
-stalled `printk` under RTT back-pressure cannot push the 50 ms deadline. `main` only
-initialises the store, starts the threads and idles.
+Lower number means higher priority, so the sensor thread preempts every consumer and a
+stalled `printk` under RTT back-pressure cannot push the 50 ms deadline. Altitude sits at 6
+— above the console, below the sensor — because it consumes every sample but never prints.
+`main` only initialises the stores, starts the threads and idles.
 
 The contract is small and enforced by the API rather than by convention:
 
 - `Measurement` carries pressure (Pa), temperature (milli-°C), acquisition timestamp,
   sequence and a validity flag — one coherent snapshot, never separate fields.
-- `SensorDataStore::publish`/`read` copy a whole struct under one `k_mutex`; the lock is
-  never held across I²C, printing or arithmetic.
+- `Altitude` carries the height in cm plus the source sequence and timestamp, the frozen
+  `P₀`, a validity flag and whether calibration finished.
+- `SensorDataStore` and `AltitudeStore` both copy a whole struct under one `k_mutex`; the
+  lock is never held across I²C, printing or arithmetic.
 - A failed fetch publishes `valid = false` with the error code and does **not** advance the
   sequence, so a failure cannot be mistaken for a new measurement.
 - Consumers check `valid` and the age against the 250 ms stale timeout before using a value
@@ -214,7 +289,8 @@ and **[docs/decisions.md](docs/decisions.md)**.
 - Zephyr/West workspace: `C:\Users\ChristianSemenov\zephyrproject` (Zephyr 4.4.2 in `deps\zephyr`).
 - Toolchain: `C:\zephyr-sdk-1.0.1`; Zephyr Workbench host tools environment: `%USERPROFILE%\.zinstaller\env.ps1`.
 - Workbench application board: `olimex_stm32_h407`; configuration name: `primary`.
-- C++ sources live in `src/`: `main.cpp` (startup), `shared_data.cpp` (the store), and one file per thread (`sensor_task.cpp`, `telemetry_task.cpp`, `diag_task.cpp`); `app_config.hpp` holds the timing, stack and priority constants. `prj.conf` enables `CONFIG_CPP=y` and `CONFIG_STD_CPP17=y`.
+- C++ sources live in `src/`: `main.cpp` (startup), `shared_data.cpp` (the stores), `altitude.cpp` (the pure calculation), and one file per thread (`sensor_task.cpp`, `altitude_task.cpp`, `telemetry_task.cpp`, `diag_task.cpp`); `app_config.hpp` holds the timing, stack and priority constants. Host tests live in `tests/` and need no board. `prj.conf` enables `CONFIG_CPP=y` and `CONFIG_STD_CPP17=y`.
+- Zephyr builds C++ with `-nostdinc++` against its minimal C++ library, so `<cmath>` is unavailable; `altitude.cpp` uses picolibc's `<math.h>` (`expm1`, `log1p`).
 - This repository is a freestanding application: it uses the separate West workspace and SDK; it does not contain Zephyr itself. `.vscode/settings.json` currently includes machine-specific relative paths, so a different machine must select its own workspace and SDK.
 - The existing build output under `build/` is ignored by Git and should be regenerated locally.
 
@@ -241,22 +317,23 @@ For debugging, select **Zephyr Workbench Debug [primary]** in VS Code's Run and 
 
 ## Next steps
 
-Live acquisition and the synchronized shared-memory path are verified on hardware. **The
-next milestone is altitude, computed from the pressure snapshot.**
+Live acquisition, the synchronized shared-memory path and relative altitude are verified on
+hardware. **The next milestone is the LED manager**, which is also the piece that removes
+the temporary heartbeat from `main()`.
 
-1. Add the altitude thread: derive altitude from pressure against a `P₀` baseline averaged
-   over ~2 s while stationary, then frozen; publish altitude as its own snapshot for the
-   apogee detector.
-2. Measure a bench baseline to set the altitude, velocity and temperature thresholds that
-   are still placeholders.
-3. Add apogee detection (negative average velocity over the preceding 750 ms) and the
-   temperature monitor, then the LED priority manager with a single writer.
+1. Add the single-owner LED manager: a pure decision function over (`now`, deployment
+   request, heat request) with absolute deadlines, so it can be tested without hardware.
+2. Add apogee detection: 750 ms history of altitude, negative average velocity above a
+   configurable minimum, latched once per flight.
+3. Add the temperature monitor, then verify the overlap cases (heat overriding deployment,
+   cooling before and after the original deadline).
 4. Build the replay harness so synthetic traces enter at the measurement publisher, and
    record the acceptance scenarios.
 
-Known limitation: altitude, apogee detection, the temperature monitor and the LED manager
-are not implemented. The LED is currently a bare 500 ms heartbeat in `main`, and the `diag`
-thread is a temporary second reader rather than a real consumer. Absolute pressure accuracy
-is ±1 hPa (≈ ±8 m), so altitude is only meaningful relative to the frozen baseline.
+Known limitation: apogee detection, the temperature monitor and the LED manager are not
+implemented. The LED is currently a bare 500 ms heartbeat in `main`, and the `diag` thread is
+a temporary reader. Altitude is relative to a bench-measured `P₀`; absolute accuracy is
+±1 hPa (≈ ±8 m), and no physical height change has been demonstrated yet — only stationarity
+of ±0.9 m peak-to-peak.
 
 The detailed work plan and assignment/requirements currently live outside this repository at `G:\My Drive\Engineering\SCAE\Interview Test\`.
