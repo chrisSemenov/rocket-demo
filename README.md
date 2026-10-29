@@ -333,7 +333,7 @@ the temporary heartbeat from `main()`.
 Known limitation: apogee detection, the temperature monitor and the LED manager are not
 implemented. The LED is currently a bare 500 ms heartbeat in `main`, and the `diag` thread is
 a temporary reader. Altitude is relative to a bench-measured `P₀`; absolute accuracy is
-±1 hPa (≈ ±8 m), and no physical height change has been demonstrated yet — only stationarity
-of ±0.9 m peak-to-peak.
+±1 hPa (≈ ±8 m). A real change was observed once (+1.42 m from a 16 Pa drop, matching
+11 Pa/m), but it was an uncontrolled hand movement, not a metered step.
 
 The detailed work plan and assignment/requirements currently live outside this repository at `G:\My Drive\Engineering\SCAE\Interview Test\`.

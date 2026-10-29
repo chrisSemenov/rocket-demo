@@ -86,13 +86,40 @@ Over the next 2.5 minutes (255 printed altitude samples):
   timestamp, so a stalled sensor shows up as a growing age even if the altitude
   thread keeps running.
 
-## 4. What this does not yet show
+## 4. An observed height change
 
-- **A physical height change.** The sensor was not lifted, so no real Δh is
-  demonstrated here; the unit tests cover the arithmetic and the trace-replay
-  harness (Milestone 10) will cover moving profiles. A ~1 m lift should read
-  ≈ +1.0 m (≈ 11 Pa), and is worth capturing for the video.
-- **Temperature compensation.** None is applied, by design; see
-  `docs/decisions.md` ("Temperature and pressure are coupled").
+While the stream was running unattended, a transient appeared at t ≈ 30–34 s:
+
+```
+[     30.01 s] seq=600  P=95113 Pa  T=23.53 C  age=26 ms
+alt:  h=0.35 m  P0=95117 Pa  seq=600  age=26 ms
+[     30.51 s] seq=610  P=95105 Pa  T=23.61 C  age=26 ms
+alt:  h=1.06 m  P0=95117 Pa  seq=610  age=26 ms
+[     33.01 s] seq=660  P=95101 Pa  T=23.93 C  age=26 ms
+alt:  h=1.42 m  P0=95117 Pa  seq=660  age=26 ms
+[     34.01 s] seq=680  P=95110 Pa  T=24.01 C  age=26 ms
+alt:  h=0.62 m  P0=95117 Pa  seq=680  age=26 ms
+```
+
+- 16 Pa below the baseline gives 1.45 m by the formula at this pressure
+  (11.0 Pa/m), and the reported peak is 1.42 m — consistent.
+- `P₀` did not move (95 117 Pa throughout), so the change is in `P`, not in the
+  reference.
+- The temperature rose 0.48 °C over the same interval, which is what a hand
+  holding the breakout looks like.
+
+**Caveat:** this was not a controlled test. Nobody measured the actual height,
+the motion was not a clean step, and warming was happening at the same time. It
+demonstrates that a real pressure change moves the reported altitude in the right
+direction, at the right magnitude — not that the calibration is accurate to a
+centimetre against a tape measure.
+
+## 5. What this does not yet show
+
+- **A controlled height step.** A metered lift (e.g. 1.00 m on a rule) would
+  separate the ~1.3 cm/°C temperature coupling from the height change.
 - **The baseline restart path** (spread > 20 Pa) has not been exercised on
   hardware yet; it triggers if the sensor is moved during the first 2 s.
+- **Long-run drift.** The longest uninterrupted capture so far is ~2.5 minutes
+  plus this one; a multi-hour run would show whether `P₀` needs a re-baseline
+  before each flight.
