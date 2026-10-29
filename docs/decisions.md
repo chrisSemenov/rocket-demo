@@ -59,12 +59,27 @@ the repository root.
 | Reset | One flight per boot/reset; a reset clears calibration, history and the deployment latch | Checklist 2.2; avoids a partial re-arm |
 | Replay | Traces enter at the measurement publisher, never at the LED | Keeps the tested path identical to live operation (checklist 10.1) |
 
+## LED manager (implemented)
+
+| Decision | Value | Why |
+|---|---|---|
+| Ownership | `led_manager` is the only writer of PC13; everyone else publishes requests | Checklist 7; the temporary heartbeat in `main()` is removed |
+| Update cadence | 10 ms | Measured request→change latency 11–21 ms, well inside any blink tolerance |
+| Arbitration | `decide(now, request)`, a pure function | Testable with fake time; 33 host checks |
+| Blink | 250 ms on / 250 ms off, phase anchored to the alarm start | 500 ms complete period; anchoring prevents drift when the loop jitters |
+| Window boundary | Active while `start <= now < deadline` | One documented rule, tested at the exact instant |
+| Deployment latch | First accepted event sets the deadline; later requests are ignored **inside the store** | FLT-04/LED-06 enforced where the state lives, not by trusting the producer |
+| Deadline ownership | Producers set deadlines; the manager only reads them | Heat can preempt the output without pausing or restarting the deployment clock |
+| Heat renewal | Renewing keeps the original start anchor, extends only the deadline | The blink grid must not jump when an alarm is extended |
+| Request snapshot | One store, one lock, both requests copied together | The manager never sees "deployment cleared but heat not yet set" |
+| Failure | LED not ready → warning and no manager; the rest of the system runs | An unavailable indicator must not stop acquisition |
+
 ## Concurrency
 
 | Decision | Value | Why |
 |---|---|---|
-| Threads | `sensor`, `altitude`, `telemetry`, `diag` now; apogee, temperature, LED manager to follow | SYS-01 |
-| Priorities | sensor 5, altitude 6, telemetry 8, diag 9 (lower number = higher priority) | The sensor must preempt the console so printk cannot push the 50 ms deadline; altitude consumes every sample but never prints |
-| Stacks | sensor 2048 B, altitude 2048 B, telemetry 1024 B, diag 1024 B | Sized for the driver, the 768 B baseline window and printk paths; see `docs/architecture.md`. A 1024 B altitude stack overflowed on the first flash and tripped the MPU |
-| Console logging | Producer publishes stats; a consumer prints them | The acquisition thread never blocks on RTT |
-| LED ownership | One writer only; the temporary heartbeat loop is removed when the LED manager lands | Checklist 7; prevents competing GPIO writes |
+| Threads | `sensor`, `altitude`, `led`, `telemetry`, `diag` now; apogee, temperature to follow | SYS-01 |
+| Priorities | sensor 5, altitude 6, led 7, telemetry 8, diag 9 (lower number = higher priority) | The sensor must preempt everything so printk cannot push the 50 ms deadline; altitude outranks the LED so a blink decision cannot delay a height calculation |
+| Stacks | sensor 2048 B, altitude 2048 B, led 1024 B, telemetry 1024 B, diag 1024 B | Sized for the driver, the 768 B baseline window and printk paths; see `docs/architecture.md`. A 1024 B altitude stack overflowed on the first flash and tripped the MPU |
+| Console logging | Producers publish; consumers print; the LED manager prints only on a transition | The acquisition thread never blocks on RTT. The RTT up-buffer is 8 KB because 2 KB overran under the LED self-test |
+| LED ownership | `led_manager` is the only writer; the temporary heartbeat loop is removed | Checklist 7; prevents competing GPIO writes |

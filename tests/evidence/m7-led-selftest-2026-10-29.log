@@ -1,0 +1,1129 @@
+*** Booting Zephyr OS build v4.4.2 ***
+TEST MODE: LED SELFTEST is active, requests are scripted
+BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x, 50 ms period
+threads: sensor(5) altitude(6) led(7) telemetry(8) diag(9); stale timeout 250 ms
+led:  [      0.011] off
+telemetry: no valid measurement yet (error=0)
+alt:  not available yet (baseline 0/38 samples)
+diag:  seq=0  age=-1 ms  valid=0  published=0
+SELFTEST: LED request sequence, 8 steps, ~30 s
+[      0.51 s] seq=10  P=95109 Pa  T=23.11 C  age=26 ms
+alt:  not available yet (baseline 10/38 samples)
+[      1.01 s] seq=20  P=95111 Pa  T=23.12 C  age=26 ms
+alt:  not available yet (baseline 20/38 samples)
+diag:  seq=20  age=26 ms  valid=1  published=20
+[      1.51 s] seq=30  P=95108 Pa  T=23.13 C  age=26 ms
+alt:  baseline frozen P0=95109 Pa after 38 samples (spread 5 Pa)
+[      2.01 s] seq=40  P=95109 Pa  T=23.13 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=40  age=26 ms
+SELFTEST: [2000 ms] deployment requested, 10 s window
+diag:  seq=40  age=27 ms  valid=1  published=40
+led:  [      2.021] on (deployment)
+[      2.51 s] seq=50  P=95110 Pa  T=23.13 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=50  age=26 ms
+[      3.01 s] seq=60  P=95109 Pa  T=23.14 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=60  age=26 ms
+diag:  seq=60  age=27 ms  valid=1  published=60
+[      3.51 s] seq=70  P=95110 Pa  T=23.14 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=70  age=26 ms
+[      4.01 s] seq=80  P=95109 Pa  T=23.14 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=80  age=26 ms
+SELFTEST: [4000 ms] heat starts (overrides deployment)
+diag:  seq=80  age=27 ms  valid=1  published=80
+led:  [      4.021] blink on (heat)
+led:  [      4.271] blink off (heat)
+[      4.51 s] seq=90  P=95110 Pa  T=23.14 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=90  age=26 ms
+led:  [      4.521] blink on (heat)
+led:  [      4.771] blink off (heat)
+[      5.01 s] seq=100  P=95111 Pa  T=23.14 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=100  age=26 ms
+diag:  seq=100  age=27 ms  valid=1  published=100
+led:  [      5.021] blink on (heat)
+led:  [      5.271] blink off (heat)
+[      5.51 s] seq=110  P=95108 Pa  T=23.15 C  age=26 ms
+alt:  h=0.09 m  P0=95109 Pa  seq=110  age=26 ms
+led:  [      5.521] blink on (heat)
+led:  [      5.771] blink off (heat)
+[      6.01 s] seq=120  P=95110 Pa  T=23.15 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=120  age=26 ms
+diag:  seq=120  age=27 ms  valid=1  published=120
+led:  [      6.021] blink on (heat)
+led:  [      6.271] blink off (heat)
+[      6.51 s] seq=130  P=95109 Pa  T=23.15 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=130  age=26 ms
+led:  [      6.521] blink on (heat)
+led:  [      6.771] blink off (heat)
+[      7.01 s] seq=140  P=95107 Pa  T=23.14 C  age=26 ms
+alt:  h=0.18 m  P0=95109 Pa  seq=140  age=26 ms
+diag:  seq=140  age=28 ms  valid=1  published=140
+led:  [      7.021] blink on (heat)
+led:  [      7.271] blink off (heat)
+[      7.51 s] seq=150  P=95107 Pa  T=23.15 C  age=26 ms
+alt:  h=0.18 m  P0=95109 Pa  seq=150  age=26 ms
+led:  [      7.521] blink on (heat)
+led:  [      7.771] blink off (heat)
+[      8.01 s] seq=160  P=95109 Pa  T=23.15 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=160  age=26 ms
+diag:  seq=160  age=28 ms  valid=1  published=160
+led:  [      8.021] blink on (heat)
+led:  [      8.271] blink off (heat)
+[      8.51 s] seq=170  P=95108 Pa  T=23.15 C  age=26 ms
+alt:  h=0.09 m  P0=95109 Pa  seq=170  age=26 ms
+led:  [      8.521] blink on (heat)
+led:  [      8.771] blink off (heat)
+[      9.01 s] seq=180  P=95109 Pa  T=23.15 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=180  age=26 ms
+SELFTEST: [9000 ms] cooled early (deployment resumes)
+diag:  seq=180  age=28 ms  valid=1  published=180
+led:  [      9.021] on (deployment)
+[      9.51 s] seq=190  P=95109 Pa  T=23.15 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=190  age=26 ms
+[     10.01 s] seq=200  P=95110 Pa  T=23.15 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=200  age=26 ms
+diag:  seq=200  age=28 ms  valid=1  published=200
+[     10.51 s] seq=210  P=95108 Pa  T=23.15 C  age=26 ms
+alt:  h=0.09 m  P0=95109 Pa  seq=210  age=26 ms
+[     11.01 s] seq=220  P=95109 Pa  T=23.16 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=220  age=26 ms
+diag:  seq=220  age=28 ms  valid=1  published=220
+[     11.51 s] seq=230  P=95106 Pa  T=23.15 C  age=26 ms
+alt:  h=0.27 m  P0=95109 Pa  seq=230  age=26 ms
+led:  [     12.011] off
+[     12.01 s] seq=240  P=95108 Pa  T=23.16 C  age=26 ms
+alt:  h=0.09 m  P0=95109 Pa  seq=240  age=26 ms
+diag:  seq=240  age=29 ms  valid=1  published=240
+[     12.51 s] seq=250  P=95108 Pa  T=23.16 C  age=26 ms
+alt:  h=0.09 m  P0=95109 Pa  seq=250  age=26 ms
+[     13.01 s] seq=260  P=95112 Pa  T=23.16 C  age=26 ms
+alt:  h=-0.27 m  P0=95109 Pa  seq=260  age=26 ms
+diag:  seq=260  age=29 ms  valid=1  published=260
+[     13.51 s] seq=270  P=95111 Pa  T=23.17 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=270  age=26 ms
+[     14.01 s] seq=280  P=95109 Pa  T=23.16 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=280  age=26 ms
+SELFTEST: [14000 ms] heat only, no deployment
+diag:  seq=280  age=29 ms  valid=1  published=280
+led:  [     14.021] blink on (heat)
+led:  [     14.261] blink off (heat)
+led:  [     14.511] blink on (heat)
+[     14.51 s] seq=290  P=95113 Pa  T=23.17 C  age=26 ms
+alt:  h=-0.35 m  P0=95109 Pa  seq=290  age=26 ms
+led:  [     14.761] blink off (heat)
+led:  [     15.011] blink on (heat)
+[     15.01 s] seq=300  P=95112 Pa  T=23.17 C  age=26 ms
+alt:  h=-0.27 m  P0=95109 Pa  seq=300  age=26 ms
+diag:  seq=300  age=29 ms  valid=1  published=300
+led:  [     15.261] blink off (heat)
+led:  [     15.511] blink on (heat)
+[     15.51 s] seq=310  P=95111 Pa  T=23.17 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=310  age=26 ms
+led:  [     15.761] blink off (heat)
+led:  [     16.011] blink on (heat)
+[     16.01 s] seq=320  P=95110 Pa  T=23.16 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=320  age=26 ms
+diag:  seq=320  age=29 ms  valid=1  published=320
+led:  [     16.261] blink off (heat)
+led:  [     16.511] blink on (heat)
+[     16.51 s] seq=330  P=95111 Pa  T=23.16 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=330  age=26 ms
+led:  [     16.761] blink off (heat)
+led:  [     17.011] blink on (heat)
+[     17.01 s] seq=340  P=95109 Pa  T=23.17 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=340  age=26 ms
+SELFTEST: [17000 ms] cooled early (nothing to resume)
+diag:  seq=340  age=30 ms  valid=1  published=340
+led:  [     17.021] off
+[     17.51 s] seq=350  P=95111 Pa  T=23.17 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=350  age=26 ms
+[     18.01 s] seq=360  P=95108 Pa  T=23.17 C  age=26 ms
+alt:  h=0.09 m  P0=95109 Pa  seq=360  age=26 ms
+diag:  seq=360  age=30 ms  valid=1  published=360
+[     18.51 s] seq=370  P=95108 Pa  T=23.17 C  age=26 ms
+alt:  h=0.09 m  P0=95109 Pa  seq=370  age=26 ms
+[     19.01 s] seq=380  P=95108 Pa  T=23.16 C  age=26 ms
+alt:  h=0.09 m  P0=95109 Pa  seq=380  age=26 ms
+diag:  seq=380  age=30 ms  valid=1  published=380
+[     19.51 s] seq=390  P=95113 Pa  T=23.17 C  age=26 ms
+alt:  h=-0.35 m  P0=95109 Pa  seq=390  age=26 ms
+stats: 200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=390
+[     20.01 s] seq=400  P=95111 Pa  T=23.18 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=400  age=26 ms
+SELFTEST: [20000 ms] heat again
+diag:  seq=400  age=30 ms  valid=1  published=400
+led:  [     20.021] blink on (heat)
+led:  [     20.261] blink off (heat)
+led:  [     20.511] blink on (heat)
+[     20.51 s] seq=410  P=95113 Pa  T=23.17 C  age=26 ms
+alt:  h=-0.35 m  P0=95109 Pa  seq=410  age=26 ms
+led:  [     20.761] blink off (heat)
+led:  [     21.011] blink on (heat)
+[     21.01 s] seq=420  P=95111 Pa  T=23.17 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=420  age=26 ms
+diag:  seq=420  age=30 ms  valid=1  published=420
+led:  [     21.261] blink off (heat)
+led:  [     21.511] blink on (heat)
+[     21.51 s] seq=430  P=95111 Pa  T=23.18 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=430  age=26 ms
+led:  [     21.761] blink off (heat)
+led:  [     22.011] blink on (heat)
+[     22.01 s] seq=440  P=95110 Pa  T=23.18 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=440  age=26 ms
+diag:  seq=440  age=31 ms  valid=1  published=440
+led:  [     22.261] blink off (heat)
+led:  [     22.511] blink on (heat)
+[     22.51 s] seq=450  P=95110 Pa  T=23.18 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=450  age=26 ms
+led:  [     22.761] blink off (heat)
+led:  [     23.011] blink on (heat)
+[     23.01 s] seq=460  P=95111 Pa  T=23.19 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=460  age=26 ms
+diag:  seq=460  age=31 ms  valid=1  published=460
+led:  [     23.261] blink off (heat)
+led:  [     23.511] blink on (heat)
+[     23.51 s] seq=470  P=95109 Pa  T=23.18 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=470  age=26 ms
+led:  [     23.761] blink off (heat)
+led:  [     24.011] blink on (heat)
+[     24.01 s] seq=480  P=95111 Pa  T=23.19 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=480  age=26 ms
+diag:  seq=480  age=31 ms  valid=1  published=480
+led:  [     24.261] blink off (heat)
+led:  [     24.511] blink on (heat)
+[     24.51 s] seq=490  P=95111 Pa  T=23.19 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=490  age=26 ms
+led:  [     24.761] blink off (heat)
+led:  [     25.011] off
+[     25.01 s] seq=500  P=95109 Pa  T=23.19 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=500  age=26 ms
+SELFTEST: [25000 ms] cooled at the end of the window
+diag:  seq=500  age=31 ms  valid=1  published=500
+[     25.51 s] seq=510  P=95110 Pa  T=23.18 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=510  age=26 ms
+[     26.01 s] seq=520  P=95113 Pa  T=23.19 C  age=26 ms
+alt:  h=-0.35 m  P0=95109 Pa  seq=520  age=26 ms
+SELFTEST: [26000 ms] second deployment request (must be ignored) -- latch check
+diag:  seq=520  age=31 ms  valid=1  published=520
+[     26.51 s] seq=530  P=95110 Pa  T=23.18 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=530  age=26 ms
+[     27.01 s] seq=540  P=95111 Pa  T=23.19 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=540  age=26 ms
+diag:  seq=540  age=32 ms  valid=1  published=540
+[     27.51 s] seq=550  P=95107 Pa  T=23.19 C  age=26 ms
+alt:  h=0.18 m  P0=95109 Pa  seq=550  age=26 ms
+[     28.01 s] seq=560  P=95113 Pa  T=23.20 C  age=26 ms
+alt:  h=-0.35 m  P0=95109 Pa  seq=560  age=26 ms
+SELFTEST: done, deployment events=1 (expected 1)
+diag:  seq=560  age=32 ms  valid=1  published=560
+[     28.51 s] seq=570  P=95111 Pa  T=23.19 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=570  age=26 ms
+[     29.01 s] seq=580  P=95113 Pa  T=23.21 C  age=26 ms
+alt:  h=-0.35 m  P0=95109 Pa  seq=580  age=26 ms
+diag:  seq=580  age=32 ms  valid=1  published=580
+[     29.51 s] seq=590  P=95114 Pa  T=23.19 C  age=26 ms
+alt:  h=-0.44 m  P0=95109 Pa  seq=590  age=26 ms
+stats: 400 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=590
+[     30.01 s] seq=600  P=95108 Pa  T=23.20 C  age=26 ms
+alt:  h=0.09 m  P0=95109 Pa  seq=600  age=26 ms
+diag:  seq=600  age=32 ms  valid=1  published=600
+[     30.51 s] seq=610  P=95111 Pa  T=23.19 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=610  age=26 ms
+[     31.01 s] seq=620  P=95111 Pa  T=23.20 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=620  age=26 ms
+diag:  seq=620  age=32 ms  valid=1  published=620
+[     31.51 s] seq=630  P=95109 Pa  T=23.19 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=630  age=26 ms
+[     32.01 s] seq=640  P=95110 Pa  T=23.20 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=640  age=26 ms
+diag:  seq=640  age=33 ms  valid=1  published=640
+[     32.51 s] seq=650  P=95112 Pa  T=23.20 C  age=26 ms
+alt:  h=-0.27 m  P0=95109 Pa  seq=650  age=26 ms
+[     33.01 s] seq=660  P=95113 Pa  T=23.21 C  age=26 ms
+alt:  h=-0.35 m  P0=95109 Pa  seq=660  age=26 ms
+diag:  seq=660  age=33 ms  valid=1  published=660
+[     33.51 s] seq=670  P=95111 Pa  T=23.21 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=670  age=26 ms
+[     34.01 s] seq=680  P=95111 Pa  T=23.20 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=680  age=26 ms
+diag:  seq=680  age=33 ms  valid=1  published=680
+[     34.51 s] seq=690  P=95112 Pa  T=23.21 C  age=26 ms
+alt:  h=-0.27 m  P0=95109 Pa  seq=690  age=26 ms
+[     35.01 s] seq=700  P=95110 Pa  T=23.20 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=700  age=26 ms
+diag:  seq=700  age=33 ms  valid=1  published=700
+[     35.51 s] seq=710  P=95109 Pa  T=23.21 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=710  age=26 ms
+[     36.01 s] seq=720  P=95111 Pa  T=23.20 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=720  age=26 ms
+diag:  seq=720  age=33 ms  valid=1  published=720
+[     36.51 s] seq=730  P=95110 Pa  T=23.20 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=730  age=26 ms
+[     37.01 s] seq=740  P=95111 Pa  T=23.21 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=740  age=26 ms
+diag:  seq=740  age=34 ms  valid=1  published=740
+[     37.51 s] seq=750  P=95109 Pa  T=23.21 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=750  age=26 ms
+[     38.01 s] seq=760  P=95109 Pa  T=23.21 C  age=26 ms
+alt:  h=0.00 m  P0=95109 Pa  seq=760  age=26 ms
+diag:  seq=760  age=34 ms  valid=1  published=760
+[     38.51 s] seq=770  P=95115 Pa  T=23.21 C  age=26 ms
+alt:  h=-0.53 m  P0=95109 Pa  seq=770  age=26 ms
+[     39.01 s] seq=780  P=95108 Pa  T=23.22 C  age=26 ms
+alt:  h=0.09 m  P0=95109 Pa  seq=780  age=26 ms
+diag:  seq=780  age=34 ms  valid=1  published=780
+[     39.51 s] seq=790  P=95112 Pa  T=23.21 C  age=26 ms
+alt:  h=-0.27 m  P0=95109 Pa  seq=790  age=26 ms
+stats: 600 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=790
+[     40.01 s] seq=800  P=95111 Pa  T=23.22 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=800  age=26 ms
+diag:  seq=800  age=34 ms  valid=1  published=800
+[     40.51 s] seq=810  P=95110 Pa  T=23.21 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=810  age=26 ms
+[     41.01 s] seq=820  P=95111 Pa  T=23.21 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=820  age=26 ms
+diag:  seq=820  age=34 ms  valid=1  published=820
+[     41.51 s] seq=830  P=95113 Pa  T=23.22 C  age=26 ms
+alt:  h=-0.35 m  P0=95109 Pa  seq=830  age=26 ms
+[     42.01 s] seq=840  P=95110 Pa  T=23.22 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=840  age=26 ms
+diag:  seq=840  age=35 ms  valid=1  published=840
+[     42.51 s] seq=850  P=95114 Pa  T=23.22 C  age=26 ms
+alt:  h=-0.44 m  P0=95109 Pa  seq=850  age=26 ms
+[     43.01 s] seq=860  P=95112 Pa  T=23.22 C  age=26 ms
+alt:  h=-0.27 m  P0=95109 Pa  seq=860  age=26 ms
+diag:  seq=860  age=35 ms  valid=1  published=860
+[     43.51 s] seq=870  P=95110 Pa  T=23.22 C  age=26 ms
+alt:  h=-0.09 m  P0=95109 Pa  seq=870  age=26 ms
+[     44.01 s] seq=880  P=95111 Pa  T=23.22 C  age=26 ms
+alt:  h=-0.18 m  P0=95109 Pa  seq=880  age=26 ms
+diag:  seq=880  age=35 ms  valid=1  published=880
+*** Booting Zephyr OS build v4.4.2 ***
+TEST MODE: LED SELFTEST is active, requests are scripted
+BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x, 50 ms period
+threads: sensor(5) altitude(6) led(7) telemetry(8) diag(9); stale timeout 250 ms
+led:  [      0.011] off
+telemetry: no valid measurement yet (error=0)
+alt:  not available yet (baseline 0/38 samples)
+diag:  seq=0  age=-1 ms  valid=0  published=0
+SELFTEST: LED request sequence, 8 steps, ~30 s
+[      0.51 s] seq=10  P=95113 Pa  T=23.23 C  age=26 ms
+alt:  not available yet (baseline 10/38 samples)
+[      1.01 s] seq=20  P=95110 Pa  T=23.23 C  age=26 ms
+alt:  not available yet (baseline 20/38 samples)
+diag:  seq=20  age=26 ms  valid=1  published=20
+[      1.51 s] seq=30  P=95110 Pa  T=23.23 C  age=26 ms
+alt:  baseline frozen P0=95110 Pa after 38 samples (spread 7 Pa)
+[      2.01 s] seq=40  P=95113 Pa  T=23.23 C  age=26 ms
+alt:  h=-0.27 m  P0=95110 Pa  seq=40  age=26 ms
+SELFTEST: [2000 ms] deployment requested, 10 s window
+diag:  seq=40  age=27 ms  valid=1  published=40
+led:  [      2.021] on (deployment)
+[      2.51 s] seq=50  P=95112 Pa  T=23.23 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=50  age=26 ms
+[      3.01 s] seq=60  P=95114 Pa  T=23.23 C  age=26 ms
+alt:  h=-0.35 m  P0=95110 Pa  seq=60  age=26 ms
+diag:  seq=60  age=27 ms  valid=1  published=60
+[      3.51 s] seq=70  P=95111 Pa  T=23.23 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=70  age=26 ms
+[      4.01 s] seq=80  P=95112 Pa  T=23.23 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=80  age=26 ms
+SELFTEST: [4000 ms] heat starts (overrides deployment)
+diag:  seq=80  age=27 ms  valid=1  published=80
+led:  [      4.021] blink on (heat)
+led:  [      4.271] blink off (heat)
+[      4.51 s] seq=90  P=95112 Pa  T=23.24 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=90  age=26 ms
+led:  [      4.521] blink on (heat)
+led:  [      4.771] blink off (heat)
+[      5.01 s] seq=100  P=95109 Pa  T=23.23 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=100  age=26 ms
+diag:  seq=100  age=27 ms  valid=1  published=100
+led:  [      5.021] blink on (heat)
+led:  [      5.271] blink off (heat)
+[      5.51 s] seq=110  P=95106 Pa  T=23.22 C  age=26 ms
+alt:  h=0.35 m  P0=95110 Pa  seq=110  age=26 ms
+led:  [      5.521] blink on (heat)
+led:  [      5.771] blink off (heat)
+[      6.01 s] seq=120  P=95109 Pa  T=23.23 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=120  age=26 ms
+diag:  seq=120  age=27 ms  valid=1  published=120
+led:  [      6.021] blink on (heat)
+led:  [      6.271] blink off (heat)
+[      6.51 s] seq=130  P=95111 Pa  T=23.23 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=130  age=26 ms
+led:  [      6.521] blink on (heat)
+led:  [      6.771] blink off (heat)
+[      7.01 s] seq=140  P=95110 Pa  T=23.23 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=140  age=26 ms
+diag:  seq=140  age=27 ms  valid=1  published=140
+led:  [      7.021] blink on (heat)
+led:  [      7.271] blink off (heat)
+[      7.51 s] seq=150  P=95109 Pa  T=23.23 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=150  age=26 ms
+led:  [      7.521] blink on (heat)
+led:  [      7.771] blink off (heat)
+[      8.01 s] seq=160  P=95112 Pa  T=23.23 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=160  age=26 ms
+diag:  seq=160  age=28 ms  valid=1  published=160
+led:  [      8.021] blink on (heat)
+led:  [      8.271] blink off (heat)
+[      8.51 s] seq=170  P=95113 Pa  T=23.23 C  age=26 ms
+alt:  h=-0.27 m  P0=95110 Pa  seq=170  age=26 ms
+led:  [      8.521] blink on (heat)
+led:  [      8.771] blink off (heat)
+[      9.01 s] seq=180  P=95111 Pa  T=23.23 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=180  age=26 ms
+SELFTEST: [9000 ms] cooled early (deployment resumes)
+diag:  seq=180  age=28 ms  valid=1  published=180
+led:  [      9.021] on (deployment)
+[      9.51 s] seq=190  P=95109 Pa  T=23.24 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=190  age=26 ms
+[     10.01 s] seq=200  P=95108 Pa  T=23.23 C  age=26 ms
+alt:  h=0.18 m  P0=95110 Pa  seq=200  age=26 ms
+diag:  seq=200  age=28 ms  valid=1  published=200
+[     10.51 s] seq=210  P=95111 Pa  T=23.24 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=210  age=26 ms
+[     11.01 s] seq=220  P=95110 Pa  T=23.24 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=220  age=26 ms
+diag:  seq=220  age=28 ms  valid=1  published=220
+[     11.51 s] seq=230  P=95112 Pa  T=23.23 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=230  age=26 ms
+led:  [     12.011] off
+[     12.01 s] seq=240  P=95107 Pa  T=23.24 C  age=26 ms
+alt:  h=0.27 m  P0=95110 Pa  seq=240  age=26 ms
+diag:  seq=240  age=28 ms  valid=1  published=240
+[     12.51 s] seq=250  P=95110 Pa  T=23.24 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=250  age=26 ms
+[     13.01 s] seq=260  P=95111 Pa  T=23.24 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=260  age=26 ms
+diag:  seq=260  age=29 ms  valid=1  published=260
+[     13.51 s] seq=270  P=95110 Pa  T=23.24 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=270  age=26 ms
+[     14.01 s] seq=280  P=95110 Pa  T=23.24 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=280  age=26 ms
+SELFTEST: [14000 ms] heat only, no deployment
+diag:  seq=280  age=29 ms  valid=1  published=280
+led:  [     14.021] blink on (heat)
+led:  [     14.261] blink off (heat)
+led:  [     14.511] blink on (heat)
+[     14.51 s] seq=290  P=95108 Pa  T=23.24 C  age=26 ms
+alt:  h=0.18 m  P0=95110 Pa  seq=290  age=26 ms
+led:  [     14.761] blink off (heat)
+led:  [     15.011] blink on (heat)
+[     15.01 s] seq=300  P=95112 Pa  T=23.24 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=300  age=26 ms
+diag:  seq=300  age=29 ms  valid=1  published=300
+led:  [     15.261] blink off (heat)
+led:  [     15.511] blink on (heat)
+[     15.51 s] seq=310  P=95111 Pa  T=23.24 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=310  age=26 ms
+led:  [     15.761] blink off (heat)
+led:  [     16.011] blink on (heat)
+[     16.01 s] seq=320  P=95108 Pa  T=23.24 C  age=26 ms
+alt:  h=0.18 m  P0=95110 Pa  seq=320  age=26 ms
+diag:  seq=320  age=29 ms  valid=1  published=320
+led:  [     16.261] blink off (heat)
+led:  [     16.511] blink on (heat)
+[     16.51 s] seq=330  P=95108 Pa  T=23.24 C  age=26 ms
+alt:  h=0.18 m  P0=95110 Pa  seq=330  age=26 ms
+led:  [     16.761] blink off (heat)
+led:  [     17.011] blink on (heat)
+[     17.01 s] seq=340  P=95110 Pa  T=23.24 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=340  age=26 ms
+SELFTEST: [17000 ms] cooled early (nothing to resume)
+diag:  seq=340  age=29 ms  valid=1  published=340
+led:  [     17.021] off
+[     17.51 s] seq=350  P=95111 Pa  T=23.24 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=350  age=26 ms
+[     18.01 s] seq=360  P=95114 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.35 m  P0=95110 Pa  seq=360  age=26 ms
+diag:  seq=360  age=30 ms  valid=1  published=360
+[     18.51 s] seq=370  P=95111 Pa  T=23.24 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=370  age=26 ms
+[     19.01 s] seq=380  P=95109 Pa  T=23.24 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=380  age=26 ms
+diag:  seq=380  age=30 ms  valid=1  published=380
+[     19.51 s] seq=390  P=95112 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=390  age=26 ms
+stats: 200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=390
+[     20.01 s] seq=400  P=95113 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.27 m  P0=95110 Pa  seq=400  age=26 ms
+SELFTEST: [20000 ms] heat again
+diag:  seq=400  age=30 ms  valid=1  published=400
+led:  [     20.021] blink on (heat)
+led:  [     20.261] blink off (heat)
+led:  [     20.511] blink on (heat)
+[     20.51 s] seq=410  P=95113 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.27 m  P0=95110 Pa  seq=410  age=26 ms
+led:  [     20.761] blink off (heat)
+led:  [     21.011] blink on (heat)
+[     21.01 s] seq=420  P=95110 Pa  T=23.24 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=420  age=26 ms
+diag:  seq=420  age=30 ms  valid=1  published=420
+led:  [     21.261] blink off (heat)
+led:  [     21.511] blink on (heat)
+[     21.51 s] seq=430  P=95110 Pa  T=23.24 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=430  age=26 ms
+led:  [     21.761] blink off (heat)
+led:  [     22.011] blink on (heat)
+[     22.01 s] seq=440  P=95112 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=440  age=26 ms
+diag:  seq=440  age=30 ms  valid=1  published=440
+led:  [     22.261] blink off (heat)
+led:  [     22.511] blink on (heat)
+[     22.51 s] seq=450  P=95110 Pa  T=23.24 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=450  age=26 ms
+led:  [     22.761] blink off (heat)
+led:  [     23.011] blink on (heat)
+[     23.01 s] seq=460  P=95107 Pa  T=23.25 C  age=26 ms
+alt:  h=0.27 m  P0=95110 Pa  seq=460  age=26 ms
+diag:  seq=460  age=31 ms  valid=1  published=460
+led:  [     23.261] blink off (heat)
+led:  [     23.511] blink on (heat)
+[     23.51 s] seq=470  P=95107 Pa  T=23.24 C  age=26 ms
+alt:  h=0.27 m  P0=95110 Pa  seq=470  age=26 ms
+led:  [     23.761] blink off (heat)
+led:  [     24.011] blink on (heat)
+[     24.01 s] seq=480  P=95109 Pa  T=23.25 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=480  age=26 ms
+diag:  seq=480  age=31 ms  valid=1  published=480
+led:  [     24.261] blink off (heat)
+led:  [     24.511] blink on (heat)
+[     24.51 s] seq=490  P=95113 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.27 m  P0=95110 Pa  seq=490  age=26 ms
+led:  [     24.761] blink off (heat)
+led:  [     25.011] off
+[     25.01 s] seq=500  P=95110 Pa  T=23.24 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=500  age=26 ms
+SELFTEST: [25000 ms] cooled at the end of the window
+diag:  seq=500  age=31 ms  valid=1  published=500
+[     25.51 s] seq=510  P=95112 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=510  age=26 ms
+[     26.01 s] seq=520  P=95112 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=520  age=26 ms
+SELFTEST: [26000 ms] second deployment request (must be ignored) -- latch check
+diag:  seq=520  age=31 ms  valid=1  published=520
+[     26.51 s] seq=530  P=95112 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=530  age=26 ms
+[     27.01 s] seq=540  P=95110 Pa  T=23.25 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=540  age=26 ms
+diag:  seq=540  age=31 ms  valid=1  published=540
+[     27.51 s] seq=550  P=95112 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=550  age=26 ms
+[     28.01 s] seq=560  P=95112 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=560  age=26 ms
+SELFTEST: done, deployment events=1 (expected 1)
+diag:  seq=560  age=32 ms  valid=1  published=560
+[     28.51 s] seq=570  P=95108 Pa  T=23.25 C  age=26 ms
+alt:  h=0.18 m  P0=95110 Pa  seq=570  age=26 ms
+[     29.01 s] seq=580  P=95108 Pa  T=23.25 C  age=26 ms
+alt:  h=0.18 m  P0=95110 Pa  seq=580  age=26 ms
+diag:  seq=580  age=32 ms  valid=1  published=580
+[     29.51 s] seq=590  P=95112 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=590  age=26 ms
+stats: 400 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=590
+[     30.01 s] seq=600  P=95109 Pa  T=23.24 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=600  age=26 ms
+diag:  seq=600  age=32 ms  valid=1  published=600
+[     30.51 s] seq=610  P=95115 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.44 m  P0=95110 Pa  seq=610  age=26 ms
+[     31.01 s] seq=620  P=95113 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.27 m  P0=95110 Pa  seq=620  age=26 ms
+diag:  seq=620  age=32 ms  valid=1  published=620
+[     31.51 s] seq=630  P=95110 Pa  T=23.25 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=630  age=26 ms
+[     32.01 s] seq=640  P=95109 Pa  T=23.25 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=640  age=26 ms
+diag:  seq=640  age=32 ms  valid=1  published=640
+[     32.51 s] seq=650  P=95110 Pa  T=23.25 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=650  age=26 ms
+[     33.01 s] seq=660  P=95112 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=660  age=26 ms
+diag:  seq=660  age=33 ms  valid=1  published=660
+[     33.51 s] seq=670  P=95109 Pa  T=23.25 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=670  age=26 ms
+[     34.01 s] seq=680  P=95111 Pa  T=23.26 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=680  age=26 ms
+diag:  seq=680  age=33 ms  valid=1  published=680
+[     34.51 s] seq=690  P=95112 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=690  age=26 ms
+[     35.01 s] seq=700  P=95111 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=700  age=26 ms
+diag:  seq=700  age=33 ms  valid=1  published=700
+[     35.51 s] seq=710  P=95109 Pa  T=23.25 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=710  age=26 ms
+[     36.01 s] seq=720  P=95111 Pa  T=23.26 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=720  age=26 ms
+diag:  seq=720  age=33 ms  valid=1  published=720
+[     36.51 s] seq=730  P=95111 Pa  T=23.25 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=730  age=26 ms
+[     37.01 s] seq=740  P=95109 Pa  T=23.26 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=740  age=26 ms
+diag:  seq=740  age=33 ms  valid=1  published=740
+[     37.51 s] seq=750  P=95110 Pa  T=23.25 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=750  age=26 ms
+[     38.01 s] seq=760  P=95107 Pa  T=23.25 C  age=26 ms
+alt:  h=0.27 m  P0=95110 Pa  seq=760  age=26 ms
+diag:  seq=760  age=34 ms  valid=1  published=760
+[     38.51 s] seq=770  P=95109 Pa  T=23.25 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=770  age=26 ms
+[     39.01 s] seq=780  P=95110 Pa  T=23.26 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=780  age=26 ms
+diag:  seq=780  age=34 ms  valid=1  published=780
+[     39.51 s] seq=790  P=95109 Pa  T=23.25 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=790  age=26 ms
+stats: 600 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=790
+[     40.01 s] seq=800  P=95107 Pa  T=23.25 C  age=26 ms
+alt:  h=0.27 m  P0=95110 Pa  seq=800  age=26 ms
+diag:  seq=800  age=34 ms  valid=1  published=800
+[     40.51 s] seq=810  P=95109 Pa  T=23.26 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=810  age=26 ms
+[     41.01 s] seq=820  P=95110 Pa  T=23.26 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=820  age=26 ms
+diag:  seq=820  age=34 ms  valid=1  published=820
+[     41.51 s] seq=830  P=95110 Pa  T=23.27 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=830  age=26 ms
+[     42.01 s] seq=840  P=95108 Pa  T=23.26 C  age=26 ms
+alt:  h=0.18 m  P0=95110 Pa  seq=840  age=26 ms
+diag:  seq=840  age=34 ms  valid=1  published=840
+[     42.51 s] seq=850  P=95109 Pa  T=23.27 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=850  age=26 ms
+[     43.01 s] seq=860  P=95112 Pa  T=23.27 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=860  age=26 ms
+diag:  seq=860  age=35 ms  valid=1  published=860
+[     43.51 s] seq=870  P=95110 Pa  T=23.26 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=870  age=26 ms
+[     44.01 s] seq=880  P=95110 Pa  T=23.26 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=880  age=26 ms
+diag:  seq=880  age=35 ms  valid=1  published=880
+[     44.51 s] seq=890  P=95111 Pa  T=23.27 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=890  age=26 ms
+[     45.01 s] seq=900  P=95110 Pa  T=23.26 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=900  age=26 ms
+diag:  seq=900  age=35 ms  valid=1  published=900
+[     45.51 s] seq=910  P=95110 Pa  T=23.26 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=910  age=26 ms
+[     46.01 s] seq=920  P=95109 Pa  T=23.26 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=920  age=26 ms
+diag:  seq=920  age=35 ms  valid=1  published=920
+[     46.51 s] seq=930  P=95111 Pa  T=23.27 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=930  age=26 ms
+[     47.01 s] seq=940  P=95111 Pa  T=23.26 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=940  age=26 ms
+diag:  seq=940  age=35 ms  valid=1  published=940
+[     47.51 s] seq=950  P=95109 Pa  T=23.26 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=950  age=26 ms
+[     48.01 s] seq=960  P=95113 Pa  T=23.27 C  age=26 ms
+alt:  h=-0.27 m  P0=95110 Pa  seq=960  age=26 ms
+diag:  seq=960  age=36 ms  valid=1  published=960
+[     48.51 s] seq=970  P=95113 Pa  T=23.27 C  age=26 ms
+alt:  h=-0.27 m  P0=95110 Pa  seq=970  age=26 ms
+[     49.01 s] seq=980  P=95107 Pa  T=23.26 C  age=26 ms
+alt:  h=0.27 m  P0=95110 Pa  seq=980  age=26 ms
+diag:  seq=980  age=36 ms  valid=1  published=980
+[     49.51 s] seq=990  P=95110 Pa  T=23.27 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=990  age=26 ms
+stats: 800 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=990
+[     50.01 s] seq=1000  P=95110 Pa  T=23.27 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=1000  age=26 ms
+diag:  seq=1000  age=36 ms  valid=1  published=1000
+[     50.51 s] seq=1010  P=95110 Pa  T=23.26 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=1010  age=26 ms
+[     51.01 s] seq=1020  P=95113 Pa  T=23.26 C  age=26 ms
+alt:  h=-0.27 m  P0=95110 Pa  seq=1020  age=26 ms
+diag:  seq=1020  age=36 ms  valid=1  published=1020
+[     51.51 s] seq=1030  P=95111 Pa  T=23.27 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=1030  age=26 ms
+[     52.01 s] seq=1040  P=95112 Pa  T=23.27 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=1040  age=26 ms
+diag:  seq=1040  age=36 ms  valid=1  published=1040
+[     52.51 s] seq=1050  P=95112 Pa  T=23.27 C  age=26 ms
+alt:  h=-0.18 m  P0=95110 Pa  seq=1050  age=26 ms
+[     53.01 s] seq=1060  P=95113 Pa  T=23.27 C  age=26 ms
+alt:  h=-0.27 m  P0=95110 Pa  seq=1060  age=26 ms
+diag:  seq=1060  age=37 ms  valid=1  published=1060
+[     53.51 s] seq=1070  P=95111 Pa  T=23.27 C  age=26 ms
+alt:  h=-0.09 m  P0=95110 Pa  seq=1070  age=26 ms
+[     54.01 s] seq=1080  P=95110 Pa  T=23.26 C  age=26 ms
+alt:  h=0.00 m  P0=95110 Pa  seq=1080  age=26 ms
+diag:  seq=1080  age=37 ms  valid=1  published=1080
+[     54.51 s] seq=1090  P=95113 Pa  T=23.27 C  age=26 ms
+alt:  h=-0.27 m  P0=95110 Pa  seq=1090  age=26 ms
+[     55.01 s] seq=1100  P=95108 Pa  T=23.26 C  age=26 ms
+alt:  h=0.18 m  P0=95110 Pa  seq=1100  age=26 ms
+diag:  seq=1100  age=37 ms  valid=1  published=1100
+[     55.51 s] seq=1110  P=95113 Pa  T=23.28 C  age=26 ms
+alt:  h=-0.27 m  P0=95110 Pa  seq=1110  age=26 ms
+*** Booting Zephyr OS build v4.4.2 ***
+TEST MODE: LED SELFTEST is active, requests are scripted
+BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x, 50 ms period
+threads: sensor(5) altitude(6) led(7) telemetry(8) diag(9); stale timeout 250 ms
+led:  [      0.011] off
+telemetry: no valid measurement yet (error=0)
+alt:  not available yet (baseline 0/38 samples)
+diag:  seq=0  age=-1 ms  valid=0  published=0
+SELFTEST: LED request sequence, 8 steps, ~30 s
+[      0.51 s] seq=10  P=95112 Pa  T=23.27 C  age=26 ms
+alt:  not available yet (baseline 10/38 samples)
+[      1.01 s] seq=20  P=95113 Pa  T=23.28 C  age=26 ms
+alt:  not available yet (baseline 20/38 samples)
+diag:  seq=20  age=26 ms  valid=1  published=20
+[      1.51 s] seq=30  P=95111 Pa  T=23.27 C  age=26 ms
+alt:  baseline frozen P0=95111 Pa after 38 samples (spread 6 Pa)
+[      2.01 s] seq=40  P=95109 Pa  T=23.27 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=40  age=26 ms
+SELFTEST: [2000 ms] deployment requested, 10 s window
+diag:  seq=40  age=27 ms  valid=1  published=40
+led:  [      2.021] on (deployment)
+[      2.51 s] seq=50  P=95109 Pa  T=23.27 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=50  age=26 ms
+[      3.01 s] seq=60  P=95111 Pa  T=23.27 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=60  age=26 ms
+diag:  seq=60  age=27 ms  valid=1  published=60
+[      3.51 s] seq=70  P=95111 Pa  T=23.27 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=70  age=26 ms
+[      4.01 s] seq=80  P=95109 Pa  T=23.28 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=80  age=26 ms
+SELFTEST: [4000 ms] heat starts (overrides deployment)
+diag:  seq=80  age=27 ms  valid=1  published=80
+led:  [      4.021] blink on (heat)
+led:  [      4.271] blink off (heat)
+[      4.51 s] seq=90  P=95110 Pa  T=23.27 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=90  age=26 ms
+led:  [      4.521] blink on (heat)
+led:  [      4.771] blink off (heat)
+[      5.01 s] seq=100  P=95114 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.27 m  P0=95111 Pa  seq=100  age=26 ms
+diag:  seq=100  age=27 ms  valid=1  published=100
+led:  [      5.021] blink on (heat)
+led:  [      5.271] blink off (heat)
+[      5.51 s] seq=110  P=95110 Pa  T=23.27 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=110  age=26 ms
+led:  [      5.521] blink on (heat)
+led:  [      5.771] blink off (heat)
+[      6.01 s] seq=120  P=95107 Pa  T=23.28 C  age=26 ms
+alt:  h=0.35 m  P0=95111 Pa  seq=120  age=26 ms
+diag:  seq=120  age=27 ms  valid=1  published=120
+led:  [      6.021] blink on (heat)
+led:  [      6.271] blink off (heat)
+[      6.51 s] seq=130  P=95109 Pa  T=23.28 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=130  age=26 ms
+led:  [      6.521] blink on (heat)
+led:  [      6.771] blink off (heat)
+[      7.01 s] seq=140  P=95108 Pa  T=23.28 C  age=26 ms
+alt:  h=0.27 m  P0=95111 Pa  seq=140  age=26 ms
+diag:  seq=140  age=28 ms  valid=1  published=140
+led:  [      7.021] blink on (heat)
+led:  [      7.271] blink off (heat)
+[      7.51 s] seq=150  P=95113 Pa  T=23.28 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=150  age=26 ms
+led:  [      7.521] blink on (heat)
+led:  [      7.771] blink off (heat)
+[      8.01 s] seq=160  P=95106 Pa  T=23.28 C  age=26 ms
+alt:  h=0.44 m  P0=95111 Pa  seq=160  age=26 ms
+diag:  seq=160  age=28 ms  valid=1  published=160
+led:  [      8.021] blink on (heat)
+led:  [      8.271] blink off (heat)
+[      8.51 s] seq=170  P=95110 Pa  T=23.28 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=170  age=26 ms
+led:  [      8.521] blink on (heat)
+led:  [      8.771] blink off (heat)
+[      9.01 s] seq=180  P=95112 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=180  age=26 ms
+SELFTEST: [9000 ms] cooled early (deployment resumes)
+diag:  seq=180  age=28 ms  valid=1  published=180
+led:  [      9.021] on (deployment)
+[      9.51 s] seq=190  P=95113 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=190  age=26 ms
+[     10.01 s] seq=200  P=95110 Pa  T=23.28 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=200  age=26 ms
+diag:  seq=200  age=28 ms  valid=1  published=200
+[     10.51 s] seq=210  P=95109 Pa  T=23.29 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=210  age=26 ms
+[     11.01 s] seq=220  P=95110 Pa  T=23.28 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=220  age=26 ms
+diag:  seq=220  age=28 ms  valid=1  published=220
+[     11.51 s] seq=230  P=95113 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=230  age=26 ms
+led:  [     12.011] off
+[     12.01 s] seq=240  P=95111 Pa  T=23.28 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=240  age=26 ms
+diag:  seq=240  age=29 ms  valid=1  published=240
+[     12.51 s] seq=250  P=95111 Pa  T=23.29 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=250  age=26 ms
+[     13.01 s] seq=260  P=95111 Pa  T=23.28 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=260  age=26 ms
+diag:  seq=260  age=29 ms  valid=1  published=260
+[     13.51 s] seq=270  P=95109 Pa  T=23.29 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=270  age=26 ms
+[     14.01 s] seq=280  P=95111 Pa  T=23.28 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=280  age=26 ms
+SELFTEST: [14000 ms] heat only, no deployment
+diag:  seq=280  age=29 ms  valid=1  published=280
+led:  [     14.021] blink on (heat)
+led:  [     14.261] blink off (heat)
+led:  [     14.511] blink on (heat)
+[     14.51 s] seq=290  P=95110 Pa  T=23.28 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=290  age=26 ms
+led:  [     14.761] blink off (heat)
+led:  [     15.011] blink on (heat)
+[     15.01 s] seq=300  P=95109 Pa  T=23.28 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=300  age=26 ms
+diag:  seq=300  age=29 ms  valid=1  published=300
+led:  [     15.261] blink off (heat)
+led:  [     15.511] blink on (heat)
+[     15.51 s] seq=310  P=95111 Pa  T=23.28 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=310  age=26 ms
+led:  [     15.761] blink off (heat)
+led:  [     16.011] blink on (heat)
+[     16.01 s] seq=320  P=95109 Pa  T=23.28 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=320  age=26 ms
+diag:  seq=320  age=29 ms  valid=1  published=320
+led:  [     16.261] blink off (heat)
+led:  [     16.511] blink on (heat)
+[     16.51 s] seq=330  P=95108 Pa  T=23.29 C  age=26 ms
+alt:  h=0.27 m  P0=95111 Pa  seq=330  age=26 ms
+led:  [     16.761] blink off (heat)
+led:  [     17.011] blink on (heat)
+[     17.01 s] seq=340  P=95110 Pa  T=23.29 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=340  age=26 ms
+SELFTEST: [17000 ms] cooled early (nothing to resume)
+diag:  seq=340  age=30 ms  valid=1  published=340
+led:  [     17.021] off
+[     17.51 s] seq=350  P=95107 Pa  T=23.28 C  age=26 ms
+alt:  h=0.35 m  P0=95111 Pa  seq=350  age=26 ms
+[     18.01 s] seq=360  P=95107 Pa  T=23.28 C  age=26 ms
+alt:  h=0.35 m  P0=95111 Pa  seq=360  age=26 ms
+diag:  seq=360  age=30 ms  valid=1  published=360
+[     18.51 s] seq=370  P=95111 Pa  T=23.28 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=370  age=26 ms
+[     19.01 s] seq=380  P=95109 Pa  T=23.28 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=380  age=26 ms
+diag:  seq=380  age=30 ms  valid=1  published=380
+[     19.51 s] seq=390  P=95107 Pa  T=23.28 C  age=26 ms
+alt:  h=0.35 m  P0=95111 Pa  seq=390  age=26 ms
+stats: 200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=390
+[     20.01 s] seq=400  P=95110 Pa  T=23.29 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=400  age=26 ms
+SELFTEST: [20000 ms] heat again
+diag:  seq=400  age=30 ms  valid=1  published=400
+led:  [     20.021] blink on (heat)
+led:  [     20.261] blink off (heat)
+led:  [     20.511] blink on (heat)
+[     20.51 s] seq=410  P=95110 Pa  T=23.28 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=410  age=26 ms
+led:  [     20.761] blink off (heat)
+led:  [     21.011] blink on (heat)
+[     21.01 s] seq=420  P=95114 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.27 m  P0=95111 Pa  seq=420  age=26 ms
+diag:  seq=420  age=30 ms  valid=1  published=420
+led:  [     21.261] blink off (heat)
+led:  [     21.511] blink on (heat)
+[     21.51 s] seq=430  P=95111 Pa  T=23.30 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=430  age=26 ms
+led:  [     21.761] blink off (heat)
+led:  [     22.011] blink on (heat)
+[     22.01 s] seq=440  P=95110 Pa  T=23.30 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=440  age=26 ms
+diag:  seq=440  age=31 ms  valid=1  published=440
+led:  [     22.261] blink off (heat)
+led:  [     22.511] blink on (heat)
+[     22.51 s] seq=450  P=95111 Pa  T=23.29 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=450  age=26 ms
+led:  [     22.761] blink off (heat)
+led:  [     23.011] blink on (heat)
+[     23.01 s] seq=460  P=95110 Pa  T=23.28 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=460  age=26 ms
+diag:  seq=460  age=31 ms  valid=1  published=460
+led:  [     23.261] blink off (heat)
+led:  [     23.511] blink on (heat)
+[     23.51 s] seq=470  P=95111 Pa  T=23.29 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=470  age=26 ms
+led:  [     23.761] blink off (heat)
+led:  [     24.011] blink on (heat)
+[     24.01 s] seq=480  P=95109 Pa  T=23.29 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=480  age=26 ms
+diag:  seq=480  age=31 ms  valid=1  published=480
+led:  [     24.261] blink off (heat)
+led:  [     24.511] blink on (heat)
+[     24.51 s] seq=490  P=95113 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=490  age=26 ms
+led:  [     24.761] blink off (heat)
+led:  [     25.011] off
+[     25.01 s] seq=500  P=95110 Pa  T=23.28 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=500  age=26 ms
+SELFTEST: [25000 ms] cooled at the end of the window
+diag:  seq=500  age=31 ms  valid=1  published=500
+[     25.51 s] seq=510  P=95112 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=510  age=26 ms
+[     26.01 s] seq=520  P=95110 Pa  T=23.29 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=520  age=26 ms
+SELFTEST: [26000 ms] second deployment request (must be ignored) -- latch check
+diag:  seq=520  age=31 ms  valid=1  published=520
+[     26.51 s] seq=530  P=95113 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=530  age=26 ms
+[     27.01 s] seq=540  P=95111 Pa  T=23.28 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=540  age=26 ms
+diag:  seq=540  age=32 ms  valid=1  published=540
+[     27.51 s] seq=550  P=95112 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=550  age=26 ms
+[     28.01 s] seq=560  P=95110 Pa  T=23.28 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=560  age=26 ms
+SELFTEST: done, deployment events=1 (expected 1)
+diag:  seq=560  age=32 ms  valid=1  published=560
+[     28.51 s] seq=570  P=95112 Pa  T=23.28 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=570  age=26 ms
+[     29.01 s] seq=580  P=95109 Pa  T=23.28 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=580  age=26 ms
+diag:  seq=580  age=32 ms  valid=1  published=580
+[     29.51 s] seq=590  P=95111 Pa  T=23.29 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=590  age=26 ms
+stats: 400 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=590
+[     30.01 s] seq=600  P=95108 Pa  T=23.29 C  age=26 ms
+alt:  h=0.27 m  P0=95111 Pa  seq=600  age=26 ms
+diag:  seq=600  age=32 ms  valid=1  published=600
+[     30.51 s] seq=610  P=95111 Pa  T=23.30 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=610  age=26 ms
+[     31.01 s] seq=620  P=95109 Pa  T=23.28 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=620  age=26 ms
+diag:  seq=620  age=32 ms  valid=1  published=620
+[     31.51 s] seq=630  P=95113 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=630  age=26 ms
+[     32.01 s] seq=640  P=95111 Pa  T=23.29 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=640  age=26 ms
+diag:  seq=640  age=33 ms  valid=1  published=640
+[     32.51 s] seq=650  P=95109 Pa  T=23.28 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=650  age=26 ms
+[     33.01 s] seq=660  P=95110 Pa  T=23.29 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=660  age=26 ms
+diag:  seq=660  age=33 ms  valid=1  published=660
+[     33.51 s] seq=670  P=95108 Pa  T=23.28 C  age=26 ms
+alt:  h=0.27 m  P0=95111 Pa  seq=670  age=26 ms
+[     34.01 s] seq=680  P=95109 Pa  T=23.29 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=680  age=26 ms
+diag:  seq=680  age=33 ms  valid=1  published=680
+[     34.51 s] seq=690  P=95113 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=690  age=26 ms
+[     35.01 s] seq=700  P=95111 Pa  T=23.28 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=700  age=26 ms
+diag:  seq=700  age=33 ms  valid=1  published=700
+[     35.51 s] seq=710  P=95112 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=710  age=26 ms
+[     36.01 s] seq=720  P=95113 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=720  age=26 ms
+diag:  seq=720  age=33 ms  valid=1  published=720
+[     36.51 s] seq=730  P=95112 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=730  age=26 ms
+[     37.01 s] seq=740  P=95110 Pa  T=23.29 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=740  age=26 ms
+diag:  seq=740  age=34 ms  valid=1  published=740
+[     37.51 s] seq=750  P=95107 Pa  T=23.29 C  age=26 ms
+alt:  h=0.35 m  P0=95111 Pa  seq=750  age=26 ms
+[     38.01 s] seq=760  P=95112 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=760  age=26 ms
+diag:  seq=760  age=34 ms  valid=1  published=760
+[     38.51 s] seq=770  P=95112 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=770  age=26 ms
+[     39.01 s] seq=780  P=95113 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=780  age=26 ms
+diag:  seq=780  age=34 ms  valid=1  published=780
+[     39.51 s] seq=790  P=95114 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.27 m  P0=95111 Pa  seq=790  age=26 ms
+stats: 600 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=790
+[     40.01 s] seq=800  P=95110 Pa  T=23.29 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=800  age=26 ms
+diag:  seq=800  age=34 ms  valid=1  published=800
+[     40.51 s] seq=810  P=95113 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=810  age=26 ms
+[     41.01 s] seq=820  P=95110 Pa  T=23.29 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=820  age=26 ms
+diag:  seq=820  age=34 ms  valid=1  published=820
+[     41.51 s] seq=830  P=95110 Pa  T=23.29 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=830  age=26 ms
+[     42.01 s] seq=840  P=95112 Pa  T=23.29 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=840  age=26 ms
+diag:  seq=840  age=35 ms  valid=1  published=840
+[     42.51 s] seq=850  P=95110 Pa  T=23.28 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=850  age=26 ms
+[     43.01 s] seq=860  P=95115 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.35 m  P0=95111 Pa  seq=860  age=26 ms
+diag:  seq=860  age=35 ms  valid=1  published=860
+[     43.51 s] seq=870  P=95109 Pa  T=23.30 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=870  age=26 ms
+[     44.01 s] seq=880  P=95110 Pa  T=23.30 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=880  age=26 ms
+diag:  seq=880  age=35 ms  valid=1  published=880
+[     44.51 s] seq=890  P=95113 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=890  age=26 ms
+[     45.01 s] seq=900  P=95114 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.27 m  P0=95111 Pa  seq=900  age=26 ms
+diag:  seq=900  age=35 ms  valid=1  published=900
+[     45.51 s] seq=910  P=95107 Pa  T=23.28 C  age=26 ms
+alt:  h=0.35 m  P0=95111 Pa  seq=910  age=26 ms
+[     46.01 s] seq=920  P=95111 Pa  T=23.30 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=920  age=26 ms
+diag:  seq=920  age=35 ms  valid=1  published=920
+[     46.51 s] seq=930  P=95109 Pa  T=23.29 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=930  age=26 ms
+[     47.01 s] seq=940  P=95109 Pa  T=23.30 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=940  age=26 ms
+diag:  seq=940  age=36 ms  valid=1  published=940
+[     47.51 s] seq=950  P=95109 Pa  T=23.30 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=950  age=26 ms
+[     48.01 s] seq=960  P=95112 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=960  age=26 ms
+diag:  seq=960  age=36 ms  valid=1  published=960
+[     48.51 s] seq=970  P=95110 Pa  T=23.30 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=970  age=26 ms
+[     49.01 s] seq=980  P=95109 Pa  T=23.29 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=980  age=26 ms
+diag:  seq=980  age=36 ms  valid=1  published=980
+[     49.51 s] seq=990  P=95109 Pa  T=23.30 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=990  age=26 ms
+stats: 800 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=990
+[     50.01 s] seq=1000  P=95112 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=1000  age=26 ms
+diag:  seq=1000  age=36 ms  valid=1  published=1000
+[     50.51 s] seq=1010  P=95111 Pa  T=23.30 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1010  age=26 ms
+[     51.01 s] seq=1020  P=95113 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=1020  age=26 ms
+diag:  seq=1020  age=36 ms  valid=1  published=1020
+[     51.51 s] seq=1030  P=95113 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=1030  age=26 ms
+[     52.01 s] seq=1040  P=95112 Pa  T=23.31 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=1040  age=26 ms
+diag:  seq=1040  age=37 ms  valid=1  published=1040
+[     52.51 s] seq=1050  P=95110 Pa  T=23.30 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=1050  age=26 ms
+[     53.01 s] seq=1060  P=95111 Pa  T=23.30 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1060  age=26 ms
+diag:  seq=1060  age=37 ms  valid=1  published=1060
+[     53.51 s] seq=1070  P=95109 Pa  T=23.31 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=1070  age=26 ms
+[     54.01 s] seq=1080  P=95108 Pa  T=23.30 C  age=26 ms
+alt:  h=0.27 m  P0=95111 Pa  seq=1080  age=26 ms
+diag:  seq=1080  age=37 ms  valid=1  published=1080
+[     54.51 s] seq=1090  P=95112 Pa  T=23.31 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=1090  age=26 ms
+[     55.01 s] seq=1100  P=95111 Pa  T=23.30 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1100  age=26 ms
+diag:  seq=1100  age=37 ms  valid=1  published=1100
+[     55.51 s] seq=1110  P=95110 Pa  T=23.31 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=1110  age=26 ms
+[     56.01 s] seq=1120  P=95111 Pa  T=23.31 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1120  age=26 ms
+diag:  seq=1120  age=37 ms  valid=1  published=1120
+[     56.51 s] seq=1130  P=95111 Pa  T=23.30 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1130  age=26 ms
+[     57.01 s] seq=1140  P=95110 Pa  T=23.30 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=1140  age=26 ms
+diag:  seq=1140  age=38 ms  valid=1  published=1140
+[     57.51 s] seq=1150  P=95111 Pa  T=23.30 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1150  age=26 ms
+[     58.01 s] seq=1160  P=95112 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=1160  age=26 ms
+diag:  seq=1160  age=38 ms  valid=1  published=1160
+[     58.51 s] seq=1170  P=95110 Pa  T=23.30 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=1170  age=26 ms
+[     59.01 s] seq=1180  P=95109 Pa  T=23.30 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=1180  age=26 ms
+diag:  seq=1180  age=38 ms  valid=1  published=1180
+[     59.51 s] seq=1190  P=95114 Pa  T=23.31 C  age=26 ms
+alt:  h=-0.27 m  P0=95111 Pa  seq=1190  age=26 ms
+stats: 1000 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=1190
+[     60.01 s] seq=1200  P=95114 Pa  T=23.31 C  age=26 ms
+alt:  h=-0.27 m  P0=95111 Pa  seq=1200  age=26 ms
+diag:  seq=1200  age=38 ms  valid=1  published=1200
+[     60.51 s] seq=1210  P=95113 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=1210  age=26 ms
+[     61.01 s] seq=1220  P=95112 Pa  T=23.30 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=1220  age=26 ms
+diag:  seq=1220  age=38 ms  valid=1  published=1220
+[     61.51 s] seq=1230  P=95111 Pa  T=23.30 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1230  age=26 ms
+[     62.01 s] seq=1240  P=95113 Pa  T=23.31 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=1240  age=26 ms
+diag:  seq=1240  age=39 ms  valid=1  published=1240
+[     62.51 s] seq=1250  P=95111 Pa  T=23.31 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1250  age=26 ms
+[     63.01 s] seq=1260  P=95112 Pa  T=23.31 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=1260  age=26 ms
+diag:  seq=1260  age=39 ms  valid=1  published=1260
+[     63.51 s] seq=1270  P=95111 Pa  T=23.30 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1270  age=26 ms
+[     64.01 s] seq=1280  P=95110 Pa  T=23.30 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=1280  age=26 ms
+diag:  seq=1280  age=39 ms  valid=1  published=1280
+[     64.51 s] seq=1290  P=95108 Pa  T=23.31 C  age=26 ms
+alt:  h=0.27 m  P0=95111 Pa  seq=1290  age=26 ms
+[     65.01 s] seq=1300  P=95111 Pa  T=23.30 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1300  age=26 ms
+diag:  seq=1300  age=39 ms  valid=1  published=1300
+[     65.51 s] seq=1310  P=95112 Pa  T=23.31 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=1310  age=26 ms
+[     66.01 s] seq=1320  P=95109 Pa  T=23.31 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=1320  age=26 ms
+diag:  seq=1320  age=39 ms  valid=1  published=1320
+[     66.51 s] seq=1330  P=95111 Pa  T=23.30 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1330  age=26 ms
+[     67.01 s] seq=1340  P=95109 Pa  T=23.31 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=1340  age=26 ms
+diag:  seq=1340  age=40 ms  valid=1  published=1340
+[     67.51 s] seq=1350  P=95112 Pa  T=23.31 C  age=26 ms
+alt:  h=-0.09 m  P0=95111 Pa  seq=1350  age=26 ms
+[     68.01 s] seq=1360  P=95111 Pa  T=23.31 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1360  age=26 ms
+diag:  seq=1360  age=40 ms  valid=1  published=1360
+[     68.51 s] seq=1370  P=95111 Pa  T=23.31 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1370  age=26 ms
+[     69.01 s] seq=1380  P=95109 Pa  T=23.31 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=1380  age=26 ms
+diag:  seq=1380  age=40 ms  valid=1  published=1380
+[     69.51 s] seq=1390  P=95108 Pa  T=23.30 C  age=26 ms
+alt:  h=0.27 m  P0=95111 Pa  seq=1390  age=26 ms
+stats: 1200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=1390
+[     70.01 s] seq=1400  P=95108 Pa  T=23.31 C  age=26 ms
+alt:  h=0.27 m  P0=95111 Pa  seq=1400  age=26 ms
+diag:  seq=1400  age=40 ms  valid=1  published=1400
+[     70.51 s] seq=1410  P=95110 Pa  T=23.30 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=1410  age=26 ms
+[     71.01 s] seq=1420  P=95107 Pa  T=23.30 C  age=26 ms
+alt:  h=0.35 m  P0=95111 Pa  seq=1420  age=26 ms
+diag:  seq=1420  age=40 ms  valid=1  published=1420
+[     71.51 s] seq=1430  P=95110 Pa  T=23.31 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=1430  age=26 ms
+[     72.01 s] seq=1440  P=95111 Pa  T=23.31 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1440  age=26 ms
+diag:  seq=1440  age=41 ms  valid=1  published=1440
+[     72.51 s] seq=1450  P=95108 Pa  T=23.31 C  age=26 ms
+alt:  h=0.27 m  P0=95111 Pa  seq=1450  age=26 ms
+[     73.01 s] seq=1460  P=95111 Pa  T=23.31 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1460  age=26 ms
+diag:  seq=1460  age=41 ms  valid=1  published=1460
+[     73.51 s] seq=1470  P=95113 Pa  T=23.31 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=1470  age=26 ms
+[     74.01 s] seq=1480  P=95113 Pa  T=23.31 C  age=26 ms
+alt:  h=-0.18 m  P0=95111 Pa  seq=1480  age=26 ms
+diag:  seq=1480  age=41 ms  valid=1  published=1480
+[     74.51 s] seq=1490  P=95111 Pa  T=23.31 C  age=26 ms
+alt:  h=0.00 m  P0=95111 Pa  seq=1490  age=26 ms
+[     75.01 s] seq=1500  P=95110 Pa  T=23.31 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=1500  age=26 ms
+diag:  seq=1500  age=41 ms  valid=1  published=1500
+[     75.51 s] seq=1510  P=95110 Pa  T=23.31 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=1510  age=26 ms
+[     76.01 s] seq=1520  P=95110 Pa  T=23.31 C  age=26 ms
+alt:  h=0.09 m  P0=95111 Pa  seq=1520  age=26 ms
+diag:  seq=1520  age=41 ms  valid=1  published=1520
+[     76.51 s] seq=1530  P=95109 Pa  T=23.31 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=1530  age=26 ms
+[     77.01 s] seq=1540  P=95109 Pa  T=23.31 C  age=26 ms
+alt:  h=0.18 m  P0=95111 Pa  seq=1540  age=26 ms
+diag:  seq=1540  age=42 ms  valid=1  published=1540
+*** Booting Zephyr OS build v4.4.2 ***
+ERROR: bmp280@76 not ready. Check 3V3, GND, SDA=PF0, SCL=PF1, CSB->3V3, SDO->GND (address 0x76 = SDO low, 0x77 = SDO high).
+led:  [      0.502] off
+*** Booting Zephyr OS build v4.4.2 ***
+ERROR: bmp280@76 not ready. Check 3V3, GND, SDA=PF0, SCL=PF1, CSB->3V3, SDO->GND (address 0x76 = SDO low, 0x77 = SDO high).
+led:  [      0.502] off

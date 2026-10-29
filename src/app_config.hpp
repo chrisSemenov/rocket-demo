@@ -23,6 +23,9 @@ constexpr int kDiagPeriodMs = 1000;
 /* Altitude reads the measurement store at the acquisition rate. */
 constexpr int kAltitudePeriodMs = 50;
 
+/* LED manager: how often it re-evaluates the requests. */
+constexpr int kLedUpdatePeriodMs = 10;
+
 /*
  * Baseline calibration: mean pressure over a stationary window, then frozen.
  * 20 Pa is about 1.7 m at this altitude (dP/dh ~= 11.5 Pa/m), well above the
@@ -52,14 +55,18 @@ constexpr std::size_t kDiagStackBytes = 1024;
  * thread room for the window plus printk on the calibration path.
  */
 constexpr std::size_t kAltitudeStackBytes = 2048;
+constexpr std::size_t kLedStackBytes = 1024;
 
 /*
- * Lower number = higher priority. The sensor thread must preempt both console
- * consumers, otherwise a slow printk could push the 50 ms deadline. Altitude
- * sits between them: it consumes every sample but never prints.
+ * Lower number = higher priority. The sensor thread must preempt every
+ * consumer, otherwise a slow printk could push the 50 ms deadline. Altitude
+ * consumes every sample but never prints; the LED manager prints only on a
+ * transition, and sits below altitude so a blink decision cannot delay a
+ * height calculation.
  */
 constexpr int kSensorPriority = 5;
 constexpr int kAltitudePriority = 6;
+constexpr int kLedPriority = 7;
 constexpr int kTelemetryPriority = 8;
 constexpr int kDiagPriority = 9;
 

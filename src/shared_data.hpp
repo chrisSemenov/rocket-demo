@@ -4,6 +4,8 @@
 
 #include <cstdint>
 
+#include "led_logic.hpp"
+
 /*
  * One coherent acquisition: pressure, temperature, timestamp and sequence are
  * published together, so a reader can never pair pressure from one sample with
@@ -94,3 +96,33 @@ private:
 };
 
 AltitudeStore &altitude_data();
+
+/*
+ * The two LED requests, in one snapshot so the manager sees a coherent pair.
+ * Deployment and heat have different writers (apogee, temperature monitor), but
+ * each has its own publish method that takes the lock, so neither does a
+ * read-modify-write across the other.
+ *
+ * The deployment event is latched here: the first accepted event sets the
+ * deadline and later ones are ignored, so no amount of descending samples can
+ * extend the indication (FLT-04, LED-06).
+ */
+class LedRequestStore {
+public:
+	void init();
+
+	void request_deployment(int64_t event_ms, int64_t deadline_ms);
+	bool request_heat(int64_t start_ms, int64_t deadline_ms);
+	void clear_heat();
+
+	void read(led::Request &out);
+	uint32_t deployment_events();
+
+private:
+	struct k_mutex lock_;
+	led::Request request_;
+	uint32_t deployment_events_;
+	bool ready_;
+};
+
+LedRequestStore &led_requests();

@@ -1,35 +1,18 @@
 #include "app_config.hpp"
 #include "altitude_task.hpp"
 #include "diag_task.hpp"
+#include "led_manager.hpp"
 #include "sensor_task.hpp"
 #include "shared_data.hpp"
 #include "telemetry_task.hpp"
 
+#if defined(APP_LED_SELFTEST)
+#include "led_selftest.hpp"
+#endif
+
 #include <zephyr/device.h>
-#include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
-
-namespace {
-
-const gpio_dt_spec kLed = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
-
-bool configure_led()
-{
-	if (!gpio_is_ready_dt(&kLed)) {
-		printk("ERROR: LED device not ready\n");
-		return false;
-	}
-
-	if (gpio_pin_configure_dt(&kLed, GPIO_OUTPUT_INACTIVE) < 0) {
-		printk("ERROR: LED configuration failed\n");
-		return false;
-	}
-
-	return true;
-}
-
-} // namespace
 
 /*
  * Startup only: bring up shared state, start the threads, then idle. No
@@ -39,7 +22,12 @@ int main(void)
 {
 	sensor_data().init();
 	altitude_data().init();
-	const bool led_ok = configure_led();
+	led_requests().init();
+
+	/* The LED manager owns the pin; a failure is reported but not fatal. */
+	if (!led_manager_start()) {
+		printk("WARNING: LED indication unavailable; everything else runs\n");
+	}
 
 	if (!sensor_task_start()) {
 		printk("ERROR: %s not ready. Check 3V3, GND, SDA=PF0, SCL=PF1, "
@@ -57,22 +45,20 @@ int main(void)
 	altitude_task_start();
 	diag_task_start();
 
+#if defined(APP_LED_SELFTEST)
+	led_selftest_start();
+	printk("TEST MODE: LED SELFTEST is active, requests are scripted\n");
+#endif
+
 	printk("BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x,"
 	       " %d ms period\n", cfg::kSamplePeriodMs);
-	printk("threads: sensor(prio %d) altitude(%d) telemetry(%d) diag(%d);"
+	printk("threads: sensor(%d) altitude(%d) led(%d) telemetry(%d) diag(%d);"
 	       " stale timeout %d ms\n", cfg::kSensorPriority,
-	       cfg::kAltitudePriority, cfg::kTelemetryPriority,
-	       cfg::kDiagPriority, cfg::kStaleTimeoutMs);
+	       cfg::kAltitudePriority, cfg::kLedPriority,
+	       cfg::kTelemetryPriority, cfg::kDiagPriority, cfg::kStaleTimeoutMs);
 
-	/*
-	 * Temporary liveness heartbeat on PC13. Removed when the LED manager
-	 * becomes the only LED writer in the next milestone.
-	 */
+	/* All work is in the threads now; main has nothing left to do. */
 	for (;;) {
-		k_msleep(500);
-
-		if (led_ok) {
-			(void)gpio_pin_toggle_dt(&kLed);
-		}
+		k_msleep(1000);
 	}
 }

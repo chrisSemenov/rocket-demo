@@ -1,6 +1,6 @@
 # Rocket Flight Controller Demo
 
-A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/temperature sensor, and Zephyr RTOS. Sensor acquisition, altitude, apogee detection and temperature monitoring are separate threads; measurement data moves through synchronized shared memory, and a single LED manager owns the output priority. Acquisition, the shared-memory contract and relative altitude are implemented and verified; apogee detection and the LED behaviours are not yet. Deployment is simulated **only by the board LED**; this is not flight-ready or safety-certified firmware.
+A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/temperature sensor, and Zephyr RTOS. Sensor acquisition, altitude, apogee detection and temperature monitoring are separate threads; measurement data moves through synchronized shared memory, and a single LED manager owns the output priority. Acquisition, the shared-memory contract, relative altitude and the LED arbitration are implemented and verified; apogee detection and the temperature alarm are not yet. Deployment is simulated **only by the board LED**; this is not flight-ready or safety-certified firmware.
 
 ## Current status
 
@@ -12,7 +12,8 @@ A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/tempe
 - **Acquisition is its own thread (M4, verified on hardware):** `sensor` owns the BMP280 and the only I²C traffic, fetches on a 50 ms absolute deadline, and publishes a complete snapshot. Measured over 2 750 samples: fetch 24 ms, interval 50 ms, zero overruns, zero errors. Evidence: [docs/verification/at-02-live-acquisition.md](docs/verification/at-02-live-acquisition.md); the failure path is covered in [m4-absent-sensor.md](docs/verification/m4-absent-sensor.md).
 - **Shared memory is synchronized (M5, verified on hardware):** readers copy a `Measurement` out of `SensorDataStore` under a mutex and never consume it, so the 500 ms telemetry consumer and an independent 1 s reader observe the same sequence at their own rates. Evidence: [docs/verification/m5-shared-memory.md](docs/verification/m5-shared-memory.md).
 - **Altitude is calculated and published (M6, verified on hardware):** a separate `altitude` thread reads the measurement snapshot, freezes a baseline `P₀` after 2 s of stationary pressure, and publishes a separate `AltitudeStore`. The maths is unit-tested on the host against independently computed references. Evidence: [docs/verification/at-03-altitude.md](docs/verification/at-03-altitude.md).
-- **Not implemented yet:** apogee detection, temperature monitoring, the LED priority manager, and the acceptance test suite.
+- **The LED has a single owner (M7, verified on hardware):** `led_manager` is the only writer of PC13. It arbitrates heat blink > deployment ON > off from a pure function, and the deployment deadline is latched once. Measured: 250 ms half-period, 10 s indication, 11–21 ms request latency. Evidence: [docs/verification/led-manager.md](docs/verification/led-manager.md).
+- **Not implemented yet:** apogee detection, temperature monitoring, and the acceptance test suite.
 
 ## Hardware and known board detail
 
@@ -204,6 +205,58 @@ Seventeen checks: seven reference pairs computed independently in 40-digit
 decimal arithmetic (1 cm tolerance), monotonicity, integer/metre agreement, and
 six rejection cases. Nothing is verified by calling the same code twice.
 
+## LED indication
+
+One thread owns the LED. Nothing else writes the pin; the other tasks publish
+*requests* and the manager decides. That is what makes priority enforceable
+rather than a race between two `gpio_pin_set_dt()` calls.
+
+| Priority | Condition | Output |
+|---|---|---|
+| 1 | heat alarm active | 250 ms on / 250 ms off, 500 ms period |
+| 2 | deployment, deadline not reached | steady on for 10 s from the event |
+| 3 | — | off |
+
+Rules that make the overlap cases behave:
+
+- **Deadlines are absolute and set once.** Apogee sets `event + 10 s`; the
+  manager only reads it. Heat can take the output for seconds without pausing,
+  extending or restarting the deployment clock.
+- **The latch lives in the store.** The first accepted deployment sets the
+  deadline; later requests are ignored inside `LedRequestStore`, so a producer
+  bug cannot extend the indication either.
+- **Blink phase is anchored to the alarm start**, not to when the loop runs, so
+  the 250 ms grid cannot drift if a period is late.
+- **Windows are half-open**: active while `start <= now < deadline`. At the
+  deadline instant the condition is already over — one documented rule, tested
+  at exactly that instant.
+- **Heat renewal keeps the original start** and only moves the deadline, so
+  extending an alarm does not make the LED jump.
+
+The decision itself is a pure function, `led::decide(now_ms, request)`, in
+`src/led_logic.cpp`. It has no clock, GPIO or Zephyr dependency, so the 10- and
+5-second windows are stepped through instantly in tests:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
+```
+
+### Watching the sequence without flight logic
+
+The arbitration can be exercised on the board before apogee and the temperature
+monitor exist. Build with the self-test option and the firmware publishes
+scripted requests through the real stores:
+
+```powershell
+west build -p always -b olimex_stm32_h407 -d build/selftest . -- -DAPP_LED_SELFTEST=ON
+```
+
+It prints `TEST MODE: LED SELFTEST is active` at boot and runs an eight-step,
+~30 s sequence: deployment, heat override, early cooling, expiry, heat alone,
+early cooling, heat to the end of the window, and a second deployment request
+that must be ignored. This is a test build only; it is off by default and the
+released image never contains it.
+
 ## Console output over ST-Link only
 
 There is no USB-UART adapter, so `printk()` goes to a **SEGGER RTT** ring buffer in RAM (`CONFIG_USE_SEGGER_RTT`, `CONFIG_RTT_CONSOLE`) that is read over the existing SWD connection. Two helper tools wrap the whole procedure: `tools\rtt-session.ps1` starts OpenOCD, and `tools\rtt-view.py` prints the stream.
@@ -225,20 +278,21 @@ Captured from the board:
 ```
 *** Booting Zephyr OS build v4.4.2 ***
 BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x, 50 ms period
-threads: sensor(prio 5) altitude(6) telemetry(8) diag(9); stale timeout 250 ms
+threads: sensor(5) altitude(6) led(7) telemetry(8) diag(9); stale timeout 250 ms
+led:  [      0.011] off
 telemetry: no valid measurement yet (error=0)
 alt:  not available yet (baseline 0/38 samples)
 diag:  seq=0  age=-1 ms  valid=0  published=0
-[      0.51 s] seq=10  P=95062 Pa  T=22.24 C  age=26 ms
+[      0.51 s] seq=10  P=95111 Pa  T=23.24 C  age=26 ms
 alt:  not available yet (baseline 10/38 samples)
-[      1.01 s] seq=20  P=95062 Pa  T=22.24 C  age=26 ms
+[      1.01 s] seq=20  P=95111 Pa  T=23.25 C  age=26 ms
 diag:  seq=20  age=26 ms  valid=1  published=20
-alt:  baseline frozen P0=95062 Pa after 38 samples (spread 8 Pa)
-[      2.01 s] seq=40  P=95060 Pa  T=22.25 C  age=26 ms
-alt:  h=0.18 m  P0=95062 Pa  seq=40  age=26 ms
+alt:  baseline frozen P0=95110 Pa after 38 samples (spread 5 Pa)
+[      2.01 s] seq=40  P=95109 Pa  T=23.26 C  age=26 ms
+alt:  h=0.09 m  P0=95110 Pa  seq=40  age=26 ms
 diag:  seq=40  age=26 ms  valid=1  published=40
 ...
-stats: 2200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=2390
+stats: 1800 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=1990
 ```
 
 Each telemetry line carries the values, the acquisition timestamp's `age` (how old the
@@ -258,13 +312,14 @@ the same sample at their own rates.
 |---|---|---|---|---|
 | `sensor` | 50 ms, absolute deadline | 5 | 2048 B | Fetch, timestamp, publish; count errors and overruns; publish timing stats |
 | `altitude` | 50 ms, absolute deadline | 6 | 2048 B | Read a measurement copy, calibrate `P₀`, publish altitude; never prints |
-| `telemetry` | 500 ms | 8 | 1024 B | Read both stores, print samples, altitude and the ten-second `stats:` line |
+| `led` | 10 ms | 7 | 1024 B | Read the request snapshot, arbitrate, write PC13; prints only on a transition |
+| `telemetry` | 500 ms | 8 | 1024 B | Read the stores, print samples, altitude and the ten-second `stats:` line |
 | `diag` | 1000 ms | 9 | 1024 B | Second independent reader (temporary) |
 
 Lower number means higher priority, so the sensor thread preempts every consumer and a
 stalled `printk` under RTT back-pressure cannot push the 50 ms deadline. Altitude sits at 6
-— above the console, below the sensor — because it consumes every sample but never prints.
-`main` only initialises the stores, starts the threads and idles.
+and the LED at 7 — above the console, below the sensor. `main` only initialises the stores,
+starts the threads and idles.
 
 The contract is small and enforced by the API rather than by convention:
 
@@ -289,7 +344,7 @@ and **[docs/decisions.md](docs/decisions.md)**.
 - Zephyr/West workspace: `C:\Users\ChristianSemenov\zephyrproject` (Zephyr 4.4.2 in `deps\zephyr`).
 - Toolchain: `C:\zephyr-sdk-1.0.1`; Zephyr Workbench host tools environment: `%USERPROFILE%\.zinstaller\env.ps1`.
 - Workbench application board: `olimex_stm32_h407`; configuration name: `primary`.
-- C++ sources live in `src/`: `main.cpp` (startup), `shared_data.cpp` (the stores), `altitude.cpp` (the pure calculation), and one file per thread (`sensor_task.cpp`, `altitude_task.cpp`, `telemetry_task.cpp`, `diag_task.cpp`); `app_config.hpp` holds the timing, stack and priority constants. Host tests live in `tests/` and need no board. `prj.conf` enables `CONFIG_CPP=y` and `CONFIG_STD_CPP17=y`.
+- C++ sources live in `src/`: `main.cpp` (startup), `shared_data.cpp` (the stores), the pure units `altitude.cpp` and `led_logic.cpp`, and one file per thread (`sensor_task.cpp`, `altitude_task.cpp`, `led_manager.cpp`, `telemetry_task.cpp`, `diag_task.cpp`); `app_config.hpp` holds the timing, stack and priority constants. `led_selftest.cpp` is only compiled when `APP_LED_SELFTEST=ON`. Host tests live in `tests/` and need no board. `prj.conf` enables `CONFIG_CPP=y` and `CONFIG_STD_CPP17=y`.
 - Zephyr builds C++ with `-nostdinc++` against its minimal C++ library, so `<cmath>` is unavailable; `altitude.cpp` uses picolibc's `<math.h>` (`expm1`, `log1p`).
 - This repository is a freestanding application: it uses the separate West workspace and SDK; it does not contain Zephyr itself. `.vscode/settings.json` currently includes machine-specific relative paths, so a different machine must select its own workspace and SDK.
 - The existing build output under `build/` is ignored by Git and should be regenerated locally.
@@ -317,21 +372,20 @@ For debugging, select **Zephyr Workbench Debug [primary]** in VS Code's Run and 
 
 ## Next steps
 
-Live acquisition, the synchronized shared-memory path and relative altitude are verified on
-hardware. **The next milestone is the LED manager**, which is also the piece that removes
-the temporary heartbeat from `main()`.
+Live acquisition, the synchronized shared-memory path, relative altitude and the LED
+arbitration are verified on hardware. **The next milestone is apogee detection**, which is
+the first real producer of a deployment request.
 
-1. Add the single-owner LED manager: a pure decision function over (`now`, deployment
-   request, heat request) with absolute deadlines, so it can be tested without hardware.
-2. Add apogee detection: 750 ms history of altitude, negative average velocity above a
-   configurable minimum, latched once per flight.
-3. Add the temperature monitor, then verify the overlap cases (heat overriding deployment,
-   cooling before and after the original deadline).
-4. Build the replay harness so synthetic traces enter at the measurement publisher, and
+1. Add apogee detection: 750 ms history of altitude, negative average velocity above a
+   configurable minimum, latched once per flight, publishing into `LedRequestStore`.
+2. Add the temperature monitor, which publishes the heat request and owns the 5 s
+   renewal/cooling policy.
+3. Choose the altitude and temperature thresholds from the baseline we now have.
+4. Build the replay harness so synthetic traces enter at the measurement publisher, then
    record the acceptance scenarios.
 
-Known limitation: apogee detection, the temperature monitor and the LED manager are not
-implemented. The LED is currently a bare 500 ms heartbeat in `main`, and the `diag` thread is
+Known limitation: apogee detection and the temperature alarm are not implemented, so the
+`led:` thread currently has no producer other than the self-test build. The `diag` thread is
 a temporary reader. Altitude is relative to a bench-measured `P₀`; absolute accuracy is
 ±1 hPa (≈ ±8 m). A real change was observed once (+1.42 m from a 16 Pa drop, matching
 11 Pa/m), but it was an uncontrolled hand movement, not a metered step.

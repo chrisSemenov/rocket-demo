@@ -15,16 +15,29 @@ if (-not $compiler) {
     throw 'g++ not found on PATH. Install a host C++ compiler or add it to PATH.'
 }
 
-$exe = Join-Path $outDir 'altitude_test.exe'
+$suites = @(
+    @{ Name = 'altitude'; Test = 'altitude_test.cpp'; Sources = @('src\altitude.cpp') },
+    @{ Name = 'led'; Test = 'led_logic_test.cpp'; Sources = @('src\led_logic.cpp') }
+)
 
-& $compiler.Source -std=c++17 -O2 -Wall -Wextra -Werror `
-    -o $exe `
-    (Join-Path $PSScriptRoot 'altitude_test.cpp') `
-    (Join-Path $root 'src\altitude.cpp')
+$failed = 0
 
-if ($LASTEXITCODE -ne 0) {
-    throw "Compilation failed (exit $LASTEXITCODE)"
+foreach ($suite in $suites) {
+    $exe = Join-Path $outDir ("{0}_test.exe" -f $suite.Name)
+    $sources = @($suite.Sources | ForEach-Object { Join-Path $root $_ })
+    $testFile = Join-Path $PSScriptRoot $suite.Test
+
+    Write-Host ("=== {0} ===" -f $suite.Test)
+
+    & $compiler.Source -std=c++17 -O2 -Wall -Wextra -Werror -o $exe $testFile $sources
+    if ($LASTEXITCODE -ne 0) {
+        throw ("Compilation failed: {0} (exit {1})" -f $suite.Test, $LASTEXITCODE)
+    }
+
+    & $exe
+    if ($LASTEXITCODE -ne 0) {
+        $failed = 1
+    }
 }
 
-& $exe
-exit $LASTEXITCODE
+exit $failed

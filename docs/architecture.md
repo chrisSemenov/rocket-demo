@@ -29,7 +29,19 @@ store at their own rate and a read never removes anything.
                  +-------------------+
                  | AltitudeStore     |<------- telemetry thread   prints
                  | altitude_cm       |<------- apogee thread      (next milestone)
-                 | calibrated        |<------- LED manager        (next milestone)
+                 | calibrated        |<------- LED manager        (only on request)
+                 +-------------------+
+
+                 +-------------------+        request_deployment()
+                 | LedRequestStore   |<------- apogee thread      (next milestone)
+                 | deployment        |<------- temperature thread (next milestone)
+                 | heat              |          request_heat()
+                 +---------+---------+
+                           | read(led::Request)
+                           v
+                 +-------------------+
+                 | led_manager       |  10 ms, sole owner of PC13
+                 | priority 7        |
                  +-------------------+
 ```
 
@@ -41,23 +53,24 @@ depends on the sensor thread directly.
 Next stages, in implementation order:
 
 ```text
-Measurement ---> altitude thread ---> AltitudeStore ---> apogee detector   [altitude done]
+Measurement ---> altitude thread ---> AltitudeStore ---> apogee detector   [done]
                                                     \--> (history, 750 ms avg)
-Temperature ---> temperature monitor ---> LED request
-Apogee -------> deployment request ----> LED request
-LED request ---> LED manager thread ---> PC13
+Apogee --------> deployment request ----> LedRequestStore   [manager done]
+Temperature ---> temperature monitor ---> LedRequestStore
+LedRequestStore -> led manager thread --> PC13
 ```
 
 ## Threads
 
 | Thread | Period | Priority | Stack | Responsibility |
 |---|---|---|---|---|
-| `main` | — | 0 | default | Initialise stores, start threads, then idle with a temporary LED heartbeat |
+| `main` | — | 0 | default | Initialise stores, start the threads, then idle |
 | `sensor` | 50 ms, absolute deadline | 5 | 2048 B | Fetch, timestamp, publish; count errors and overruns; publish timing stats |
 | `altitude` | 50 ms, absolute deadline | 6 | 2048 B | Read a measurement copy, calibrate `P₀`, compute altitude, publish a separate snapshot; never prints |
-| `telemetry` | 500 ms | 8 | 1024 B | Read both stores, print samples, altitude and the ten-second stats line |
+| `led` | 10 ms | 7 | 1024 B | Read the request snapshot, arbitrate, write PC13; prints only on a transition |
+| `telemetry` | 500 ms | 8 | 1024 B | Read the stores, print samples, altitude and the ten-second stats line |
 | `diag` | 1000 ms | 9 | 1024 B | Independent reader proving reads do not consume; replaced by a real consumer later |
-| apogee, temperature, LED manager | — | — | — | Added in later milestones |
+| apogee, temperature | — | — | — | Added in later milestones; they only publish requests |
 
 Priority, not period, is what protects the acquisition rate: the sensor thread
 preempts every consumer, so a stalled `printk` (RTT back-pressure) cannot move the
