@@ -118,6 +118,7 @@ void LedRequestStore::init()
 
 	request_ = led::Request{false, 0, false, 0, 0};
 	deployment_events_ = 0;
+	ready_signalled_ = false;
 	ready_ = true;
 }
 
@@ -164,6 +165,24 @@ void LedRequestStore::clear_heat()
 	k_mutex_lock(&lock_, K_FOREVER);
 	request_.heat_active = false;
 	k_mutex_unlock(&lock_);
+}
+
+void LedRequestStore::signal_ready()
+{
+	k_mutex_lock(&lock_, K_FOREVER);
+	ready_signalled_ = true;
+	k_mutex_unlock(&lock_);
+}
+
+bool LedRequestStore::take_ready()
+{
+	k_mutex_lock(&lock_, K_FOREVER);
+	const bool signalled = ready_signalled_;
+
+	ready_signalled_ = false;
+	k_mutex_unlock(&lock_);
+
+	return signalled;
 }
 
 void LedRequestStore::read(led::Request &out)

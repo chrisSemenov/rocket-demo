@@ -46,16 +46,26 @@ the repository root.
 | Precision | Publish cm | 1 cm against ~0.9 m of observed baseline noise |
 | Testability | Pure function in `src/altitude.cpp`, host tests in `tests/` | Checks the maths against independent references without a board |
 
-## Flight logic (to be implemented with the apogee and temperature tasks)
+## Flight logic (implemented)
 
 | Decision | Value | Why |
 |---|---|---|
-| Trigger | Current altitude above the configured minimum **and** negative average velocity over the preceding 750 ms | Literal reading of FLT-03, no extra arming rule |
-| Velocity | `(h_now − h(t−750 ms)) / 0.750`, boundary interpolated by timestamp | Timestamps, not sample counts; 50 ms divides 750 but cadence gaps still occur |
-| Trigger repeat | Latched once per flight; the deployment deadline is set once | FLT-04, FLT-05 |
+| Trigger | Current altitude at or above the minimum **and** average velocity over the preceding 750 ms at or below -0.30 m/s | FLT-03, with a small noise guard above "negative" |
+| Velocity | Least-squares slope of altitude over the preceding 750 ms, using every sample in the window | Timestamps, not sample counts; 50 ms divides 750 but cadence gaps still occur. A slope is the average rate, and one spike cannot move it |
+| Trigger condition | Strictly negative and at least the margin below zero | "v <= 0" would treat a flat trace as descending, which matters when the margin is configured as 0 |
+| History | Fixed 32 samples in the detector, evicted by timestamp after 2 s | Processing state owned by the apogee thread, not a second shared store |
+| Duplicates | Repeated sequence numbers are ignored | The consumer polls faster than the producer publishes |
+| Gaps | A hole longer than the stale timeout clears the window | A 750 ms estimate cannot be defended across an outage |
+| Threshold | 1.50 m (`CONFIG_APP_APOGEE_MIN_ALT_CM`) | About twice the observed altitude noise; a bench value, documented as such |
+| Descent margin | 0.30 m/s (`CONFIG_APP_APOGEE_MIN_DESCENT_MM_S`) | Noise guard only: a 0.3 m/s trailing average is reached ~0.41 s / 0.8 m after apogee, so a larger margin would delay detection. Ours, not the assignment's |
+| Bench preset | `bench.conf`: altitude 50 cm, margin 0.60 m/s | The lab's air drift reaches 0.55 m/s, so the bench needs a *larger* margin than flight and a lower altitude gate; layered in at build time, never a default |
+| Configuration | Kconfig symbols in `prj.conf`, compiled in | Satisfies "configurable" without adding a runtime command path or a second writer |
+| Ready indication | Two 100 ms flashes once the window is full, gated on no active request; `CONFIG_APP_READY_INDICATION` | Without a console, this is the only way to know the chain is armed. Documented as a boot aid, not an assignment behaviour |
+| Trigger repeat | Latched permanently in the detector; the store also refuses a second event | FLT-04, FLT-05 enforced twice, at the decision and at the state |
+| Event time | The triggering sample's timestamp; deadline = event + 10 s | Deterministic and testable; the visible indication starts within ~30 ms |
 | Heat alarm | 5 s window started on detection, renewed while still hot, cancelled immediately on cooling | Resolves the assignment's ambiguity; early cooling truncates the window and returns control to deployment |
 | LED priority | Active heat blink > unexpired deployment ON > OFF | LED-04, LED-05 |
-| Thresholds | Configurable constants; bench values set after a baseline measurement | FLT-02, LED-02 |
+| Thresholds | Configurable Kconfig symbols (`CONFIG_APP_APOGEE_MIN_ALT_CM`, `CONFIG_APP_APOGEE_MIN_DESCENT_MM_S`); bench values set after a baseline measurement | FLT-02, LED-02. Changing them is a rebuild, not a code edit |
 | Reset | One flight per boot/reset; a reset clears calibration, history and the deployment latch | Checklist 2.2; avoids a partial re-arm |
 | Replay | Traces enter at the measurement publisher, never at the LED | Keeps the tested path identical to live operation (checklist 10.1) |
 
@@ -78,8 +88,8 @@ the repository root.
 
 | Decision | Value | Why |
 |---|---|---|
-| Threads | `sensor`, `altitude`, `led`, `telemetry`, `diag` now; apogee, temperature to follow | SYS-01 |
-| Priorities | sensor 5, altitude 6, led 7, telemetry 8, diag 9 (lower number = higher priority) | The sensor must preempt everything so printk cannot push the 50 ms deadline; altitude outranks the LED so a blink decision cannot delay a height calculation |
-| Stacks | sensor 2048 B, altitude 2048 B, led 1024 B, telemetry 1024 B, diag 1024 B | Sized for the driver, the 768 B baseline window and printk paths; see `docs/architecture.md`. A 1024 B altitude stack overflowed on the first flash and tripped the MPU |
+| Threads | `sensor`, `altitude`, `apogee`, `led`, `telemetry`, `diag` now; temperature to follow | SYS-01 |
+| Priorities | sensor 5, altitude 6, apogee 7, led 8, telemetry 9, diag 10 (lower number = higher priority) | The sensor must preempt everything so printk cannot push the 50 ms deadline; altitude outranks apogee so a decision is never made on a stale estimate; the LED and console sit below both |
+| Stacks | sensor 2048 B, altitude 2048 B, apogee 2048 B, led 1024 B, telemetry 1024 B, diag 1024 B | Sized for the driver, the 768 B baseline window, the 32-entry history and printk paths. A 1024 B altitude stack overflowed on the first flash and tripped the MPU |
 | Console logging | Producers publish; consumers print; the LED manager prints only on a transition | The acquisition thread never blocks on RTT. The RTT up-buffer is 8 KB because 2 KB overran under the LED self-test |
 | LED ownership | `led_manager` is the only writer; the temporary heartbeat loop is removed | Checklist 7; prevents competing GPIO writes |

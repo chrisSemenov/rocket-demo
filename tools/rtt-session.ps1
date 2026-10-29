@@ -44,7 +44,8 @@ param(
     [switch]$Flash,
     [string]$Port = '9090',
     [int]$StartupDelayMs = 1000,
-    [switch]$DryRun
+    [switch]$DryRun,
+    [string]$BuildDir = 'build\primary'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -53,7 +54,7 @@ $repo = Split-Path -Parent $PSScriptRoot
 $openocd = 'C:\zephyr-sdk-1.0.1\hosttools\openocd\bin\openocd.exe'
 $nm = 'C:\zephyr-sdk-1.0.1\gnu\arm-zephyr-eabi\bin\arm-zephyr-eabi-nm.exe'
 $cfg = Join-Path $repo 'openocd-stlink.cfg'
-$elf = Join-Path $repo 'build\primary\zephyr\zephyr.elf'
+$elf = Join-Path $repo (Join-Path $BuildDir 'zephyr\zephyr.elf')
 
 function Get-RttWindow {
     <#
@@ -106,7 +107,7 @@ function Get-RttWindow {
 if (-not (Test-Path -LiteralPath $openocd)) { throw "OpenOCD not found: $openocd" }
 if (-not (Test-Path -LiteralPath $cfg)) { throw "ST-Link config not found: $cfg" }
 if ($Flash -and -not (Test-Path -LiteralPath $elf)) {
-    throw "Firmware image not found: $elf`nBuild it first: west build -p always -b olimex_stm32_h407 -d build/primary ."
+    throw "Firmware image not found: $elf`nBuild it first: west build -p always -b olimex_stm32_h407 -d $BuildDir ."
 }
 
 $window = Get-RttWindow -ElfPath $elf -NmPath $nm

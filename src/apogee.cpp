@@ -1,0 +1,223 @@
+﻿#include "apogee.hpp"
+
+/* Zephyr's minimal C++ library has no <cstring>; the C header is available. */
+#include <string.h>
+
+namespace apogee {
+
+Detector::Detector(const Config &config)
+	: config_(config), count_(0), last_sequence_valid_(0), last_sequence_(0),
+	  state_(State::filling), velocity_mm_s_(0)
+{
+}
+
+void Detector::push(const Sample &sample)
+{
+	if (count_ == kCapacity) {
+		/* Drop the oldest; the window is time-bounded anyway. */
+		memmove(&samples_[0], &samples_[1],
+			     sizeof(Sample) * (kCapacity - 1));
+		--count_;
+	}
+
+	samples_[count_++] = sample;
+}
+
+void Detector::evict_older_than(int64_t newest_ms)
+{
+	int keep_from = 0;
+
+	while (keep_from < count_ &&
+	       newest_ms - samples_[keep_from].timestamp_ms > config_.history_ms) {
+		++keep_from;
+	}
+
+	if (keep_from == 0) {
+		return;
+	}
+
+	count_ -= keep_from;
+	memmove(&samples_[0], &samples_[keep_from], sizeof(Sample) * count_);
+}
+
+bool Detector::velocity_over_window(int64_t &out_target_ms,
+				    double &out_velocity_ms) const
+{
+	if (count_ < 2) {
+		return false;
+	}
+
+	const Sample &newest = samples_[count_ - 1];
+	const int64_t start_ts = newest.timestamp_ms - config_.window_ms;
+
+	if (samples_[0].timestamp_ms > start_ts) {
+		/* History does not reach back a full window yet. */
+		return false;
+	}
+
+	/* First sample inside the window. */
+	int first = 0;
+
+	while (first < count_ && samples_[first].timestamp_ms < start_ts) {
+		++first;
+	}
+
+	const int n = count_ - first;
+
+	if (n < 2) {
+		return false;
+	}
+
+	/*
+	 * Least-squares fit of altitude versus time over the window. The slope is
+	 * the average vertical velocity across those 750 ms, but it uses every
+	 * sample instead of two endpoints, which is roughly twice as quiet.
+	 */
+	const double t_ref = static_cast<double>(newest.timestamp_ms) / 1000.0;
+	double sum_x = 0.0;
+	double sum_y = 0.0;
+	double sum_xx = 0.0;
+	double sum_xy = 0.0;
+
+	for (int i = first; i < count_; ++i) {
+		const double x =
+			static_cast<double>(samples_[i].timestamp_ms) / 1000.0 - t_ref;
+		const double y = static_cast<double>(samples_[i].altitude_cm) / 100.0;
+
+		sum_x += x;
+		sum_y += y;
+		sum_xx += x * x;
+		sum_xy += x * y;
+	}
+
+	const double denominator =
+		static_cast<double>(n) * sum_xx - sum_x * sum_x;
+
+	if (!(denominator > 0.0)) {
+		/* Degenerate timestamps: refuse rather than divide by zero. */
+		return false;
+	}
+
+	out_velocity_ms = (static_cast<double>(n) * sum_xy - sum_x * sum_y) /
+			  denominator;
+	out_target_ms = start_ts;
+
+	return true;
+}
+
+Event Detector::on_sample(const Sample &sample)
+{
+	Event event{};
+
+	if (state_ == State::deployed) {
+		/* One deployment per flight: nothing can extend or repeat it. */
+		return event;
+	}
+
+	if (last_sequence_valid_ && sample.sequence == last_sequence_) {
+		/* The consumer polls at its own rate; the same sample is not new data. */
+		return event;
+	}
+
+	if (count_ > 0) {
+		const int64_t newest = samples_[count_ - 1].timestamp_ms;
+
+		if (sample.timestamp_ms <= newest) {
+			/* Out-of-order or repeated timestamp: reject rather than reorder. */
+			return event;
+		}
+
+		if (sample.timestamp_ms - newest > config_.max_gap_ms) {
+			/*
+			 * A hole this long cannot support a defensible 750 ms estimate:
+			 * start the window again from this sample.
+			 */
+			count_ = 0;
+			state_ = State::filling;
+		}
+	}
+
+	push(sample);
+	last_sequence_ = sample.sequence;
+	last_sequence_valid_ = 1;
+
+	evict_older_than(sample.timestamp_ms);
+
+	const Sample &newest = samples_[count_ - 1];
+
+	int64_t target = 0;
+	double velocity_ms = 0.0;
+
+	if (!velocity_over_window(target, velocity_ms)) {
+		state_ = State::filling;
+		return event;
+	}
+
+	velocity_mm_s_ = static_cast<int32_t>(velocity_ms * 1000.0 >= 0.0
+						     ? velocity_ms * 1000.0 + 0.5
+						     : velocity_ms * 1000.0 - 0.5);
+
+	if (state_ == State::filling) {
+		state_ = State::ready;
+	}
+
+	const bool high_enough = newest.altitude_cm >= config_.min_altitude_cm;
+
+	/*
+	 * Strictly negative, and at least the configured margin below zero. The
+	 * strictness matters when the margin is configured as 0: "v <= 0" would
+	 * treat a flat trace as descending.
+	 */
+	const bool descending = velocity_mm_s_ < 0 &&
+				velocity_mm_s_ <= -config_.min_descent_mm_s;
+
+	if (high_enough && descending) {
+		state_ = State::deployed;
+
+		event.deployed = true;
+		event.event_ms = newest.timestamp_ms;
+		event.deadline_ms = newest.timestamp_ms + kDeploymentIndicationMs;
+	}
+
+	return event;
+}
+
+State Detector::state() const
+{
+	return state_;
+}
+
+bool Detector::deployed() const
+{
+	return state_ == State::deployed;
+}
+
+int32_t Detector::velocity_mm_s() const
+{
+	return velocity_mm_s_;
+}
+
+int64_t Detector::coverage_ms() const
+{
+	if (count_ < 2) {
+		return 0;
+	}
+
+	return samples_[count_ - 1].timestamp_ms - samples_[0].timestamp_ms;
+}
+
+int Detector::samples() const
+{
+	return count_;
+}
+
+void Detector::reset()
+{
+	count_ = 0;
+	last_sequence_valid_ = 0;
+	last_sequence_ = 0;
+	state_ = State::filling;
+	velocity_mm_s_ = 0;
+}
+
+} // namespace apogee

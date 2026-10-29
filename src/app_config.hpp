@@ -23,6 +23,9 @@ constexpr int kDiagPeriodMs = 1000;
 /* Altitude reads the measurement store at the acquisition rate. */
 constexpr int kAltitudePeriodMs = 50;
 
+/* Apogee reads the altitude store at the same rate it is published. */
+constexpr int kApogeePeriodMs = 50;
+
 /* LED manager: how often it re-evaluates the requests. */
 constexpr int kLedUpdatePeriodMs = 10;
 
@@ -56,18 +59,19 @@ constexpr std::size_t kDiagStackBytes = 1024;
  */
 constexpr std::size_t kAltitudeStackBytes = 2048;
 constexpr std::size_t kLedStackBytes = 1024;
+constexpr std::size_t kApogeeStackBytes = 2048;
 
 /*
  * Lower number = higher priority. The sensor thread must preempt every
  * consumer, otherwise a slow printk could push the 50 ms deadline. Altitude
- * consumes every sample but never prints; the LED manager prints only on a
- * transition, and sits below altitude so a blink decision cannot delay a
- * height calculation.
+ * outranks apogee so a detection decision is never made on a stale estimate;
+ * the LED and the console sit below both.
  */
 constexpr int kSensorPriority = 5;
 constexpr int kAltitudePriority = 6;
-constexpr int kLedPriority = 7;
-constexpr int kTelemetryPriority = 8;
-constexpr int kDiagPriority = 9;
+constexpr int kApogeePriority = 7;
+constexpr int kLedPriority = 8;
+constexpr int kTelemetryPriority = 9;
+constexpr int kDiagPriority = 10;
 
 } // namespace cfg

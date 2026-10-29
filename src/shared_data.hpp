@@ -115,6 +115,14 @@ public:
 	bool request_heat(int64_t start_ms, int64_t deadline_ms);
 	void clear_heat();
 
+	/*
+	 * One-shot "the system is ready" flag. The apogee thread sets it once the
+	 * history is full; the LED manager takes it (read and clear) so the
+	 * indication happens a single time per boot.
+	 */
+	void signal_ready();
+	bool take_ready();
+
 	void read(led::Request &out);
 	uint32_t deployment_events();
 
@@ -122,6 +130,7 @@ private:
 	struct k_mutex lock_;
 	led::Request request_;
 	uint32_t deployment_events_;
+	bool ready_signalled_;
 	bool ready_;
 };
 

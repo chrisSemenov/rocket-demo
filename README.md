@@ -13,7 +13,8 @@ A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/tempe
 - **Shared memory is synchronized (M5, verified on hardware):** readers copy a `Measurement` out of `SensorDataStore` under a mutex and never consume it, so the 500 ms telemetry consumer and an independent 1 s reader observe the same sequence at their own rates. Evidence: [docs/verification/m5-shared-memory.md](docs/verification/m5-shared-memory.md).
 - **Altitude is calculated and published (M6, verified on hardware):** a separate `altitude` thread reads the measurement snapshot, freezes a baseline `P₀` after 2 s of stationary pressure, and publishes a separate `AltitudeStore`. The maths is unit-tested on the host against independently computed references. Evidence: [docs/verification/at-03-altitude.md](docs/verification/at-03-altitude.md).
 - **The LED has a single owner (M7, verified on hardware):** `led_manager` is the only writer of PC13. It arbitrates heat blink > deployment ON > off from a pure function, and the deployment deadline is latched once. Measured: 250 ms half-period, 10 s indication, 11–21 ms request latency. Evidence: [docs/verification/led-manager.md](docs/verification/led-manager.md).
-- **Not implemented yet:** apogee detection, temperature monitoring, and the acceptance test suite.
+- **Apogee detection is implemented (M8):** the `apogee` thread keeps its own 750 ms altitude window, triggers when the least-squares slope over that window is at or below -0.30 m/s while above 1.5 m, and publishes exactly one deployment request per flight. 33 host checks cover the trigger, gaps, duplicates and the latch; the live run shows no false trigger. Evidence: [docs/verification/at-04-at-06-apogee.md](docs/verification/at-04-at-06-apogee.md).
+- **Not implemented yet:** temperature monitoring and the acceptance test suite.
 
 ## Hardware and known board detail
 
@@ -205,6 +206,108 @@ Seventeen checks: seven reference pairs computed independently in 40-digit
 decimal arithmetic (1 cm tolerance), monotonicity, integer/metre agreement, and
 six rejection cases. Nothing is verified by calling the same code twice.
 
+## Apogee detection
+
+The `apogee` thread turns altitude into a deployment decision. It is a separate
+thread with its own history; it reads the altitude snapshot and publishes at most
+one request per flight.
+
+```
+v = least-squares slope of altitude over the last 750 ms
+deploy when  h(now) ≥ 1.50 m  and  v ≤ −0.30 m/s
+```
+
+Both conditions are required, and the event latches.
+
+### Why each piece exists
+
+| Piece | Reason |
+|---|---|
+| **750 ms window** | The assignment's descent criterion. Timestamp-based, so a missed sample does not silently shorten it. |
+| **Least-squares slope** | It uses all ~15 samples instead of two endpoints. Averages over the window, and a single spike cannot move it. |
+| **1.50 m minimum** | About twice the observed altitude noise (0.9 m peak-to-peak). Without it, a bench wobble at "altitude 0" could satisfy a negative velocity. |
+| **−0.30 m/s margin** | A noise guard, not a performance threshold. Falling from rest at apogee, a 0.3 m/s trailing average is reached **~0.41 s and ~0.8 m** below the peak. Larger margins only delay detection. |
+| **Fixed 32-sample history** | 1.6 s at 20 Hz — the 750 ms window plus bracketing. Owned by the thread, not a third shared store: nobody else needs it. |
+| **Duplicate rejection** | The thread polls at 50 ms, but a slow pass can read the same sequence twice. A repeated sequence is ignored, not counted as new flight data. |
+| **Gap handling** | A hole longer than the 250 ms stale timeout clears the window; the next decision needs 750 ms of fresh samples. |
+| **Latch** | Once deployed, the detector ignores everything and the request store refuses a second event. Two independent guards against FLT-04. |
+
+### What "negative average velocity" actually promises
+
+It is the average over 750 ms: the current altitude is lower than it was 750 ms
+ago. It does **not** mean every intermediate sample descended, and it does not
+identify the exact peak — a rocket that bounces slightly after apogee still
+satisfies it. That is what FLT-03 asks for, and the README does not claim more.
+
+### Configuring the trigger
+
+Two numbers are configurable, in `Kconfig` and `prj.conf`:
+
+```conf
+CONFIG_APP_APOGEE_MIN_ALT_CM=150
+CONFIG_APP_APOGEE_MIN_DESCENT_MM_S=300
+```
+
+A different build changes the behaviour without touching source:
+
+```powershell
+west build -p always -b olimex_stm32_h407 -d build/shortdrop . -- `
+  -DCONFIG_APP_APOGEE_MIN_ALT_CM=30 -DCONFIG_APP_APOGEE_MIN_DESCENT_MM_S=150
+```
+
+For a hand-performed test there is a ready-made preset, `bench.conf` (50 cm,
+0.60 m/s), which exists because room air drift reaches 0.55 m/s and would
+otherwise mask a hand move:
+
+```powershell
+west build -p always -b olimex_stm32_h407 -d build/bench . -- "-DEXTRA_CONF_FILE=bench.conf"
+```
+
+The helper script accepts the same build directory, so the bench image can be
+flashed (and streamed) with the usual procedure:
+
+```powershell
+C:\SCAE\projects\rocket-demo\tools\rtt-session.ps1 -Flash -BuildDir build\bench
+```
+
+Without `-BuildDir` it uses `build\primary`, which keeps the default image on the
+board.
+
+What is deliberately **not** configurable: the 750 ms window, the 10 s
+deployment indication, the 5 s alarm and the 500 ms blink period. Those are the
+behaviour the assignment specifies; making them tunable would let the demo drift
+away from the requirement.
+
+### Where the numbers came from
+
+This distinction matters, so it is stated rather than implied:
+
+| Value | Origin |
+|---|---|
+| A minimum altitude threshold | **Assignment** (FLT-02: "configurable minimum threshold") |
+| 750 ms averaging window | **Assignment** (FLT-03) |
+| Negative average velocity | **Assignment** (FLT-03) |
+| **1.50 m** | **Ours.** ~2× the measured altitude noise (0.89 m peak-to-peak), so noise alone cannot reach it |
+| **0.30 m/s** margin | **Ours.** A noise guard, deliberately small: it must not delay detection beyond ~0.4 s after apogee. The assignment only says "negative"; 0 is available via Kconfig |
+
+The margin is a deliberate tightening of the requirement, not a reading of it:
+without it, a stationary sensor would satisfy "negative" on noise. The measured
+numbers behind both choices are in
+[docs/verification/at-04-at-06-apogee.md](docs/verification/at-04-at-06-apogee.md).
+
+### Testing
+
+The detector is a pure unit in `src/apogee.cpp`, so the window, gaps, duplicates
+and latch are all exercised without hardware:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
+```
+
+33 checks, including the exact threshold (`150 cm` deploys, `149 cm` does not),
+an incomplete window, a 1 s outage, out-of-order timestamps and a second flight
+after `reset()`.
+
 ## LED indication
 
 One thread owns the LED. Nothing else writes the pin; the other tasks publish
@@ -216,6 +319,21 @@ rather than a race between two `gpio_pin_set_dt()` calls.
 | 1 | heat alarm active | 250 ms on / 250 ms off, 500 ms period |
 | 2 | deployment, deadline not reached | steady on for 10 s from the event |
 | 3 | — | off |
+
+Plus one **boot indication**, which is not an assignment behaviour: when the
+sensor is answering, the baseline is frozen and the 750 ms history is full, the
+LED flashes twice (100 ms on, 120 ms off, 100 ms on) and then stays off. It runs
+once per boot and only if no flight indication is active. Disable it with
+`CONFIG_APP_READY_INDICATION=n`.
+
+For an untethered run this is the only way to know the system is armed:
+
+| What you see | Meaning |
+|---|---|
+| two short flashes ~3 s after power-on, then dark | sensor OK, baseline frozen, detector armed |
+| no flashes at all | sensor not answering or calibration failed — nothing will trigger |
+| solid light | deployed; off after 10 s |
+| 250/250 blinking | overheating (M9, not implemented yet) |
 
 Rules that make the overlap cases behave:
 
@@ -312,14 +430,15 @@ the same sample at their own rates.
 |---|---|---|---|---|
 | `sensor` | 50 ms, absolute deadline | 5 | 2048 B | Fetch, timestamp, publish; count errors and overruns; publish timing stats |
 | `altitude` | 50 ms, absolute deadline | 6 | 2048 B | Read a measurement copy, calibrate `P₀`, publish altitude; never prints |
-| `led` | 10 ms | 7 | 1024 B | Read the request snapshot, arbitrate, write PC13; prints only on a transition |
-| `telemetry` | 500 ms | 8 | 1024 B | Read the stores, print samples, altitude and the ten-second `stats:` line |
-| `diag` | 1000 ms | 9 | 1024 B | Second independent reader (temporary) |
+| `apogee` | 50 ms | 7 | 2048 B | 750 ms window, deploy once when above the minimum and descending |
+| `led` | 10 ms | 8 | 1024 B | Read the request snapshot, arbitrate, write PC13; prints only on a transition |
+| `telemetry` | 500 ms | 9 | 1024 B | Read the stores, print samples, altitude and the ten-second `stats:` line |
+| `diag` | 1000 ms | 10 | 1024 B | Second independent reader (temporary) |
 
 Lower number means higher priority, so the sensor thread preempts every consumer and a
-stalled `printk` under RTT back-pressure cannot push the 50 ms deadline. Altitude sits at 6
-and the LED at 7 — above the console, below the sensor. `main` only initialises the stores,
-starts the threads and idles.
+stalled `printk` under RTT back-pressure cannot push the 50 ms deadline. Altitude outranks
+apogee, so a deployment decision is never made from a stale estimate; the LED and console
+sit below both. `main` only initialises the stores, starts the threads and idles.
 
 The contract is small and enforced by the API rather than by convention:
 
@@ -372,22 +491,22 @@ For debugging, select **Zephyr Workbench Debug [primary]** in VS Code's Run and 
 
 ## Next steps
 
-Live acquisition, the synchronized shared-memory path, relative altitude and the LED
-arbitration are verified on hardware. **The next milestone is apogee detection**, which is
-the first real producer of a deployment request.
+Live acquisition, the shared-memory path, relative altitude, the LED arbitration and apogee
+detection are implemented. **The next milestone is the temperature monitor**, which is the
+last producer in the assignment.
 
-1. Add apogee detection: 750 ms history of altitude, negative average velocity above a
-   configurable minimum, latched once per flight, publishing into `LedRequestStore`.
-2. Add the temperature monitor, which publishes the heat request and owns the 5 s
-   renewal/cooling policy.
-3. Choose the altitude and temperature thresholds from the baseline we now have.
-4. Build the replay harness so synthetic traces enter at the measurement publisher, then
-   record the acceptance scenarios.
+1. Add the temperature thread: configurable threshold, 5 s alarm window that renews while
+   hot and cancels on cooling, publishing a heat request into `LedRequestStore`.
+2. Run the overlap cases (heat over deployment, cooling before and after the original
+   deadline) as labelled on-target tests.
+3. Build the replay harness so synthetic traces enter at the measurement publisher — that
+   is what makes AT-04/05/06 reproducible, since a real ascent cannot be produced on a desk.
+4. Record the acceptance matrix and the demonstration video.
 
-Known limitation: apogee detection and the temperature alarm are not implemented, so the
-`led:` thread currently has no producer other than the self-test build. The `diag` thread is
-a temporary reader. Altitude is relative to a bench-measured `P₀`; absolute accuracy is
-±1 hPa (≈ ±8 m). A real change was observed once (+1.42 m from a 16 Pa drop, matching
-11 Pa/m), but it was an uncontrolled hand movement, not a metered step.
+Known limitation: the temperature monitor is not implemented, so the heat path is only
+exercised by the LED self-test build. Apogee detection has been verified by unit tests and
+runs live without false triggers, but no real ascent/descent has been produced on hardware;
+`Detector::reset()` exists and is tested, though the firmware still resets a flight only on
+power cycle.
 
 The detailed work plan and assignment/requirements currently live outside this repository at `G:\My Drive\Engineering\SCAE\Interview Test\`.

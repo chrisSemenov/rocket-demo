@@ -1,0 +1,52 @@
+# Application-specific configuration.
+#
+# This file is the Kconfig root for the application, so it must pull in
+# Zephyr's own tree first; otherwise every Zephyr symbol is undefined.
+#
+# These are the values that a reviewer or a test build is expected to change
+# without touching source. The 750 ms window, the 10 s deployment indication,
+# the 5 s alarm and the 500 ms blink period are *not* configurable: they are
+# the behaviour the assignment specifies.
+
+source "Kconfig.zephyr"
+
+menu "Rocket demo"
+
+config APP_APOGEE_MIN_ALT_CM
+	int "Minimum altitude above the baseline before deploying (cm)"
+	range 10 3000
+	default 150
+	help
+	  Threshold relative to the baseline P0 captured at start-up, not to sea
+	  level. 150 cm is about twice the altitude noise measured on the bench
+	  (0.9 m peak-to-peak). A bench value, not a flight value: a real vehicle
+	  would set this well above the ground handling envelope.
+
+config APP_APOGEE_MIN_DESCENT_MM_S
+	int "Minimum average descent over 750 ms (mm/s)"
+	range 0 20000
+	default 300
+	help
+	  How far below zero the 750 ms average velocity must be. 0 is the literal
+	  "becomes negative" of the assignment; 300 mm/s is a noise guard above it,
+	  not a performance threshold.
+
+	  Timing: falling from rest at apogee, a 0.3 m/s trailing average is
+	  reached about 0.41 s later, roughly 0.8 m below the peak. Raising this
+	  value delays detection; it does not improve it in flight.
+
+	  Note that a moving vehicle is not a bench: in the lab, room air drift
+	  alone wanders by up to 0.55 m/s, which is why bench.conf needs a *larger*
+	  margin than this default.
+
+config APP_READY_INDICATION
+	bool "Flash the LED twice when the system is ready"
+	default y
+	help
+	  Once the sensor is answering, the baseline is frozen and the 750 ms
+	  history is full, flash the LED twice (100 ms on, 120 ms off, 100 ms on).
+	  This exists for untethered runs where no console is available.
+	  It is not part of the assignment's LED behaviour; disable it to keep the
+	  LED strictly for deployment and overheating.
+
+endmenu

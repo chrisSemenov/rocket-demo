@@ -1,5 +1,6 @@
 #include "app_config.hpp"
 #include "altitude_task.hpp"
+#include "apogee_task.hpp"
 #include "diag_task.hpp"
 #include "led_manager.hpp"
 #include "sensor_task.hpp"
@@ -43,6 +44,7 @@ int main(void)
 
 	telemetry_task_start();
 	altitude_task_start();
+	apogee_task_start();
 	diag_task_start();
 
 #if defined(APP_LED_SELFTEST)
@@ -52,9 +54,9 @@ int main(void)
 
 	printk("BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x,"
 	       " %d ms period\n", cfg::kSamplePeriodMs);
-	printk("threads: sensor(%d) altitude(%d) led(%d) telemetry(%d) diag(%d);"
-	       " stale timeout %d ms\n", cfg::kSensorPriority,
-	       cfg::kAltitudePriority, cfg::kLedPriority,
+	printk("threads: sensor(%d) altitude(%d) apogee(%d) led(%d) telemetry(%d)"
+	       " diag(%d); stale timeout %d ms\n", cfg::kSensorPriority,
+	       cfg::kAltitudePriority, cfg::kApogeePriority, cfg::kLedPriority,
 	       cfg::kTelemetryPriority, cfg::kDiagPriority, cfg::kStaleTimeoutMs);
 
 	/* All work is in the threads now; main has nothing left to do. */

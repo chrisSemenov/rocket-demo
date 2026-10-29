@@ -28,12 +28,19 @@ store at their own rate and a read never removes anything.
                            v
                  +-------------------+
                  | AltitudeStore     |<------- telemetry thread   prints
-                 | altitude_cm       |<------- apogee thread      (next milestone)
-                 | calibrated        |<------- LED manager        (only on request)
+                 | altitude_cm       |<------- apogee thread      consumes
+                 | calibrated        |
+                 +---------+---------+
+                           | read(Altitude)
+                           v
                  +-------------------+
-
+                 | apogee thread     |  750 ms window, latched once per flight
+                 | priority 7        |  publishes only on a deployment
+                 +---------+---------+
+                           | request_deployment(event, deadline)
+                           v
                  +-------------------+        request_deployment()
-                 | LedRequestStore   |<------- apogee thread      (next milestone)
+                 | LedRequestStore   |<------- apogee thread
                  | deployment        |<------- temperature thread (next milestone)
                  | heat              |          request_heat()
                  +---------+---------+
@@ -41,7 +48,7 @@ store at their own rate and a read never removes anything.
                            v
                  +-------------------+
                  | led_manager       |  10 ms, sole owner of PC13
-                 | priority 7        |
+                 | priority 8        |
                  +-------------------+
 ```
 
@@ -55,9 +62,9 @@ Next stages, in implementation order:
 ```text
 Measurement ---> altitude thread ---> AltitudeStore ---> apogee detector   [done]
                                                     \--> (history, 750 ms avg)
-Apogee --------> deployment request ----> LedRequestStore   [manager done]
-Temperature ---> temperature monitor ---> LedRequestStore
-LedRequestStore -> led manager thread --> PC13
+Apogee --------> deployment request ----> LedRequestStore   [done]
+Temperature ---> temperature monitor ---> LedRequestStore   [next]
+LedRequestStore -> led manager thread --> PC13              [done]
 ```
 
 ## Threads
@@ -67,10 +74,11 @@ LedRequestStore -> led manager thread --> PC13
 | `main` | — | 0 | default | Initialise stores, start the threads, then idle |
 | `sensor` | 50 ms, absolute deadline | 5 | 2048 B | Fetch, timestamp, publish; count errors and overruns; publish timing stats |
 | `altitude` | 50 ms, absolute deadline | 6 | 2048 B | Read a measurement copy, calibrate `P₀`, compute altitude, publish a separate snapshot; never prints |
-| `led` | 10 ms | 7 | 1024 B | Read the request snapshot, arbitrate, write PC13; prints only on a transition |
-| `telemetry` | 500 ms | 8 | 1024 B | Read the stores, print samples, altitude and the ten-second stats line |
-| `diag` | 1000 ms | 9 | 1024 B | Independent reader proving reads do not consume; replaced by a real consumer later |
-| apogee, temperature | — | — | — | Added in later milestones; they only publish requests |
+| `apogee` | 50 ms | 7 | 2048 B | Keep a 750 ms altitude window, detect descent above the minimum, publish one deployment request |
+| `led` | 10 ms | 8 | 1024 B | Read the request snapshot, arbitrate, write PC13; prints only on a transition |
+| `telemetry` | 500 ms | 9 | 1024 B | Read the stores, print samples, altitude and the ten-second stats line |
+| `diag` | 1000 ms | 10 | 1024 B | Independent reader proving reads do not consume; replaced by a real consumer later |
+| temperature | — | — | — | Next milestone; publishes a heat request only |
 
 Priority, not period, is what protects the acquisition rate: the sensor thread
 preempts every consumer, so a stalled `printk` (RTT back-pressure) cannot move the
