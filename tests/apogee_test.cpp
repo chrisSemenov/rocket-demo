@@ -301,6 +301,49 @@ int main()
 		check(f.events == 2, "a new flight can deploy again after reset");
 	}
 
+	/* 15. A lift cannot trigger: the peak follows the altitude. */
+	{
+		Feeder f;
+		f.ramp(0, 400);
+		for (int i = 1; i <= 120; ++i) {
+			/* Keep climbing, with a centimetre of pressure noise. */
+			f.step(400 + i * 2 + ((i % 3) == 0 ? -1 : 0));
+		}
+		check(f.events == 0, "a lift cannot trigger, even with noise");
+	}
+
+	/* 16. A dip smaller than the confirmation drop does not trigger. */
+	{
+		Feeder f;
+		f.ramp(0, 400);
+		f.run(4, 400);
+		for (int i = 1; i <= 10; ++i) {
+			f.step(400 - i);
+		}
+		check(f.events == 0, "a dip below the drop threshold does not trigger");
+	}
+
+	/* 17. A real drop after the peak triggers. */
+	{
+		Feeder f;
+		f.ramp(0, 400);
+		f.run(4, 400);
+		f.descend(20, 400, 50, 3);
+
+		check(f.events == 1, "a drop beyond the confirmation triggers");
+	}
+
+	/* 18. A gap resets the peak, so a pre-gap high point cannot confirm a drop. */
+	{
+		Feeder f;
+		f.ramp(0, 600);
+		f.now_ms += 1000;
+		f.run(20, 500);
+		f.descend(10, 500, 50, 2); /* 20 cm, below the 25 cm confirmation */
+
+		check(f.events == 0, "a gap resets the peak");
+	}
+
 	std::printf("\n%s (%d failure%s)\n", failures != 0 ? "FAILED" : "PASSED",
 		    failures, failures == 1 ? "" : "s");
 

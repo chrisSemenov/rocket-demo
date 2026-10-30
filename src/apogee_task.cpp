@@ -56,6 +56,7 @@ apogee::Config make_config()
 
 	config.min_altitude_cm = CONFIG_APP_APOGEE_MIN_ALT_CM;
 	config.min_descent_mm_s = CONFIG_APP_APOGEE_MIN_DESCENT_MM_S;
+	config.min_drop_cm = CONFIG_APP_APOGEE_MIN_DROP_CM;
 
 	return config;
 }
@@ -117,9 +118,9 @@ void apogee_entry(void *, void *, void *)
 			const bool ready = state != apogee::State::filling;
 
 			if (ready && !last_ready) {
-				printk("apogee: window full; threshold %d cm, margin"
-				       " %d mm/s, window %lld ms\n",
-				       config.min_altitude_cm,
+				printk("apogee: armed; threshold %d cm, drop %d cm,"
+				       " margin %d mm/s, window %lld ms\n",
+				       config.min_altitude_cm, config.min_drop_cm,
 				       config.min_descent_mm_s,
 				       static_cast<long long>(config.window_ms));
 

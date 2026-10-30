@@ -24,6 +24,7 @@ struct Config {
 	int64_t window_ms;        /* 750 */
 	int64_t history_ms;       /* how long a sample may stay in the buffer */
 	int64_t max_gap_ms;       /* a longer hole invalidates the window */
+	int32_t min_drop_cm;      /* how far below the peak before deploying */
 };
 
 struct Sample {
@@ -47,6 +48,7 @@ constexpr Config kDefaultConfig{
 	750,
 	2000,
 	250,
+	25,    /* 25 cm below the peak: a lift has zero drop by definition */
 };
 
 class Detector {
@@ -77,6 +79,7 @@ private:
 	uint32_t last_sequence_;
 	State state_;
 	int32_t velocity_mm_s_;
+	int32_t peak_cm_;
 };
 
 } // namespace apogee

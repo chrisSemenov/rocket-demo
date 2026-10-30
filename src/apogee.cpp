@@ -1,4 +1,4 @@
-﻿#include "apogee.hpp"
+#include "apogee.hpp"
 
 /* Zephyr's minimal C++ library has no <cstring>; the C header is available. */
 #include <string.h>
@@ -7,7 +7,7 @@ namespace apogee {
 
 Detector::Detector(const Config &config)
 	: config_(config), count_(0), last_sequence_valid_(0), last_sequence_(0),
-	  state_(State::filling), velocity_mm_s_(0)
+	  state_(State::filling), velocity_mm_s_(0), peak_cm_(INT32_MIN)
 {
 }
 
@@ -134,6 +134,7 @@ Event Detector::on_sample(const Sample &sample)
 			 */
 			count_ = 0;
 			state_ = State::filling;
+			peak_cm_ = INT32_MIN;
 		}
 	}
 
@@ -161,7 +162,18 @@ Event Detector::on_sample(const Sample &sample)
 		state_ = State::ready;
 	}
 
+	/*
+	 * Peak tracking: the trigger requires a drop below the highest altitude seen
+	 * since arming. A lift sets a new peak every sample, so its drop is always
+	 * zero and it cannot fire no matter how noisy the pressure is.
+	 */
+	if (newest.altitude_cm > peak_cm_) {
+		peak_cm_ = newest.altitude_cm;
+	}
+
+	const int32_t drop_cm = peak_cm_ - newest.altitude_cm;
 	const bool high_enough = newest.altitude_cm >= config_.min_altitude_cm;
+	const bool dropped = drop_cm >= config_.min_drop_cm;
 
 	/*
 	 * Strictly negative, and at least the configured margin below zero. The
@@ -171,7 +183,7 @@ Event Detector::on_sample(const Sample &sample)
 	const bool descending = velocity_mm_s_ < 0 &&
 				velocity_mm_s_ <= -config_.min_descent_mm_s;
 
-	if (high_enough && descending) {
+	if (high_enough && dropped && descending) {
 		state_ = State::deployed;
 
 		event.deployed = true;
@@ -214,6 +226,7 @@ int Detector::samples() const
 void Detector::reset()
 {
 	count_ = 0;
+	peak_cm_ = INT32_MIN;
 	last_sequence_valid_ = 0;
 	last_sequence_ = 0;
 	state_ = State::filling;
