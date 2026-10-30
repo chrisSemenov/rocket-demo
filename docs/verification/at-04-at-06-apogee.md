@@ -6,7 +6,7 @@ retrigger or extend the indication (FLT-01–05; AT-04, AT-05, AT-06, AT-11).
 
 **Date:** 2026-10-29
 **Board:** Olimex STM32-H407, BMP280 on I²C2
-**Build:** 44 852 B flash / 24 128 B RAM (default) / 44 860 B (bench preset)
+**Build:** 47 844 B flash / 25 344 B RAM (default) / 47 860 B (bench preset)
 
 ## 1. What is implemented
 
@@ -25,7 +25,7 @@ retrigger or extend the indication (FLT-01–05; AT-04, AT-05, AT-06, AT-11).
 
 ## 2. Host tests
 
-33 checks, run by `tests/run-tests.ps1` with no board:
+37 checks, run by `tests/run-tests.ps1` with no board:
 
 ```
 ok   stationary at 0 cm does not deploy
@@ -93,20 +93,24 @@ It has **not** seen a real ascent and descent on hardware.
 
 ## 5. Configuration and provenance
 
-The two numbers are Kconfig symbols, so a test build changes behaviour without
+The numbers are Kconfig symbols, so a test build changes behaviour without
 touching source:
 
 ```
 CONFIG_APP_APOGEE_MIN_ALT_CM=150
 CONFIG_APP_APOGEE_MIN_DESCENT_MM_S=300
+CONFIG_APP_APOGEE_MIN_DROP_CM=25
 ```
 
 Verified by building the same tree twice and reading the resolved `.config`:
 
-| Build | `MIN_ALT_CM` | `MIN_DESCENT_MM_S` | Flash |
-|---|---|---|---|
-| `build/primary` | 150 | 500 | 44 796 B |
-| `build/shortdrop` | 30 | 150 | 44 812 B |
+| Build | `MIN_ALT_CM` | `MIN_DESCENT_MM_S` | `MIN_DROP_CM` | Flash |
+|---|---|---|---|---|
+| `build/primary` | 150 | 300 | 25 | 47 844 B |
+| `build/bench` | 50 | 600 | 15 | 47 860 B |
+
+The bench preset needs a *larger* margin than the flight default because room air
+drift reaches 0.55 m/s; see `bench.conf` for the reasoning.
 
 The 750 ms window, the 10 s indication, the 5 s alarm and the 500 ms blink are
 not configurable — they are the specified behaviour.

@@ -18,7 +18,6 @@ constexpr int kSamplePeriodMs = 50;
 
 /* Console consumers run at their own rates; neither sets the acquisition rate. */
 constexpr int kTelemetryPeriodMs = 500;
-constexpr int kDiagPeriodMs = 1000;
 
 /* Altitude reads the measurement store at the acquisition rate. */
 constexpr int kAltitudePeriodMs = 50;
@@ -54,7 +53,6 @@ constexpr int kStatsWindowSamples = 200;
  */
 constexpr std::size_t kSensorStackBytes = 2048;
 constexpr std::size_t kTelemetryStackBytes = 1024;
-constexpr std::size_t kDiagStackBytes = 1024;
 /*
  * The altitude thread keeps its 64-entry baseline window (768 B) on the stack.
  * 1024 B overflowed it and tripped the MPU; 2048 B leaves the driver-free
@@ -64,6 +62,7 @@ constexpr std::size_t kAltitudeStackBytes = 2048;
 constexpr std::size_t kLedStackBytes = 1024;
 constexpr std::size_t kApogeeStackBytes = 2048;
 constexpr std::size_t kHeatStackBytes = 1024;
+constexpr std::size_t kReplayStackBytes = 2048;
 
 /*
  * Lower number = higher priority. The sensor thread must preempt every
@@ -77,6 +76,7 @@ constexpr int kApogeePriority = 7;
 constexpr int kHeatPriority = 8;
 constexpr int kLedPriority = 9;
 constexpr int kTelemetryPriority = 10;
-constexpr int kDiagPriority = 11;
+constexpr int kSelftestPriority = 11; /* test builds only */
+constexpr int kReplayPriority = 5; /* stands in for the sensor thread */
 
 } // namespace cfg

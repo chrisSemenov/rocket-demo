@@ -1,12 +1,16 @@
 #include "app_config.hpp"
 #include "altitude_task.hpp"
 #include "apogee_task.hpp"
-#include "diag_task.hpp"
+
 #include "heat_task.hpp"
 #include "led_manager.hpp"
 #include "sensor_task.hpp"
 #include "shared_data.hpp"
 #include "telemetry_task.hpp"
+
+#if defined(CONFIG_APP_REPLAY)
+#include "replay.hpp"
+#endif
 
 #if defined(APP_LED_SELFTEST)
 #include "led_selftest.hpp"
@@ -70,6 +74,14 @@ int main(void)
 		printk("WARNING: LED indication unavailable; everything else runs\n");
 	}
 
+#if defined(CONFIG_APP_REPLAY)
+	/*
+	 * Replay mode: no sensor thread, no bus recovery. Exactly one publisher.
+	 */
+	printk("TEST MODE: REPLAY %s (live sensor not used)\n",
+	       replay_trace_name());
+	replay_task_start();
+#else
 	/*
 	 * A bus left latched by an interrupted transfer (SDA held low) is
 	 * recoverable in software: nine clocks plus a STOP. Harmless on a healthy
@@ -94,25 +106,35 @@ int main(void)
 			k_msleep(5000);
 		}
 	}
+#endif
 
 	telemetry_task_start();
 	altitude_task_start();
 	apogee_task_start();
 	heat_task_start();
-	diag_task_start();
 
 #if defined(APP_LED_SELFTEST)
 	led_selftest_start();
 	printk("TEST MODE: LED SELFTEST is active, requests are scripted\n");
 #endif
 
-	printk("BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x,"
-	       " %d ms period\n", cfg::kSamplePeriodMs);
+#if defined(CONFIG_APP_REPLAY)
+	printk("input: REPLAY %s, %d ms cadence (live sensor not used)\n",
+	       replay_trace_name(), cfg::kSamplePeriodMs);
+	printk("threads: replay(%d) altitude(%d) apogee(%d) heat(%d) led(%d)"
+	       " telemetry(%d); stale timeout %d ms\n",
+	       cfg::kReplayPriority, cfg::kAltitudePriority,
+	       cfg::kApogeePriority, cfg::kHeatPriority, cfg::kLedPriority,
+	       cfg::kTelemetryPriority, cfg::kStaleTimeoutMs);
+#else
+	printk("input: LIVE BMP280, I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode"
+	       " 8x/2x, %d ms period\n", cfg::kSamplePeriodMs);
 	printk("threads: sensor(%d) altitude(%d) apogee(%d) heat(%d) led(%d)"
-	       " telemetry(%d) diag(%d); stale timeout %d ms\n",
+	       " telemetry(%d); stale timeout %d ms\n",
 	       cfg::kSensorPriority, cfg::kAltitudePriority, cfg::kApogeePriority,
 	       cfg::kHeatPriority, cfg::kLedPriority, cfg::kTelemetryPriority,
-	       cfg::kDiagPriority, cfg::kStaleTimeoutMs);
+	       cfg::kStaleTimeoutMs);
+#endif
 
 	/* All work is in the threads now; main has nothing left to do. */
 	for (;;) {

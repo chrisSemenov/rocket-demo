@@ -105,7 +105,7 @@ void led_selftest_start()
 {
 	k_thread_create(&selftest_thread, selftest_stack,
 			K_THREAD_STACK_SIZEOF(selftest_stack), selftest_entry,
-			nullptr, nullptr, nullptr, cfg::kDiagPriority, 0,
+			nullptr, nullptr, nullptr, cfg::kSelftestPriority, 0,
 			K_NO_WAIT);
 	(void)k_thread_name_set(&selftest_thread, "selftest");
 }

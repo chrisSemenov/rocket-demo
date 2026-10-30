@@ -21,8 +21,11 @@ target_sources(app PRIVATE
     src/heat_task.cpp
     src/led_manager.cpp
     src/telemetry_task.cpp
-    src/diag_task.cpp
 )
+
+if(CONFIG_APP_REPLAY)
+    target_sources(app PRIVATE src/replay.cpp)
+endif()
 
 if(APP_LED_SELFTEST)
     target_sources(app PRIVATE src/led_selftest.cpp)

@@ -67,6 +67,34 @@ config APP_HEAT_HYSTERESIS_MC
 	  minus this band. 200 = 0.2 C, which is above the sensor's noise so the
 	  alarm does not chatter at the boundary.
 
+config APP_REPLAY
+	bool "Replay a recorded trace instead of the live sensor"
+	default n
+	help
+	  Publishes a trace from traces/ through the normal measurement store, so
+	  altitude, apogee, heat and the LED run unmodified. Exactly one publisher
+	  exists per boot: the sensor thread is not started in this mode.
+
+choice APP_REPLAY_TRACE
+	prompt "Trace to replay"
+	depends on APP_REPLAY
+	default APP_TRACE_AT05
+	help
+	  One trace per build, so each acceptance scenario is reproducible and its
+	  evidence is tied to a known binary. See traces/.
+
+config APP_TRACE_AT04A
+	bool "at04a - descending below the minimum"
+config APP_TRACE_AT04B
+	bool "at04b - above the minimum but ascending"
+config APP_TRACE_AT05
+	bool "at05 - ascent, peak, sustained descent"
+config APP_TRACE_AT08
+	bool "at08 - deployment then heat, cooling before the deadline"
+config APP_TRACE_AT09
+	bool "at09 - heat starts after the deployment deadline"
+endchoice
+
 config APP_READY_INDICATION
 	bool "Flash the LED twice when the system is ready"
 	default y

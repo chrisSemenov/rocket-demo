@@ -80,7 +80,7 @@ the repository root.
 |---|---|---|
 | Ownership | `led_manager` is the only writer of PC13; everyone else publishes requests | Checklist 7; the temporary heartbeat in `main()` is removed |
 | Update cadence | 10 ms | Measured request→change latency 11–21 ms, well inside any blink tolerance |
-| Arbitration | `decide(now, request)`, a pure function | Testable with fake time; 33 host checks |
+| Arbitration | `decide(now, request)`, a pure function | Testable with fake time; 35 host checks |
 | Blink | 250 ms on / 250 ms off, phase anchored to the alarm start | 500 ms complete period; anchoring prevents drift when the loop jitters |
 | Window boundary | Active while `start <= now < deadline` | One documented rule, tested at the exact instant |
 | Deployment latch | First accepted event sets the deadline; later requests are ignored **inside the store** | FLT-04/LED-06 enforced where the state lives, not by trusting the producer |
@@ -93,8 +93,8 @@ the repository root.
 
 | Decision | Value | Why |
 |---|---|---|
-| Threads | `sensor`, `altitude`, `apogee`, `led`, `telemetry`, `diag` now; temperature to follow | SYS-01 |
-| Priorities | sensor 5, altitude 6, apogee 7, led 8, telemetry 9, diag 10 (lower number = higher priority) | The sensor must preempt everything so printk cannot push the 50 ms deadline; altitude outranks apogee so a decision is never made on a stale estimate; the LED and console sit below both |
-| Stacks | sensor 2048 B, altitude 2048 B, apogee 2048 B, led 1024 B, telemetry 1024 B, diag 1024 B | Sized for the driver, the 768 B baseline window, the 32-entry history and printk paths. A 1024 B altitude stack overflowed on the first flash and tripped the MPU |
+| Threads | `sensor` (or `replay` in test mode), `altitude`, `apogee`, `heat`, `led`, `telemetry` | SYS-01 |
+| Priorities | sensor 5, altitude 6, apogee 7, heat 8, led 9, telemetry 10 (lower number = higher priority) | The sensor must preempt everything so printk cannot push the 50 ms deadline; altitude outranks apogee so a decision is never made on a stale estimate; the LED and console sit below both |
+| Stacks | sensor 2048 B, altitude 2048 B, apogee 2048 B, heat 1024 B, led 1024 B, telemetry 1024 B | Sized for the driver, the 768 B baseline window, the 32-entry history and printk paths. A 1024 B altitude stack overflowed on the first flash and tripped the MPU |
 | Console logging | Producers publish; consumers print; the LED manager prints only on a transition | The acquisition thread never blocks on RTT. The RTT up-buffer is 8 KB because 2 KB overran under the LED self-test |
 | LED ownership | `led_manager` is the only writer; the temporary heartbeat loop is removed | Checklist 7; prevents competing GPIO writes |

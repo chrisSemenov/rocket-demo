@@ -9,19 +9,19 @@ store at their own rate and a read never removes anything.
 ```text
                  +-------------------+
    BMP280  --->  | sensor thread     |  50 ms, forced mode, one conversion per fetch
-   (I2C2)        | priority 5        |
+   (I2C2)        | priority 5        |  (replay thread instead, in replay mode)
                  +---------+---------+
                            | publish(Measurement)
                            v
                  +-------------------+        (k_mutex, copy in / copy out)
                  | SensorDataStore   |<------- telemetry thread   500 ms, prints
-                 | measurement       |<------- diag thread       1000 ms, prints
-                 | stats             |<------- altitude thread    50 ms, computes
-                 +---------+---------+<------- temperature thread (next milestone)
+                 | measurement       |<------- heat thread        50 ms, alarm policy
+                 | stats             |<------- (sensor thread publishes stats)
+                 +---------+---------+
                            ^
                            | read(Measurement)
                  +---------+---------+
-                 | altitude thread   |  baseline P0 frozen after 2 s, 50 ms period
+                 | altitude thread   |  baseline P0 frozen after 2 s, 50 ms
                  | priority 6        |
                  +---------+---------+
                            | publish(Altitude)
@@ -34,8 +34,8 @@ store at their own rate and a read never removes anything.
                            | read(Altitude)
                            v
                  +-------------------+
-                 | apogee thread     |  750 ms window, latched once per flight
-                 | priority 7        |  publishes only on a deployment
+                 | apogee thread     |  750 ms window, peak drop, latched once
+                 | priority 7        |
                  +---------+---------+
                            | request_deployment(event, deadline)
                            v
@@ -48,7 +48,7 @@ store at their own rate and a read never removes anything.
                            v
                  +-------------------+
                  | led_manager       |  10 ms, sole owner of PC13
-                 | priority 8        |
+                 | priority 9        |
                  +-------------------+
 ```
 
@@ -78,7 +78,6 @@ LedRequestStore -> led manager thread --> PC13              [done]
 | `heat` | 50 ms | 8 | 1024 B | Apply the 5 s overheat window, renewal and hysteresis; publish a heat request |
 | `led` | 10 ms | 9 | 1024 B | Read the request snapshot, arbitrate, write PC13; prints only on a transition |
 | `telemetry` | 500 ms | 10 | 1024 B | Read the stores, print samples, altitude and the ten-second stats line |
-| `diag` | 1000 ms | 11 | 1024 B | Independent reader proving reads do not consume; replaced by a real consumer later |
 
 Priority, not period, is what protects the acquisition rate: the sensor thread
 preempts every consumer, so a stalled `printk` (RTT back-pressure) cannot move the

@@ -7,7 +7,7 @@ AT-07).
 
 **Date:** 2026-10-29
 **Board:** Olimex STM32-H407, BMP280 on I²C2
-**Build:** 47 792 B flash / 25 344 B RAM
+**Build:** 47 844 B flash / 25 344 B RAM
 
 ## 1. What is implemented
 
@@ -26,7 +26,7 @@ AT-07).
 
 ## 2. Host tests
 
-28 checks, no board:
+31 checks, no board:
 
 ```
 ok   cool samples stay cool

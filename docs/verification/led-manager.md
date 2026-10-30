@@ -33,7 +33,7 @@ ok   heat at deadline                         t=  5000 on
 PASSED (0 failures)
 ```
 
-33 checks in total; the full list is the suite output.
+35 checks in total; the full list is the suite output.
 
 ## 2. On-target scripted sequence
 

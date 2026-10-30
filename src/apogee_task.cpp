@@ -141,7 +141,7 @@ void apogee_entry(void *, void *, void *)
 		}
 
 		/* Periodic insight, not a decision: altitude, velocity and coverage. */
-		if (now >= next_report) {
+		if (now >= next_report && altitude.valid) {
 			printk("apogee: h=");
 			print_metres(altitude.altitude_cm);
 			printk(" m  v=");

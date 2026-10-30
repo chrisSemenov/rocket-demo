@@ -164,18 +164,20 @@ may lose old lines but never corrupt the stream.
 
 ## Expected output
 
-Line shape of the threaded 50 ms build (telemetry logs every 500 ms, `diag` every 1 s, and
-the `stats:` line is printed every 10 s from a 200-sample window):
+Line shape of the threaded build (telemetry logs every 500 ms, the apogee and heat
+threads add a line on a state change, and `stats:` is printed every 10 s from a
+200-sample window):
 
 ```
 *** Booting Zephyr OS build v4.4.2 ***
-BMP280 ready: I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x, 50 ms period
-threads: sensor(prio 5) telemetry(8) diag(9); stale timeout 250 ms
-telemetry: no valid measurement yet (error=0)
-diag:  seq=0  age=-1 ms  valid=0  published=0
-[      0.51 s] seq=10  P=95041 Pa  T=22.60 C  age=26 ms
-[      1.01 s] seq=20  P=95043 Pa  T=22.62 C  age=26 ms
-diag:  seq=20  age=26 ms  valid=1  published=20
+input: LIVE BMP280, I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x, 50 ms period
+threads: sensor(5) altitude(6) apogee(7) heat(8) led(9) telemetry(10); stale timeout 250 ms
+led:  [      0.011] off
+apogee: no usable altitude (valid=0 calibrated=0 age=11 ms)
+heat: threshold 30.000 C, hysteresis 200 mC, window 5000 ms
+[      0.51 s] seq=10  P=95111 Pa  T=23.24 C  age=26 ms
+[      1.01 s] seq=20  P=95111 Pa  T=23.25 C  age=26 ms
+alt:  baseline frozen P0=95110 Pa after 38 samples (spread 5 Pa)
 ...
 stats: 200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  seq=390
 ```
