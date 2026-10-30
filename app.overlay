@@ -17,6 +17,15 @@
 	pinctrl-names = "default";
 	clock-frequency = <I2C_BITRATE_STANDARD>;
 
+	/*
+	 * Recovery taps for a bus that has latched (a device holding SDA low).
+	 * With CONFIG_I2C_STM32_BUS_RECOVERY the driver bit-bangs nine clocks and
+	 * a STOP over these GPIOs, so a wedged bus does not need a power cycle.
+	 * Open-drain: the breakout's pull-ups define the high level.
+	 */
+	scl-gpios = <&gpiof 1 (GPIO_OPEN_DRAIN | GPIO_ACTIVE_HIGH)>;
+	sda-gpios = <&gpiof 0 (GPIO_OPEN_DRAIN | GPIO_ACTIVE_HIGH)>;
+
 	bmp280: bmp280@76 {
 		compatible = "bosch,bme280";
 		reg = <0x76>;
