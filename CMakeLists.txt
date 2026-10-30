@@ -14,9 +14,11 @@ target_sources(app PRIVATE
     src/altitude.cpp
     src/led_logic.cpp
     src/apogee.cpp
+    src/heat.cpp
     src/sensor_task.cpp
     src/altitude_task.cpp
     src/apogee_task.cpp
+    src/heat_task.cpp
     src/led_manager.cpp
     src/telemetry_task.cpp
     src/diag_task.cpp

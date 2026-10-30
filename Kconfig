@@ -39,6 +39,34 @@ config APP_APOGEE_MIN_DESCENT_MM_S
 	  alone wanders by up to 0.55 m/s, which is why bench.conf needs a *larger*
 	  margin than this default.
 
+config APP_APOGEE_MIN_DROP_CM
+	int "Descent below the peak before deploying (cm)"
+	range 0 500
+	default 25
+	help
+	  How far the altitude must fall from the highest value seen since arming.
+	  A lift keeps setting new peaks, so its drop is always zero and it cannot
+	  trigger; a real descent accumulates drop immediately. 25 cm is about
+	  three times the altitude noise.
+
+config APP_HEAT_THRESHOLD_MC
+	int "Overheat threshold (milli-degrees Celsius)"
+	range -40000 85000
+	default 30000
+	help
+	  The temperature at or above which the overheat alarm starts. 30000 is
+	  30.0 C: above a still bench, which reads about 23 C here, and reachable
+	  by pinching the sensor.
+
+config APP_HEAT_HYSTERESIS_MC
+	int "Overheat release hysteresis (milli-degrees Celsius)"
+	range 0 5000
+	default 200
+	help
+	  The alarm clears only once the temperature falls below the threshold
+	  minus this band. 200 = 0.2 C, which is above the sensor's noise so the
+	  alarm does not chatter at the boundary.
+
 config APP_READY_INDICATION
 	bool "Flash the LED twice when the system is ready"
 	default y

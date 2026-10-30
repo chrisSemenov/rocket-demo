@@ -41,8 +41,8 @@ store at their own rate and a read never removes anything.
                            v
                  +-------------------+        request_deployment()
                  | LedRequestStore   |<------- apogee thread
-                 | deployment        |<------- temperature thread (next milestone)
-                 | heat              |          request_heat()
+                 | deployment        |<------- heat thread        request_heat()
+                 | heat              |
                  +---------+---------+
                            | read(led::Request)
                            v
@@ -63,7 +63,7 @@ Next stages, in implementation order:
 Measurement ---> altitude thread ---> AltitudeStore ---> apogee detector   [done]
                                                     \--> (history, 750 ms avg)
 Apogee --------> deployment request ----> LedRequestStore   [done]
-Temperature ---> temperature monitor ---> LedRequestStore   [next]
+Temperature ---> heat thread ----------> LedRequestStore   [done]
 LedRequestStore -> led manager thread --> PC13              [done]
 ```
 
@@ -75,10 +75,10 @@ LedRequestStore -> led manager thread --> PC13              [done]
 | `sensor` | 50 ms, absolute deadline | 5 | 2048 B | Fetch, timestamp, publish; count errors and overruns; publish timing stats |
 | `altitude` | 50 ms, absolute deadline | 6 | 2048 B | Read a measurement copy, calibrate `P₀`, compute altitude, publish a separate snapshot; never prints |
 | `apogee` | 50 ms | 7 | 2048 B | Keep a 750 ms altitude window, detect descent above the minimum, publish one deployment request |
-| `led` | 10 ms | 8 | 1024 B | Read the request snapshot, arbitrate, write PC13; prints only on a transition |
-| `telemetry` | 500 ms | 9 | 1024 B | Read the stores, print samples, altitude and the ten-second stats line |
-| `diag` | 1000 ms | 10 | 1024 B | Independent reader proving reads do not consume; replaced by a real consumer later |
-| temperature | — | — | — | Next milestone; publishes a heat request only |
+| `heat` | 50 ms | 8 | 1024 B | Apply the 5 s overheat window, renewal and hysteresis; publish a heat request |
+| `led` | 10 ms | 9 | 1024 B | Read the request snapshot, arbitrate, write PC13; prints only on a transition |
+| `telemetry` | 500 ms | 10 | 1024 B | Read the stores, print samples, altitude and the ten-second stats line |
+| `diag` | 1000 ms | 11 | 1024 B | Independent reader proving reads do not consume; replaced by a real consumer later |
 
 Priority, not period, is what protects the acquisition rate: the sensor thread
 preempts every consumer, so a stalled `printk` (RTT back-pressure) cannot move the

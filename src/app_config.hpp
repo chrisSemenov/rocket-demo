@@ -26,6 +26,9 @@ constexpr int kAltitudePeriodMs = 50;
 /* Apogee reads the altitude store at the same rate it is published. */
 constexpr int kApogeePeriodMs = 50;
 
+/* Temperature monitor: poll the measurement store. */
+constexpr int kHeatPeriodMs = 50;
+
 /* LED manager: how often it re-evaluates the requests. */
 constexpr int kLedUpdatePeriodMs = 10;
 
@@ -60,6 +63,7 @@ constexpr std::size_t kDiagStackBytes = 1024;
 constexpr std::size_t kAltitudeStackBytes = 2048;
 constexpr std::size_t kLedStackBytes = 1024;
 constexpr std::size_t kApogeeStackBytes = 2048;
+constexpr std::size_t kHeatStackBytes = 1024;
 
 /*
  * Lower number = higher priority. The sensor thread must preempt every
@@ -70,8 +74,9 @@ constexpr std::size_t kApogeeStackBytes = 2048;
 constexpr int kSensorPriority = 5;
 constexpr int kAltitudePriority = 6;
 constexpr int kApogeePriority = 7;
-constexpr int kLedPriority = 8;
-constexpr int kTelemetryPriority = 9;
-constexpr int kDiagPriority = 10;
+constexpr int kHeatPriority = 8;
+constexpr int kLedPriority = 9;
+constexpr int kTelemetryPriority = 10;
+constexpr int kDiagPriority = 11;
 
 } // namespace cfg

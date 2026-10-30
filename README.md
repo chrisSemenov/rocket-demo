@@ -14,7 +14,8 @@ A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/tempe
 - **Altitude is calculated and published (M6, verified on hardware):** a separate `altitude` thread reads the measurement snapshot, freezes a baseline `P₀` after 2 s of stationary pressure, and publishes a separate `AltitudeStore`. The maths is unit-tested on the host against independently computed references. Evidence: [docs/verification/at-03-altitude.md](docs/verification/at-03-altitude.md).
 - **The LED has a single owner (M7, verified on hardware):** `led_manager` is the only writer of PC13. It arbitrates heat blink > deployment ON > off from a pure function, and the deployment deadline is latched once. Measured: 250 ms half-period, 10 s indication, 11–21 ms request latency. Evidence: [docs/verification/led-manager.md](docs/verification/led-manager.md).
 - **Apogee detection is implemented (M8):** the `apogee` thread keeps its own 750 ms altitude window, triggers when the least-squares slope over that window is at or below -0.30 m/s while above 1.5 m, and publishes exactly one deployment request per flight. 33 host checks cover the trigger, gaps, duplicates and the latch; the live run shows no false trigger. Evidence: [docs/verification/at-04-at-06-apogee.md](docs/verification/at-04-at-06-apogee.md).
-- **Not implemented yet:** temperature monitoring and the acceptance test suite.
+- **The temperature alarm is implemented (M9):** the `heat` thread applies a 5 s window that renews while still hot and clears on cooling, with hysteresis and a fail-safe that never treats missing data as cool. 28 host checks; the live heat run is pending a power cycle (the I²C bus latched after a mid-transfer reset). Evidence: [docs/verification/at-07-heat.md](docs/verification/at-07-heat.md).
+- **Not implemented yet:** the acceptance test suite, the replay harness and the demonstration video.
 
 ## Hardware and known board detail
 
@@ -308,6 +309,43 @@ powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
 an incomplete window, a 1 s outage, out-of-order timestamps and a second flight
 after `reset()`.
 
+## Temperature alarm
+
+The `heat` thread reads the same measurement snapshot as everything else, applies
+the overheat policy, and publishes a heat request. It never calls the sensor and
+never touches the LED.
+
+```
+hot    when  T ≥ 30.0 °C
+alarm  starts on the hot sample, lasts 5 s
+renew  60 ms before expiry while still hot, another 5 s (anchor unchanged, no gap)
+clear  immediately when T < 29.8 °C   (threshold − 0.2 °C hysteresis)
+```
+
+### Why each rule exists
+
+| Rule | Reason |
+|---|---|
+| **Threshold 30.0 °C** | Above a still bench (~22 °C here) and reachable with a finger. Configurable via `CONFIG_APP_HEAT_THRESHOLD_MC` |
+| **0.2 °C hysteresis** | Sensor noise around the boundary would otherwise start and clear the alarm repeatedly |
+| **Renew just before expiry, keep the anchor** | Renewing exactly at expiry leaves the LED dark for one poll (~100 ms). The guard extends the window before it lapses; the blink phase is anchored to the alarm start, so a renewal does not make it jump |
+| **No back-filling** | If samples were missed, the renewal starts a fresh window rather than replaying the ones that would have elapsed |
+| **Missing data is not cooling** | A stale or failed sensor must not silently cancel an overheat alarm. The state holds and the window expires on its own deadline |
+| **Duplicate sequences ignored** | The thread polls faster than the sensor publishes |
+
+### Testing
+
+The policy is a pure unit (`src/heat.cpp`), so persistence, renewal, cooling and
+the hysteresis band are exercised without hardware:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
+```
+
+28 checks: window start, no restart on repeated hot samples, renewal at expiry,
+renewal after a gap, immediate cooling, hysteresis, threshold equality, missing
+data and reset.
+
 ## LED indication
 
 One thread owns the LED. Nothing else writes the pin; the other tasks publish
@@ -319,6 +357,11 @@ rather than a race between two `gpio_pin_set_dt()` calls.
 | 1 | heat alarm active | 250 ms on / 250 ms off, 500 ms period |
 | 2 | deployment, deadline not reached | steady on for 10 s from the event |
 | 3 | — | off |
+
+The heat alarm has more than one window: while the temperature stays above the
+threshold the 5 s window renews, and the blink phase is anchored to the original
+start, so a renewal does not make the LED jump. Cooling clears the alarm at once
+and the deployment indication resumes with whatever time it has left.
 
 Plus one **boot indication**, which is not an assignment behaviour: when the
 sensor is answering, the baseline is frozen and the 750 ms history is full, the
@@ -333,7 +376,7 @@ For an untethered run this is the only way to know the system is armed:
 | two short flashes ~3 s after power-on, then dark | sensor OK, baseline frozen, detector armed |
 | no flashes at all | sensor not answering or calibration failed — nothing will trigger |
 | solid light | deployed; off after 10 s |
-| 250/250 blinking | overheating (M9, not implemented yet) |
+| 250/250 blinking | overheating |
 
 Rules that make the overlap cases behave:
 
@@ -431,9 +474,10 @@ the same sample at their own rates.
 | `sensor` | 50 ms, absolute deadline | 5 | 2048 B | Fetch, timestamp, publish; count errors and overruns; publish timing stats |
 | `altitude` | 50 ms, absolute deadline | 6 | 2048 B | Read a measurement copy, calibrate `P₀`, publish altitude; never prints |
 | `apogee` | 50 ms | 7 | 2048 B | 750 ms window, deploy once when above the minimum and descending |
-| `led` | 10 ms | 8 | 1024 B | Read the request snapshot, arbitrate, write PC13; prints only on a transition |
-| `telemetry` | 500 ms | 9 | 1024 B | Read the stores, print samples, altitude and the ten-second `stats:` line |
-| `diag` | 1000 ms | 10 | 1024 B | Second independent reader (temporary) |
+| `heat` | 50 ms | 8 | 1024 B | 5 s overheat window with renewal and hysteresis; publishes a heat request |
+| `led` | 10 ms | 9 | 1024 B | Read the request snapshot, arbitrate, write PC13; prints only on a transition |
+| `telemetry` | 500 ms | 10 | 1024 B | Read the stores, print samples, altitude and the ten-second `stats:` line |
+| `diag` | 1000 ms | 11 | 1024 B | Second independent reader (temporary) |
 
 Lower number means higher priority, so the sensor thread preempts every consumer and a
 stalled `printk` under RTT back-pressure cannot push the 50 ms deadline. Altitude outranks
@@ -491,22 +535,19 @@ For debugging, select **Zephyr Workbench Debug [primary]** in VS Code's Run and 
 
 ## Next steps
 
-Live acquisition, the shared-memory path, relative altitude, the LED arbitration and apogee
-detection are implemented. **The next milestone is the temperature monitor**, which is the
-last producer in the assignment.
+Live acquisition, the shared-memory path, relative altitude, the LED arbitration, apogee
+detection and the temperature alarm are implemented. **The next milestone is the acceptance
+matrix**, backed by a replay harness.
 
-1. Add the temperature thread: configurable threshold, 5 s alarm window that renews while
-   hot and cancels on cooling, publishing a heat request into `LedRequestStore`.
-2. Run the overlap cases (heat over deployment, cooling before and after the original
-   deadline) as labelled on-target tests.
-3. Build the replay harness so synthetic traces enter at the measurement publisher — that
-   is what makes AT-04/05/06 reproducible, since a real ascent cannot be produced on a desk.
-4. Record the acceptance matrix and the demonstration video.
+1. Build the replay harness so synthetic traces enter at the measurement publisher; that is
+   what makes AT-04/05/06 reproducible, since a real ascent cannot be produced on a desk.
+2. Run the overlap cases (heat over deployment, cooling before and after the deployment
+   deadline) as labelled tests.
+3. Record the acceptance matrix and the demonstration video.
 
-Known limitation: the temperature monitor is not implemented, so the heat path is only
-exercised by the LED self-test build. Apogee detection has been verified by unit tests and
-runs live without false triggers, but no real ascent/descent has been produced on hardware;
-`Detector::reset()` exists and is tested, though the firmware still resets a flight only on
-power cycle.
+Known limitation: no real ascent/descent has been flown — apogee is proven by unit tests and
+a live no-false-trigger run. The live heat transition is pending a board power cycle, after
+the I²C bus latched during a flash. `Detector::reset()` exists and is tested, but the
+firmware still resets a flight only on power cycle.
 
 The detailed work plan and assignment/requirements currently live outside this repository at `G:\My Drive\Engineering\SCAE\Interview Test\`.

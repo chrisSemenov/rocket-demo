@@ -64,6 +64,11 @@ the repository root.
 | Trigger repeat | Latched permanently in the detector; the store also refuses a second event | FLT-04, FLT-05 enforced twice, at the decision and at the state |
 | Event time | The triggering sample's timestamp; deadline = event + 10 s | Deterministic and testable; the visible indication starts within ~30 ms |
 | Heat alarm | 5 s window started on detection, renewed while still hot, cancelled immediately on cooling | Resolves the assignment's ambiguity; early cooling truncates the window and returns control to deployment |
+| Heat hysteresis | 0.2 °C below the threshold | Sensor noise would otherwise chatter the alarm at the boundary |
+| Heat renewal guard | Renew 60 ms before expiry, poll every 50 ms | Renewing at expiry left the LED dark for one poll; the guard keeps the blink continuous |
+| I2C bus recovery | Nine clocks + STOP over PF0/PF1 at boot, plus a 0x76/0x77 probe on failure | A reset during a transfer can leave the sensor holding SDA; recovery avoids a power cycle, and the probe says whether the chip answers at all |
+| Heat and missing data | Missing or stale temperature holds the state, never clears it | "No data" is not "cool"; the window expires on its own deadline |
+| Heat threshold | 30.0 °C (`CONFIG_APP_HEAT_THRESHOLD_MC`), configurable | Above a still bench (~22 °C), reachable by hand |
 | LED priority | Active heat blink > unexpired deployment ON > OFF | LED-04, LED-05 |
 | Thresholds | Configurable Kconfig symbols (`CONFIG_APP_APOGEE_MIN_ALT_CM`, `CONFIG_APP_APOGEE_MIN_DESCENT_MM_S`); bench values set after a baseline measurement | FLT-02, LED-02. Changing them is a rebuild, not a code edit |
 | Reset | One flight per boot/reset; a reset clears calibration, history and the deployment latch | Checklist 2.2; avoids a partial re-arm |
