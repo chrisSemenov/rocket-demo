@@ -74,8 +74,7 @@ LedRequestStore -> led manager thread --> PC13              [done]
 | `main` | — | 0 | default | Initialise stores, start the threads, then idle |
 | `sensor` | 50 ms, absolute deadline | 5 | 2048 B | Fetch, timestamp, publish; count errors and overruns; publish timing stats |
 | `altitude` | 50 ms, absolute deadline | 6 | 2048 B | Read a measurement copy, calibrate `P₀`, compute altitude, publish a separate snapshot; never prints |
-| `apogee` | 50 ms | 7 | 2048 B | Keep a 750 ms altitude window, detect descent above the minimum, publish one deployment request |
-| `heat` | 50 ms | 8 | 1024 B | Apply the 5 s overheat window, renewal and hysteresis; publish a heat request |
+| `apogee` | 50 ms | 7 | 2048 B | Keep a 750 ms altitude window, detect descent above the minimum, publish one deployment request || `heat` | 50 ms | 8 | 1024 B | Apply the 5 s overheat window, renewal and hysteresis; publish a heat request |
 | `led` | 10 ms | 9 | 1024 B | Read the request snapshot, arbitrate, write PC13; prints only on a transition |
 | `telemetry` | 500 ms | 10 | 1024 B | Read the stores, print samples, altitude and the ten-second stats line |
 
@@ -107,9 +106,10 @@ consumes every sample but never prints.
 
 ## Timing model
 
-Every periodic thread uses an absolute deadline (`next += period`,
+Every periodic thread uses an absolute deadline (`next += period`, then
 `k_sleep(K_TIMEOUT_ABS_MS(next))`). A thread that overruns counts the overrun and
-re-anchors instead of bursting to catch up, so the reported period stays honest.
+re-anchors, then still sleeps to the new slot, so a missed deadline costs one
+period instead of compressing the next interval.
 
 Measured on hardware: fetch 24 ms every period, inter-sample interval 50 ms,
 zero overruns (`docs/verification/`).
@@ -117,7 +117,11 @@ zero overruns (`docs/verification/`).
 ## Stack usage (measured)
 
 High-water marks from `CONFIG_THREAD_ANALYZER` after ~45 s of live operation
-(2026-10-31). The analyzer itself costs a thread, so these are upper bounds:
+(2026-10-31). Read these as "worst case observed in this run", not as a proof of
+the worst case: the analyzer adds a thread and its own stack, and the run did not
+include a deployment, a heat alarm, a bus recovery or a replay. Every path that
+adds stack has since been exercised on the target, but the marks were not
+re-taken with the analyzer enabled.
 
 | Thread | Used / size | Headroom |
 |---|---|---|

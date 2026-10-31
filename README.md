@@ -1,24 +1,25 @@
 # Rocket Flight Controller Demo
 
-A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/temperature sensor, and Zephyr RTOS. Sensor acquisition, altitude, apogee detection and temperature monitoring are separate threads; measurement data moves through synchronized shared memory, and a single LED manager owns the output priority. Acquisition, the shared-memory contract, relative altitude and the LED arbitration are implemented and verified; apogee detection and the temperature alarm are not yet. Deployment is simulated **only by the board LED**; this is not flight-ready or safety-certified firmware.
+A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/temperature sensor, and Zephyr RTOS. Sensor acquisition, altitude, apogee detection and temperature monitoring are separate threads; measurement data moves through synchronized shared memory, and a single LED manager owns the output priority. Acquisition, the shared-memory contract, relative altitude, apogee detection, the temperature alarm and the LED arbitration are implemented and verified on the target; the demonstration video is not yet recorded. Deployment is simulated **only by the board LED**; this is not flight-ready or safety-certified firmware.
 
 The task and its mandatory requirements are included in the repository:
 [docs/assignment.md](docs/assignment.md) and [docs/requirements.md](docs/requirements.md).
-Every acceptance row is recorded in [docs/acceptance-matrix.md](docs/acceptance-matrix.md).
+Every acceptance row is recorded in [docs/acceptance-matrix.md](docs/acceptance-matrix.md),
+with the raw console capture it came from in `tests/evidence/m10/`.
 
 ## Current status
 
 - Zephyr 4.4.2 and Zephyr SDK 1.0.1 are installed and have built firmware for `olimex_stm32_h407`.
 - **Working hardware baseline:** this project's C++ LED blink test builds successfully with Zephyr 4.4.2 and SDK 1.0.1. ST-Link programming and LED operation on the Olimex STM32-H407 were confirmed by the user after applying the project configuration. The firmware toggles the green user LED every 500 ms (one complete cycle per second).
-- The project includes the PC13 LED overlay, ST-Link flash settings, and a VS Code debug launch configuration. These were based on the separate working `C:\SCAE\projects\blinky` reference project.
+- The project includes the PC13 LED overlay, ST-Link flash settings, and a VS Code debug launch configuration, carried over from the earlier single-file `blinky` bring-up project (kept outside this repository).
 - **BMP280 sensor working (verified on hardware, 2026-10-28):** `app.overlay` enables `i2c2` on PF1 (SCL) and PF0 (SDA) with a `bosch,bme280` node at address `0x76`. Flash programming verified OK, OpenOCD found the RTT control block at `0x20000810`, and live samples were captured (≈94 940 Pa, ≈26 °C). 94.9 kPa is consistent with roughly 550 m elevation, and the driver only reports the device ready after validating the chip ID over I²C at `0x76`.
 - **Sampling reworked for the descent test:** the sensor runs 8× pressure / 2× temperature in forced mode on a 50 ms deadline-based loop, so the 750 ms velocity window contains a full set of samples. The loop reports its own fetch duration, inter-sample interval and deadline overruns on the console. See [Sampling design](#sampling-design).
 - **Acquisition is its own thread (M4, verified on hardware):** `sensor` owns the BMP280 and the only I²C traffic, fetches on a 50 ms absolute deadline, and publishes a complete snapshot. Measured over 2 750 samples: fetch 24 ms, interval 50 ms, zero overruns, zero errors. Evidence: [docs/verification/at-02-live-acquisition.md](docs/verification/at-02-live-acquisition.md); the failure path is covered in [m4-absent-sensor.md](docs/verification/m4-absent-sensor.md).
 - **Shared memory is synchronized (M5, verified on hardware):** readers copy a `Measurement` out of `SensorDataStore` under a mutex and never consume it, so the 500 ms telemetry consumer and an independent 1 s reader observe the same sequence at their own rates. Evidence: [docs/verification/m5-shared-memory.md](docs/verification/m5-shared-memory.md).
 - **Altitude is calculated and published (M6, verified on hardware):** a separate `altitude` thread reads the measurement snapshot, freezes a baseline `P₀` after 2 s of stationary pressure, and publishes a separate `AltitudeStore`. The maths is unit-tested on the host against independently computed references. Evidence: [docs/verification/at-03-altitude.md](docs/verification/at-03-altitude.md).
 - **The LED has a single owner (M7, verified on hardware):** `led_manager` is the only writer of PC13. It arbitrates heat blink > deployment ON > off from a pure function, and the deployment deadline is latched once. Measured: 250 ms half-period, 10 s indication, 11–21 ms request latency. Evidence: [docs/verification/led-manager.md](docs/verification/led-manager.md).
-- **Apogee detection is implemented (M8):** the `apogee` thread keeps its own 750 ms altitude window, triggers when the least-squares slope over that window is at or below -0.30 m/s while above 1.5 m, and publishes exactly one deployment request per flight. 37 host checks cover the trigger, gaps, duplicates, the peak confirmation and the latch; the live run shows no false trigger. Evidence: [docs/verification/at-04-at-06-apogee.md](docs/verification/at-04-at-06-apogee.md).
-- **The temperature alarm is implemented (M9):** the `heat` thread applies a 5 s window that renews while still hot and clears on cooling, with hysteresis and a fail-safe that never treats missing data as cool. 31 host checks; the live heat run is captured (the I²C bus latched after a mid-transfer reset). Evidence: [docs/verification/at-07-heat.md](docs/verification/at-07-heat.md).
+- **Apogee detection is implemented and verified on the target (M8):** the `apogee` thread keeps its own 750 ms altitude window and triggers when the **average velocity over that window** is at or below -0.30 m/s while above 1.5 m and at least 25 cm below the peak. A least-squares slope over the same window is logged alongside it as a diagnostic, never as the trigger. 41 host checks cover the trigger, the two estimators, gaps, duplicates, the peak confirmation and the latch; replay runs on the board produce exactly one deployment per flight. Evidence: [docs/verification/at-04-at-06-apogee.md](docs/verification/at-04-at-06-apogee.md).
+- **The temperature alarm is implemented (M9):** the `heat` thread applies a 5 s window that renews while the temperature stays above the release threshold and clears on cooling, with 0.2 C of hysteresis and a fail-safe that never treats missing data as cool. 37 host checks; replay runs on the target cover a single window, two renewals and both overlap cases. Evidence: [docs/verification/at-07-heat.md](docs/verification/at-07-heat.md).
 - **Acceptance evidence:** every mandatory scenario is recorded in [docs/acceptance-matrix.md](docs/acceptance-matrix.md), with the action taken and the observed console values.
 - **Not implemented:** the demonstration video and a physical (non-replayed) apogee descent.
 
@@ -180,7 +181,9 @@ frozen:
 - require the pressure spread across that window to stay within **20 Pa**
   (≈ 1.8 m here);
 - if the sensor moved, restart the window from the current sample;
-- a gap longer than the 250 ms stale timeout clears the window entirely;
+- a gap longer than the 250 ms stale timeout clears the window **while calibrating**
+  and publishes an invalid altitude; once `P₀` is frozen, a gap only invalidates
+  the output and never moves the reference;
 - after calibration, `P₀` never changes for the rest of the run.
 
 On the bench (≈ 626–630 m elevation) this gave `P₀ = 95 062 Pa` and altitude
@@ -220,21 +223,25 @@ thread with its own history; it reads the altitude snapshot and publishes at mos
 one request per flight.
 
 ```
-v = least-squares slope of altitude over the last 750 ms
-deploy when  h(now) ≥ 1.50 m  and  v ≤ −0.30 m/s
+v = (h(now) - h(now - 750 ms)) / 0.750 s     window start interpolated
+deploy when  h(now) >= 1.50 m  and  v <= -0.30 m/s  and  h(now) <= peak - 25 cm
 ```
 
-Both conditions are required, and the event latches.
+All three conditions are required, and the event latches. A least-squares slope
+over the same window is computed and printed as `slope=`; it is a diagnostic, not
+the trigger.
 
 ### Why each piece exists
 
 | Piece | Reason |
 |---|---|
 | **750 ms window** | The assignment's descent criterion. Timestamp-based, so a missed sample does not silently shorten it. |
-| **Least-squares slope** | It uses all ~15 samples instead of two endpoints. Averages over the window, and a single spike cannot move it. |
+| **Average over the window** | `(h(now) - h(now-750 ms)) / 0.75`, with the start height interpolated between the bracketing samples. This is the assignment's wording; the endpoint is what decides. |
+| **Slope diagnostic** | A least-squares fit over the same window is logged as `slope=`. It is smoother on a straight ramp but differs in sign on a bounce, so it does not arm the trigger. |
 | **1.50 m minimum** | About twice the observed altitude noise (0.9 m peak-to-peak). Without it, a bench wobble at "altitude 0" could satisfy a negative velocity. |
 | **−0.30 m/s margin** | A noise guard, not a performance threshold. Falling from rest at apogee, a 0.3 m/s trailing average is reached **~0.41 s and ~0.8 m** below the peak. Larger margins only delay detection. |
-| **Fixed 32-sample history** | 1.6 s at 20 Hz — the 750 ms window plus bracketing. Owned by the thread, not a third shared store: nobody else needs it. |
+| **25 cm drop confirmation** | A lift sets a new peak every sample, so its drop is always zero and it cannot fire no matter how noisy the pressure is. |
+| **Fixed 32-sample history** | 1.55 s at 20 Hz, which bounds the 750 ms window; the time bound is 2 s but capacity is reached first. Owned by the thread, not a third shared store. |
 | **Duplicate rejection** | The thread polls at 50 ms, but a slow pass can read the same sequence twice. A repeated sequence is ignored, not counted as new flight data. |
 | **Gap handling** | A hole longer than the 250 ms stale timeout clears the window; the next decision needs 750 ms of fresh samples. |
 | **Latch** | Once deployed, the detector ignores everything and the request store refuses a second event. Two independent guards against FLT-04. |
@@ -242,9 +249,11 @@ Both conditions are required, and the event latches.
 ### What "negative average velocity" actually promises
 
 It is the average over 750 ms: the current altitude is lower than it was 750 ms
-ago. It does **not** mean every intermediate sample descended, and it does not
-identify the exact peak — a rocket that bounces slightly after apogee still
-satisfies it. That is what FLT-03 asks for, and the README does not claim more.
+ago. It does **not** mean every intermediate sample descended - a bounce on the
+way down still satisfies it as long as the net change over the window is
+downward - and it does not identify the exact peak. That is what FLT-03 asks for,
+and the README does not claim more. The logged `slope=` value is a different
+estimate of the same window and is there for comparison, not for the decision.
 
 ### Configuring the trigger
 
@@ -274,7 +283,7 @@ The helper script accepts the same build directory, so the bench image can be
 flashed (and streamed) with the usual procedure:
 
 ```powershell
-C:\SCAE\projects\rocket-demo\tools\rtt-session.ps1 -Flash -BuildDir build\bench
+tools\rtt-session.ps1 -Flash -BuildDir build\bench
 ```
 
 Without `-BuildDir` it uses `build\primary`, which keeps the default image on the
@@ -311,7 +320,7 @@ and latch are all exercised without hardware:
 powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
 ```
 
-37 checks, including the exact threshold (`150 cm` deploys, `149 cm` does not),
+41 checks, including the exact threshold (`150 cm` deploys, `149 cm` does not),
 an incomplete window, a 1 s outage, out-of-order timestamps and a second flight
 after `reset()`.
 
@@ -348,7 +357,7 @@ the hysteresis band are exercised without hardware:
 powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
 ```
 
-31 checks: window start, no restart on repeated hot samples, renewal at expiry,
+37 checks: window start, no restart on repeated hot samples, renewal at expiry,
 renewal after a gap, immediate cooling, hysteresis, threshold equality, missing
 data and reset.
 
@@ -363,7 +372,7 @@ demonstration video, and a physical (non-replayed) apogee descent.
 
 The acceptance scenarios cannot be flown on a desk, so finished traces are
 played into the **same measurement store** the sensor writes to. Everything
-downstream � altitude, apogee, heat, LED � runs unmodified; only the source of
+downstream - altitude, apogee, heat, LED - runs unmodified; only the source of
 the samples differs.
 
 ```
@@ -375,8 +384,9 @@ input: REPLAY at05, 50 ms cadence (live sensor not used)
 - Traces live in `traces/*.csv`, generated by `tools/make-traces.py` from height
   profiles via the inverse barometric model, and embedded as
   `src/traces_data.hpp`.
-- The cadence is held at 50 ms in real time, so the 10 s indication and the
-  250 ms blink are genuine and filmable.
+- The pace comes from the trace's own timestamps (`t[i+1] - t[i]`), replayed in
+  real time, so the 10 s indication and the 250 ms blink are genuine and
+  filmable, and an irregularly spaced trace is not silently retimed.
 
 ```powershell
 west build -p always -b olimex_stm32_h407 -d build/replay . -- `
@@ -384,8 +394,9 @@ west build -p always -b olimex_stm32_h407 -d build/replay . -- `
 tools\rtt-session.ps1 -Flash -BuildDir build\replay
 ```
 
-Results for AT-04, AT-05, AT-06, AT-08, AT-09 and AT-11 are recorded in
-[docs/verification/replay.md](docs/verification/replay.md).
+Results for AT-04, AT-05, AT-05b, AT-06, AT-07, AT-08, AT-09 and AT-11 are
+recorded in [docs/verification/replay.md](docs/verification/replay.md), with the
+raw console captures in `tests/evidence/m10/`.
 ## LED indication
 
 One thread owns the LED. Nothing else writes the pin; the other tasks publish
@@ -491,13 +502,13 @@ There is no USB-UART adapter, so `printk()` goes to a **SEGGER RTT** ring buffer
 Terminal 1 — add `-Flash` on the first run or after any code change; omit it when the board already runs the current build:
 
 ```powershell
-C:\SCAE\projects\rocket-demo\tools\rtt-session.ps1 -Flash
+tools\rtt-session.ps1 -Flash
 ```
 
 Terminal 2:
 
 ```powershell
-python C:\SCAE\projects\rocket-demo\tools\rtt-view.py
+python tools\rtt-view.py
 ```
 
 Captured from the board:
@@ -569,31 +580,43 @@ and **[docs/decisions.md](docs/decisions.md)**.
 
 ## Local development environment
 
-- Zephyr/West workspace: `C:\Users\ChristianSemenov\zephyrproject` (Zephyr 4.4.2 in `deps\zephyr`).
+- Zephyr/West workspace on this machine: `%USERPROFILE%\zephyrproject` (Zephyr 4.4.2 in `deps\zephyr`).
 - Toolchain: `C:\zephyr-sdk-1.0.1`; Zephyr Workbench host tools environment: `%USERPROFILE%\.zinstaller\env.ps1`.
 - Workbench application board: `olimex_stm32_h407`; configuration name: `primary`.
-- C++ sources live in `src/`: `main.cpp` (startup), `shared_data.cpp` (the stores), the pure units `altitude.cpp` and `led_logic.cpp`, and one file per thread (`sensor_task.cpp`, `altitude_task.cpp`, `apogee_task.cpp`, `heat_task.cpp`, `led_manager.cpp`, `telemetry_task.cpp`), plus `replay.cpp` for the trace player; `app_config.hpp` holds the timing, stack and priority constants. `led_selftest.cpp` is only compiled when `APP_LED_SELFTEST=ON`. Host tests live in `tests/` and need no board. `prj.conf` enables `CONFIG_CPP=y` and `CONFIG_STD_CPP17=y`.
+- C++ sources live in `src/`: `main.cpp` (startup), `shared_data.cpp` (the stores), `bus_recovery.cpp` (the boot I2C step), the pure units `altitude.cpp`, `led_logic.cpp`, `led_pulse.cpp`, `apogee.cpp` and `heat.cpp`, and one file per thread (`sensor_task.cpp`, `altitude_task.cpp`, `apogee_task.cpp`, `heat_task.cpp`, `led_manager.cpp`, `telemetry_task.cpp`), plus `replay.cpp` for the trace player; `app_config.hpp` holds the timing, stack and priority constants. `led_selftest.cpp` is only compiled when `APP_LED_SELFTEST=ON`. Host tests live in `tests/` and need no board. `prj.conf` enables `CONFIG_CPP=y` and `CONFIG_STD_CPP17=y`.
 - Zephyr builds C++ with `-nostdinc++` against its minimal C++ library, so `<cmath>` is unavailable; `altitude.cpp` uses picolibc's `<math.h>` (`expm1`, `log1p`).
 - This repository is a freestanding application: it uses the separate West workspace and SDK; it does not contain Zephyr itself. `west-manifest.yml` is the workspace snapshot this project was built against (`west init` from it if you are starting from nothing). `.vscode/settings.json` contains a machine-specific workspace path — point it at your own checkout of that workspace, or ignore it and use the terminal below.
 - The existing build output under `build/` is ignored by Git and should be regenerated locally.
 
-With the Zephyr workspace and host tools installed, build from an activated VS Code PowerShell terminal. Replace `<path-to-your-clone>` with this repository's location; nothing depends on `C:\SCAE`:
+With the Zephyr workspace and host tools installed, build from an activated VS
+Code PowerShell terminal. Replace `<path-to-your-clone>` with this repository's
+location, and `C:\zephyr-sdk-1.0.1` with wherever the SDK is installed (that is
+the default installer location, and it is not inside the workspace). Nothing
+depends on the repository being under `C:\SCAE`:
 
 ```powershell
-. "$env:USERPROFILE\.zinstaller\env.ps1"
+. "$env:USERPROFILE\.zinstaller\env.ps1"      # Workbench host tools; omit if west is already on PATH
 $env:ZEPHYR_BASE = "$env:USERPROFILE\zephyrproject\deps\zephyr"
-$env:ZEPHYR_SDK_INSTALL_DIR = "$env:USERPROFILE\zephyr-sdk-1.0.1"
+$env:ZEPHYR_SDK_INSTALL_DIR = "C:\zephyr-sdk-1.0.1"
 $env:ZEPHYR_TOOLCHAIN_VARIANT = 'zephyr'
 cd <path-to-your-clone>
 west build -p always -b olimex_stm32_h407 -d build/primary .
 ```
 
-This build command was tested locally, **not from a clean clone on another machine**. Explicit workspace/SDK variables are needed in a standalone terminal; activating the host tools alone did not locate them here.
+Check both paths before building: `$env:ZEPHYR_BASE` must point at the Zephyr
+source tree inside the workspace (`<workspace>\deps\zephyr`), and
+`$env:ZEPHYR_SDK_INSTALL_DIR` at the SDK root (the directory containing `gnu`
+and `hosttools`), not at the workspace.
+
+This build command was verified from a clean clone of the release candidate as
+well as locally (see `docs/acceptance-matrix.md`, "Reproducibility check").
+Explicit workspace/SDK variables are needed in a standalone terminal; activating
+the host tools alone did not locate them here.
 
 With the board correctly powered and the same ST-Link SWD wiring used for the reference project, use Workbench's Flash action or run in the same terminal:
 
 ```powershell
-west flash -d build/primary --runner openocd -- --config "C:/SCAE/projects/rocket-demo/openocd-stlink.cfg"
+west flash -d build/primary --runner openocd -- --config openocd-stlink.cfg
 ```
 
 For debugging, select **Zephyr Workbench Debug [primary]** in VS Code's Run and Debug view after building. `.vscode/launch.json` is configured to start the SDK's OpenOCD directly, connect GDB on port 3333, program the ELF, and break at `main()`. It does not depend on generated `.debug` helper files. Resume execution to observe blinking; stop any existing debug/OpenOCD session before flashing.
@@ -622,4 +645,6 @@ Known limitations, stated rather than hidden:
 - The temperature alarm was exercised with replayed and lowered-threshold temperatures, not by
   warming the real sensor to 30 C.
 
-The detailed work plan and assignment/requirements currently live outside this repository at `G:\My Drive\Engineering\SCAE\Interview Test\`.
+The work plan, assignment and requirements are included here: `docs/assignment.md`
+is the task as given, and `docs/requirements.md` is the derived checklist with the
+acceptance IDs used above.

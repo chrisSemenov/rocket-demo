@@ -31,19 +31,19 @@ Three things must all be true, and each one has failed at least once during brin
 Terminal 1 — flash (first time, or after any code change) and serve the stream:
 
 ```powershell
-C:\SCAE\projects\rocket-demo\tools\rtt-session.ps1 -Flash
+tools\rtt-session.ps1 -Flash
 ```
 
 Or, if the board already runs the current build, attach without re-flashing:
 
 ```powershell
-C:\SCAE\projects\rocket-demo\tools\rtt-session.ps1
+tools\rtt-session.ps1
 ```
 
 Terminal 2 — read the stream (leave terminal 1 running):
 
 ```powershell
-python C:\SCAE\projects\rocket-demo\tools\rtt-view.py
+python tools\rtt-view.py
 ```
 
 Useful switches:
@@ -58,7 +58,7 @@ Useful switches:
 `-DryRun` is the safest way to inspect what will happen:
 
 ```powershell
-C:\SCAE\projects\rocket-demo\tools\rtt-session.ps1 -Flash -DryRun
+tools\rtt-session.ps1 -Flash -DryRun
 ```
 
 ## The underlying OpenOCD command
@@ -67,9 +67,9 @@ C:\SCAE\projects\rocket-demo\tools\rtt-session.ps1 -Flash -DryRun
 
 ```powershell
 & 'C:\zephyr-sdk-1.0.1\hosttools\openocd\bin\openocd.exe' `
-  -f 'C:\SCAE\projects\rocket-demo\openocd-stlink.cfg' `
+  -f 'openocd-stlink.cfg' `
   -c 'init' `
-  -c 'program C:/SCAE/projects/rocket-demo/build/primary/zephyr/zephyr.elf verify' `
+  -c 'program build/primary/zephyr/zephyr.elf verify' `
   -c 'reset run' `
   -c 'sleep 1000' `
   -c 'stm32f4x.cpu rtt setup 0x20000000 0x8B8 {SEGGER RTT}' `
@@ -109,7 +109,7 @@ The window comes from two linker symbols:
 
 ```powershell
 & 'C:\zephyr-sdk-1.0.1\gnu\arm-zephyr-eabi\bin\arm-zephyr-eabi-nm.exe' `
-  'C:\SCAE\projects\rocket-demo\build\primary\zephyr\zephyr.elf' | Select-String '__rtt'
+  'build\primary\zephyr\zephyr.elf' | Select-String '__rtt'
 ```
 
 ```
@@ -152,8 +152,8 @@ CONFIG_UART_CONSOLE=n
 ## Reading the stream
 
 ```powershell
-python C:\SCAE\projects\rocket-demo\tools\rtt-view.py            # port 9090
-python C:\SCAE\projects\rocket-demo\tools\rtt-view.py --port 9091
+python tools\rtt-view.py            # port 9090
+python tools\rtt-view.py --port 9091
 ```
 
 `tools/rtt-view.py` is a ~30-line TCP client. Windows ships neither `telnet` nor `nc` by

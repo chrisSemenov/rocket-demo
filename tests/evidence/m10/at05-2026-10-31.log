@@ -1,0 +1,175 @@
+*** Booting Zephyr OS build v4.4.2 ***
+TEST MODE: REPLAY at05 (live sensor not used)
+input: REPLAY at05, 50 ms cadence (live sensor not used)
+threads: replay(5) altitude(6) apogee(7) heat(8) led(9) telemetry(10); stale timeout 250 ms
+REPLAY TEST: at05 - one deployment after the peak, then 19 s of continued descent (501 samples, 25000 ms)
+apogee: no usable altitude (valid=0 calibrated=0 age=0 ms)
+heat: threshold 30.000 C, hysteresis 200 mC, window 5000 ms
+led:  [      0.011] off
+[      0.01 s] seq=1  P=95120 Pa  T=21.50 C  age=0 ms
+alt:  not available yet (baseline 1/38 samples)
+apogee: no usable altitude (valid=0 calibrated=0 age=0 ms)
+apogee: no usable altitude (valid=0 calibrated=0 age=0 ms)
+[      0.51 s] seq=11  P=95120 Pa  T=21.50 C  age=0 ms
+alt:  not available yet (baseline 11/38 samples)
+[      1.01 s] seq=21  P=95120 Pa  T=21.50 C  age=0 ms
+alt:  not available yet (baseline 21/38 samples)
+[      1.51 s] seq=31  P=95120 Pa  T=21.50 C  age=0 ms
+alt:  baseline frozen P0=95120 Pa after 38 samples (spread 0 Pa)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=0 ms  n=1  state=filling  seq=38
+[      2.01 s] seq=41  P=95120 Pa  T=21.50 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=41  age=0 ms
+apogee: h=0.71 m  v=0.000  slope=0.000  cov=500 ms  n=11  state=filling  seq=48
+[      2.51 s] seq=51  P=95109 Pa  T=21.50 C  age=0 ms
+alt:  h=0.98 m  P0=95120 Pa  seq=51  age=0 ms
+apogee: armed; threshold 150 cm, drop 25 cm, margin 300 mm/s, window 750 ms (endpoint average; slope is diagnostic)
+led:  ready signal
+led:  [      2.611] ready flash on
+led:  [      2.711] ready flash off
+led:  [      2.831] ready flash on
+apogee: h=1.69 m  v=2.013  slope=2.006  cov=1000 ms  n=21  state=ready  seq=58
+led:  [      2.931] ready flash end
+[      3.01 s] seq=61  P=95097 Pa  T=21.50 C  age=0 ms
+alt:  h=2.04 m  P0=95120 Pa  seq=61  age=0 ms
+apogee: h=2.66 m  v=1.893  slope=1.938  cov=1500 ms  n=31  state=ready  seq=68
+[      3.51 s] seq=71  P=95086 Pa  T=21.50 C  age=0 ms
+alt:  h=3.02 m  P0=95120 Pa  seq=71  age=0 ms
+apogee: h=3.73 m  v=2.013  slope=2.006  cov=1550 ms  n=32  state=ready  seq=78
+[      4.01 s] seq=81  P=95075 Pa  T=21.50 C  age=0 ms
+alt:  h=3.99 m  P0=95120 Pa  seq=81  age=0 ms
+apogee: h=4.70 m  v=2.013  slope=2.025  cov=1550 ms  n=32  state=ready  seq=88
+[      4.51 s] seq=91  P=95064 Pa  T=21.50 C  age=0 ms
+alt:  h=4.97 m  P0=95120 Pa  seq=91  age=0 ms
+apogee: h=5.68 m  v=2.013  slope=2.004  cov=1550 ms  n=32  state=ready  seq=98
+[      5.01 s] seq=101  P=95052 Pa  T=21.50 C  age=0 ms
+alt:  h=6.03 m  P0=95120 Pa  seq=101  age=0 ms
+apogee: h=5.94 m  v=0.947  slope=1.093  cov=1550 ms  n=32  state=ready  seq=108
+[      5.51 s] seq=111  P=95057 Pa  T=21.50 C  age=0 ms
+alt:  h=5.59 m  P0=95120 Pa  seq=111  age=0 ms
+apogee: DEPLOY at 5.41 m, v=-0.360 m/s (slope=-0.495); LED on until 15611 ms (seq=113)
+led:  [      5.611] on (deployment)
+apogee: h=4.88 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=118
+[      6.01 s] seq=121  P=95068 Pa  T=21.50 C  age=0 ms
+alt:  h=4.61 m  P0=95120 Pa  seq=121  age=0 ms
+apogee: h=3.90 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=128
+[      6.51 s] seq=131  P=95079 Pa  T=21.50 C  age=0 ms
+alt:  h=3.64 m  P0=95120 Pa  seq=131  age=0 ms
+apogee: h=2.93 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=138
+[      7.01 s] seq=141  P=95091 Pa  T=21.50 C  age=0 ms
+alt:  h=2.57 m  P0=95120 Pa  seq=141  age=0 ms
+apogee: h=1.86 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=148
+[      7.51 s] seq=151  P=95102 Pa  T=21.50 C  age=0 ms
+alt:  h=1.60 m  P0=95120 Pa  seq=151  age=0 ms
+apogee: h=0.89 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=158
+[      8.01 s] seq=161  P=95113 Pa  T=21.50 C  age=0 ms
+alt:  h=0.62 m  P0=95120 Pa  seq=161  age=0 ms
+apogee: h=-0.09 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=168
+[      8.51 s] seq=171  P=95125 Pa  T=21.50 C  age=0 ms
+alt:  h=-0.44 m  P0=95120 Pa  seq=171  age=0 ms
+apogee: h=-1.06 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=178
+[      9.01 s] seq=181  P=95136 Pa  T=21.50 C  age=0 ms
+alt:  h=-1.42 m  P0=95120 Pa  seq=181  age=0 ms
+apogee: h=-1.77 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=188
+[      9.51 s] seq=191  P=95141 Pa  T=21.50 C  age=0 ms
+alt:  h=-1.86 m  P0=95120 Pa  seq=191  age=0 ms
+apogee: h=-2.22 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=198
+[     10.01 s] seq=201  P=95147 Pa  T=21.50 C  age=0 ms
+alt:  h=-2.39 m  P0=95120 Pa  seq=201  age=0 ms
+apogee: h=-2.75 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=208
+[     10.51 s] seq=211  P=95153 Pa  T=21.50 C  age=0 ms
+alt:  h=-2.93 m  P0=95120 Pa  seq=211  age=0 ms
+apogee: h=-3.28 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=218
+[     11.01 s] seq=221  P=95158 Pa  T=21.50 C  age=0 ms
+alt:  h=-3.37 m  P0=95120 Pa  seq=221  age=0 ms
+apogee: h=-3.72 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=228
+[     11.51 s] seq=231  P=95164 Pa  T=21.50 C  age=0 ms
+alt:  h=-3.90 m  P0=95120 Pa  seq=231  age=0 ms
+apogee: h=-4.26 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=238
+[     12.01 s] seq=241  P=95170 Pa  T=21.50 C  age=0 ms
+alt:  h=-4.43 m  P0=95120 Pa  seq=241  age=0 ms
+apogee: h=-4.79 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=248
+[     12.51 s] seq=251  P=95175 Pa  T=21.50 C  age=0 ms
+alt:  h=-4.88 m  P0=95120 Pa  seq=251  age=0 ms
+apogee: h=-5.23 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=258
+[     13.01 s] seq=261  P=95181 Pa  T=21.50 C  age=0 ms
+alt:  h=-5.41 m  P0=95120 Pa  seq=261  age=0 ms
+apogee: h=-5.76 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=268
+[     13.51 s] seq=271  P=95187 Pa  T=21.50 C  age=0 ms
+alt:  h=-5.94 m  P0=95120 Pa  seq=271  age=0 ms
+apogee: h=-6.21 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=278
+[     14.01 s] seq=281  P=95192 Pa  T=21.50 C  age=0 ms
+alt:  h=-6.38 m  P0=95120 Pa  seq=281  age=0 ms
+apogee: h=-6.74 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=288
+[     14.51 s] seq=291  P=95198 Pa  T=21.50 C  age=0 ms
+alt:  h=-6.92 m  P0=95120 Pa  seq=291  age=0 ms
+apogee: h=-7.27 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=298
+[     15.01 s] seq=301  P=95203 Pa  T=21.50 C  age=0 ms
+alt:  h=-7.36 m  P0=95120 Pa  seq=301  age=0 ms
+apogee: h=-7.71 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=308
+[     15.51 s] seq=311  P=95209 Pa  T=21.50 C  age=0 ms
+alt:  h=-7.89 m  P0=95120 Pa  seq=311  age=0 ms
+led:  [     15.611] off
+apogee: h=-8.24 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=318
+[     16.01 s] seq=321  P=95215 Pa  T=21.50 C  age=0 ms
+alt:  h=-8.42 m  P0=95120 Pa  seq=321  age=0 ms
+apogee: h=-8.78 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=328
+[     16.51 s] seq=331  P=95220 Pa  T=21.50 C  age=0 ms
+alt:  h=-8.87 m  P0=95120 Pa  seq=331  age=0 ms
+apogee: h=-9.22 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=338
+[     17.01 s] seq=341  P=95226 Pa  T=21.50 C  age=0 ms
+alt:  h=-9.40 m  P0=95120 Pa  seq=341  age=0 ms
+apogee: h=-9.75 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=348
+[     17.51 s] seq=351  P=95232 Pa  T=21.50 C  age=0 ms
+alt:  h=-9.93 m  P0=95120 Pa  seq=351  age=0 ms
+apogee: h=-10.28 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=358
+[     18.01 s] seq=361  P=95237 Pa  T=21.50 C  age=0 ms
+alt:  h=-10.37 m  P0=95120 Pa  seq=361  age=0 ms
+apogee: h=-10.73 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=368
+[     18.51 s] seq=371  P=95243 Pa  T=21.50 C  age=0 ms
+alt:  h=-10.90 m  P0=95120 Pa  seq=371  age=0 ms
+apogee: h=-11.26 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=378
+[     19.01 s] seq=381  P=95249 Pa  T=21.50 C  age=0 ms
+alt:  h=-11.43 m  P0=95120 Pa  seq=381  age=0 ms
+apogee: h=-11.79 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=388
+[     19.51 s] seq=391  P=95254 Pa  T=21.50 C  age=0 ms
+alt:  h=-11.88 m  P0=95120 Pa  seq=391  age=0 ms
+apogee: h=-12.23 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=398
+[     20.01 s] seq=401  P=95260 Pa  T=21.50 C  age=0 ms
+alt:  h=-12.41 m  P0=95120 Pa  seq=401  age=0 ms
+apogee: h=-12.76 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=408
+[     20.51 s] seq=411  P=95266 Pa  T=21.50 C  age=0 ms
+alt:  h=-12.94 m  P0=95120 Pa  seq=411  age=0 ms
+apogee: h=-13.21 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=418
+[     21.01 s] seq=421  P=95271 Pa  T=21.50 C  age=0 ms
+alt:  h=-13.38 m  P0=95120 Pa  seq=421  age=0 ms
+apogee: h=-13.74 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=428
+[     21.51 s] seq=431  P=95277 Pa  T=21.50 C  age=0 ms
+alt:  h=-13.91 m  P0=95120 Pa  seq=431  age=0 ms
+apogee: h=-14.27 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=438
+[     22.01 s] seq=441  P=95282 Pa  T=21.50 C  age=0 ms
+alt:  h=-14.36 m  P0=95120 Pa  seq=441  age=0 ms
+apogee: h=-14.71 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=448
+[     22.51 s] seq=451  P=95288 Pa  T=21.50 C  age=0 ms
+alt:  h=-14.89 m  P0=95120 Pa  seq=451  age=0 ms
+apogee: h=-15.24 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=458
+[     23.01 s] seq=461  P=95294 Pa  T=21.50 C  age=0 ms
+alt:  h=-15.42 m  P0=95120 Pa  seq=461  age=0 ms
+apogee: h=-15.77 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=468
+[     23.51 s] seq=471  P=95299 Pa  T=21.50 C  age=0 ms
+alt:  h=-15.86 m  P0=95120 Pa  seq=471  age=0 ms
+apogee: h=-16.22 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=478
+[     24.01 s] seq=481  P=95305 Pa  T=21.50 C  age=0 ms
+alt:  h=-16.39 m  P0=95120 Pa  seq=481  age=0 ms
+apogee: h=-16.75 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=488
+[     24.51 s] seq=491  P=95311 Pa  T=21.50 C  age=0 ms
+alt:  h=-16.93 m  P0=95120 Pa  seq=491  age=0 ms
+apogee: h=-17.28 m  v=n/a  slope=n/a  cov=1550 ms  n=32  state=deployed  seq=498
+[     25.01 s] seq=501  P=95316 Pa  T=21.50 C  age=0 ms
+alt:  h=-17.37 m  P0=95120 Pa  seq=501  age=0 ms
+REPLAY TEST: done, 501 samples published
+heat: no usable temperature (age=0 ms)
+heat: no usable temperature (age=50 ms)
+heat: no usable temperature (age=100 ms)
+telemetry: no valid measurement yet (error=0)
+telemetry: no valid measurement yet (error=0)
+telemetry: no valid measurement yet (error=0)

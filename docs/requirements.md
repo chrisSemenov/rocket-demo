@@ -6,7 +6,7 @@ Develop a bench demonstration of a simple rocket flight controller using **Zephy
 
 The application demonstrates concurrent processing, decoupled shared-memory communication, barometric altitude estimation, apogee detection, and priority-based control of a single user LED.
 
-**Source of mandatory requirements:** [`assignment.md`](../assignment.md). Recommendations and unresolved details below are explicitly distinguished from assignment requirements.
+**Source of mandatory requirements:** [`assignment.md`](assignment.md). Recommendations and unresolved details below are explicitly distinguished from assignment requirements.
 
 Physical parachute deployment, guidance, motor control, and flight-safety certification are out of scope. Deployment is simulated using the LED only.
 

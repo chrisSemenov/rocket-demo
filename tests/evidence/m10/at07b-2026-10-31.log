@@ -1,0 +1,163 @@
+*** Booting Zephyr OS build v4.4.2 ***
+TEST MODE: REPLAY at07b (live sensor not used)
+input: REPLAY at07b, 50 ms cadence (live sensor not used)
+threads: replay(5) altitude(6) apogee(7) heat(8) led(9) telemetry(10); stale timeout 250 ms
+REPLAY TEST: at07b - two renewals while hot, then cooling clears it (321 samples, 16000 ms)
+apogee: no usable altitude (valid=0 calibrated=0 age=0 ms)
+heat: threshold 30.000 C, hysteresis 200 mC, window 5000 ms
+led:  [      0.011] off
+[      0.01 s] seq=1  P=95120 Pa  T=21.50 C  age=0 ms
+alt:  not available yet (baseline 1/38 samples)
+apogee: no usable altitude (valid=0 calibrated=0 age=0 ms)
+apogee: no usable altitude (valid=0 calibrated=0 age=0 ms)
+[      0.51 s] seq=11  P=95120 Pa  T=21.50 C  age=0 ms
+alt:  not available yet (baseline 11/38 samples)
+[      1.01 s] seq=21  P=95120 Pa  T=21.50 C  age=0 ms
+alt:  not available yet (baseline 21/38 samples)
+[      1.51 s] seq=31  P=95120 Pa  T=21.50 C  age=0 ms
+alt:  baseline frozen P0=95120 Pa after 38 samples (spread 0 Pa)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=0 ms  n=1  state=filling  seq=38
+[      2.01 s] seq=41  P=95120 Pa  T=21.50 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=41  age=0 ms
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=500 ms  n=11  state=filling  seq=48
+[      2.51 s] seq=51  P=95120 Pa  T=21.50 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=51  age=0 ms
+apogee: armed; threshold 150 cm, drop 25 cm, margin 300 mm/s, window 750 ms (endpoint average; slope is diagnostic)
+led:  ready signal
+led:  [      2.611] ready flash on
+led:  [      2.711] ready flash off
+led:  [      2.831] ready flash on
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1000 ms  n=21  state=ready  seq=58
+led:  [      2.931] ready flash end
+[      3.01 s] seq=61  P=95120 Pa  T=21.50 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=61  age=0 ms
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1500 ms  n=31  state=ready  seq=68
+[      3.51 s] seq=71  P=95120 Pa  T=21.50 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=71  age=0 ms
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=78
+heat: HOT at 32.000 C; alarm until 9011 ms (seq=81)
+led:  [      4.011] blink on (heat)
+[      4.01 s] seq=81  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=81  age=0 ms
+led:  [      4.261] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=88
+led:  [      4.511] blink on (heat)
+[      4.51 s] seq=91  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=91  age=0 ms
+led:  [      4.761] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=98
+led:  [      5.011] blink on (heat)
+[      5.01 s] seq=101  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=101  age=0 ms
+led:  [      5.261] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=108
+led:  [      5.511] blink on (heat)
+[      5.51 s] seq=111  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=111  age=0 ms
+led:  [      5.761] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=118
+led:  [      6.011] blink on (heat)
+[      6.01 s] seq=121  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=121  age=0 ms
+led:  [      6.261] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=128
+led:  [      6.511] blink on (heat)
+[      6.51 s] seq=131  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=131  age=0 ms
+led:  [      6.761] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=138
+led:  [      7.011] blink on (heat)
+[      7.01 s] seq=141  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=141  age=0 ms
+led:  [      7.261] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=148
+led:  [      7.511] blink on (heat)
+[      7.51 s] seq=151  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=151  age=0 ms
+led:  [      7.761] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=158
+led:  [      8.011] blink on (heat)
+[      8.01 s] seq=161  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=161  age=0 ms
+led:  [      8.261] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=168
+led:  [      8.511] blink on (heat)
+[      8.51 s] seq=171  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=171  age=0 ms
+led:  [      8.761] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=178
+heat: still hot at 32.000 C; alarm extended to 14011 ms (seq=180)
+led:  [      9.011] blink on (heat)
+[      9.01 s] seq=181  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=181  age=0 ms
+led:  [      9.261] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=188
+led:  [      9.511] blink on (heat)
+[      9.51 s] seq=191  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=191  age=0 ms
+led:  [      9.761] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=198
+led:  [     10.011] blink on (heat)
+[     10.01 s] seq=201  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=201  age=0 ms
+led:  [     10.261] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=208
+led:  [     10.511] blink on (heat)
+[     10.51 s] seq=211  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=211  age=0 ms
+led:  [     10.761] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=218
+led:  [     11.011] blink on (heat)
+[     11.01 s] seq=221  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=221  age=0 ms
+led:  [     11.261] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=228
+led:  [     11.511] blink on (heat)
+[     11.51 s] seq=231  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=231  age=0 ms
+led:  [     11.761] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=238
+led:  [     12.011] blink on (heat)
+[     12.01 s] seq=241  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=241  age=0 ms
+led:  [     12.261] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=248
+led:  [     12.511] blink on (heat)
+[     12.51 s] seq=251  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=251  age=0 ms
+led:  [     12.761] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=258
+led:  [     13.011] blink on (heat)
+[     13.01 s] seq=261  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=261  age=0 ms
+led:  [     13.261] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=268
+led:  [     13.511] blink on (heat)
+[     13.51 s] seq=271  P=95120 Pa  T=32.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=271  age=0 ms
+led:  [     13.761] blink off (heat)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=278
+heat: still hot at 32.000 C; alarm extended to 19011 ms (seq=280)
+heat: cooled at 24.000 C; alarm cleared (seq=281)
+led:  [     14.011] off
+[     14.01 s] seq=281  P=95120 Pa  T=24.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=281  age=0 ms
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=288
+[     14.51 s] seq=291  P=95120 Pa  T=24.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=291  age=0 ms
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=298
+[     15.01 s] seq=301  P=95120 Pa  T=24.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=301  age=0 ms
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=308
+[     15.51 s] seq=311  P=95120 Pa  T=24.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=311  age=0 ms
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=1550 ms  n=32  state=ready  seq=318
+[     16.01 s] seq=321  P=95120 Pa  T=24.00 C  age=0 ms
+alt:  h=0.00 m  P0=95120 Pa  seq=321  age=0 ms
+REPLAY TEST: done, 321 samples published
+heat: no usable temperature (age=0 ms)
+heat: no usable temperature (age=50 ms)
+heat: no usable temperature (age=100 ms)
+telemetry: no valid measurement yet (error=0)
+telemetry: no valid measurement yet (error=0)
+telemetry: no valid measurement yet (error=0)

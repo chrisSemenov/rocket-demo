@@ -1,0 +1,462 @@
+*** Booting Zephyr OS build v4.4.2 ***
+i2c: boot recovery ok (ran before the sensor driver)
+input: LIVE BMP280, I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x, 50 ms period
+threads: sensor(5) altitude(6) apogee(7) heat(8) led(9) telemetry(10); stale timeout 250 ms
+apogee: no usable altitude (valid=0 calibrated=0 age=11 ms)
+heat: threshold 30.000 C, hysteresis 200 mC, window 5000 ms
+heat: no usable temperature (age=11 ms)
+led:  [      0.011] off
+telemetry: no valid measurement yet (error=0)
+alt:  not available yet (baseline 0/38 samples)
+apogee: no usable altitude (valid=0 calibrated=0 age=8 ms)
+apogee: no usable altitude (valid=0 calibrated=0 age=26 ms)
+[      0.51 s] seq=10  P=95142 Pa  T=22.98 C  age=27 ms
+alt:  not available yet (baseline 10/38 samples)
+[      1.01 s] seq=20  P=95140 Pa  T=22.99 C  age=27 ms
+alt:  not available yet (baseline 20/38 samples)
+[      1.51 s] seq=30  P=95138 Pa  T=23.00 C  age=27 ms
+alt:  baseline frozen P0=95140 Pa after 38 samples (spread 8 Pa)
+apogee: h=0.00 m  v=0.000  slope=0.000  cov=0 ms  n=1  state=filling  seq=38
+[      2.01 s] seq=40  P=95143 Pa  T=23.00 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=40  age=27 ms
+apogee: h=-0.18 m  v=0.000  slope=0.000  cov=500 ms  n=11  state=filling  seq=48
+[      2.51 s] seq=50  P=95140 Pa  T=23.00 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=50  age=27 ms
+apogee: armed; threshold 150 cm, drop 25 cm, margin 300 mm/s, window 750 ms (endpoint average; slope is diagnostic)
+led:  ready signal
+led:  [      2.661] ready flash on
+led:  [      2.761] ready flash off
+led:  [      2.881] ready flash on
+apogee: h=0.00 m  v=0.360  slope=0.499  cov=1000 ms  n=21  state=ready  seq=58
+led:  [      2.981] ready flash end
+[      3.01 s] seq=60  P=95143 Pa  T=22.99 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=60  age=27 ms
+apogee: h=-0.27 m  v=-0.600  slope=-0.302  cov=1500 ms  n=31  state=ready  seq=68
+[      3.51 s] seq=70  P=95142 Pa  T=23.00 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=70  age=27 ms
+apogee: h=0.18 m  v=0.360  slope=0.177  cov=1550 ms  n=32  state=ready  seq=78
+[      4.01 s] seq=80  P=95140 Pa  T=23.00 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=80  age=27 ms
+apogee: h=-0.27 m  v=-0.240  slope=-0.177  cov=1550 ms  n=32  state=ready  seq=88
+[      4.51 s] seq=90  P=95138 Pa  T=23.00 C  age=27 ms
+alt:  h=0.18 m  P0=95140 Pa  seq=90  age=27 ms
+apogee: h=-0.35 m  v=-0.227  slope=0.270  cov=1550 ms  n=32  state=ready  seq=98
+[      5.01 s] seq=100  P=95139 Pa  T=23.00 C  age=27 ms
+alt:  h=0.09 m  P0=95140 Pa  seq=100  age=27 ms
+apogee: h=-0.09 m  v=-0.480  slope=-0.193  cov=1550 ms  n=32  state=ready  seq=108
+[      5.51 s] seq=110  P=95138 Pa  T=23.00 C  age=27 ms
+alt:  h=0.18 m  P0=95140 Pa  seq=110  age=27 ms
+apogee: h=0.09 m  v=0.480  slope=0.090  cov=1550 ms  n=32  state=ready  seq=118
+[      6.01 s] seq=120  P=95140 Pa  T=23.00 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=120  age=27 ms
+apogee: h=0.09 m  v=0.360  slope=0.053  cov=1550 ms  n=32  state=ready  seq=128
+[      6.51 s] seq=130  P=95138 Pa  T=23.01 C  age=27 ms
+alt:  h=0.18 m  P0=95140 Pa  seq=130  age=27 ms
+apogee: h=-0.09 m  v=-0.360  slope=-0.143  cov=1550 ms  n=32  state=ready  seq=138
+[      7.01 s] seq=140  P=95142 Pa  T=23.01 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=140  age=27 ms
+apogee: h=0.00 m  v=0.120  slope=-0.100  cov=1550 ms  n=32  state=ready  seq=148
+[      7.51 s] seq=150  P=95145 Pa  T=23.01 C  age=27 ms
+alt:  h=-0.44 m  P0=95140 Pa  seq=150  age=27 ms
+apogee: h=-0.09 m  v=0.000  slope=-0.202  cov=1550 ms  n=32  state=ready  seq=158
+[      8.01 s] seq=160  P=95144 Pa  T=23.01 C  age=27 ms
+alt:  h=-0.35 m  P0=95140 Pa  seq=160  age=27 ms
+apogee: h=0.09 m  v=0.480  slope=0.311  cov=1550 ms  n=32  state=ready  seq=168
+[      8.51 s] seq=170  P=95140 Pa  T=23.00 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=170  age=27 ms
+apogee: h=0.00 m  v=0.240  slope=-0.009  cov=1550 ms  n=32  state=ready  seq=178
+[      9.01 s] seq=180  P=95140 Pa  T=23.01 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=180  age=27 ms
+apogee: h=-0.44 m  v=-0.347  slope=-0.011  cov=1550 ms  n=32  state=ready  seq=188
+[      9.51 s] seq=190  P=95144 Pa  T=23.01 C  age=27 ms
+alt:  h=-0.35 m  P0=95140 Pa  seq=190  age=27 ms
+apogee: h=-0.35 m  v=-0.587  slope=-0.372  cov=1550 ms  n=32  state=ready  seq=198
+[     10.01 s] seq=200  P=95144 Pa  T=23.01 C  age=27 ms
+alt:  h=-0.35 m  P0=95140 Pa  seq=200  age=27 ms
+apogee: h=-0.27 m  v=0.107  slope=0.374  cov=1550 ms  n=32  state=ready  seq=208
+[     10.51 s] seq=210  P=95142 Pa  T=23.01 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=210  age=27 ms
+apogee: h=-0.09 m  v=0.240  slope=-0.058  cov=1550 ms  n=32  state=ready  seq=218
+[     11.01 s] seq=220  P=95143 Pa  T=23.02 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=220  age=27 ms
+apogee: h=-0.09 m  v=-0.120  slope=0.032  cov=1550 ms  n=32  state=ready  seq=228
+[     11.51 s] seq=230  P=95141 Pa  T=23.01 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=230  age=27 ms
+apogee: h=0.09 m  v=0.240  slope=0.106  cov=1550 ms  n=32  state=ready  seq=238
+[     12.01 s] seq=240  P=95144 Pa  T=23.01 C  age=27 ms
+alt:  h=-0.35 m  P0=95140 Pa  seq=240  age=27 ms
+apogee: h=-0.44 m  v=-0.227  slope=-0.207  cov=1550 ms  n=32  state=ready  seq=248
+[     12.51 s] seq=250  P=95142 Pa  T=23.01 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=250  age=27 ms
+apogee: h=0.00 m  v=0.000  slope=0.155  cov=1550 ms  n=32  state=ready  seq=258
+[     13.01 s] seq=260  P=95138 Pa  T=23.00 C  age=27 ms
+alt:  h=0.18 m  P0=95140 Pa  seq=260  age=27 ms
+apogee: h=-0.09 m  v=0.240  slope=0.146  cov=1550 ms  n=32  state=ready  seq=268
+[     13.51 s] seq=270  P=95141 Pa  T=23.00 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=270  age=27 ms
+apogee: h=0.09 m  v=0.000  slope=-0.366  cov=1550 ms  n=32  state=ready  seq=278
+[     14.01 s] seq=280  P=95140 Pa  T=23.00 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=280  age=27 ms
+apogee: h=-0.18 m  v=0.120  slope=-0.155  cov=1550 ms  n=32  state=ready  seq=288
+[     14.51 s] seq=290  P=95143 Pa  T=23.01 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=290  age=27 ms
+apogee: h=0.00 m  v=0.240  slope=0.266  cov=1550 ms  n=32  state=ready  seq=298
+[     15.01 s] seq=300  P=95142 Pa  T=23.00 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=300  age=27 ms
+apogee: h=-0.27 m  v=-0.240  slope=-0.049  cov=1550 ms  n=32  state=ready  seq=308
+[     15.51 s] seq=310  P=95142 Pa  T=23.00 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=310  age=27 ms
+apogee: h=-0.35 m  v=0.240  slope=-0.051  cov=1550 ms  n=32  state=ready  seq=318
+[     16.01 s] seq=320  P=95142 Pa  T=23.00 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=320  age=27 ms
+apogee: h=0.27 m  v=0.720  slope=0.327  cov=1550 ms  n=32  state=ready  seq=328
+[     16.51 s] seq=330  P=95142 Pa  T=23.00 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=330  age=27 ms
+apogee: h=0.00 m  v=0.240  slope=0.080  cov=1550 ms  n=32  state=ready  seq=338
+[     17.01 s] seq=340  P=95141 Pa  T=22.99 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=340  age=27 ms
+apogee: h=-0.09 m  v=-0.120  slope=-0.024  cov=1550 ms  n=32  state=ready  seq=348
+[     17.51 s] seq=350  P=95141 Pa  T=23.00 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=350  age=27 ms
+apogee: h=-0.18 m  v=0.227  slope=-0.145  cov=1550 ms  n=32  state=ready  seq=358
+[     18.01 s] seq=360  P=95143 Pa  T=23.00 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=360  age=27 ms
+apogee: h=-0.18 m  v=-0.120  slope=-0.015  cov=1550 ms  n=32  state=ready  seq=368
+[     18.51 s] seq=370  P=95144 Pa  T=22.99 C  age=27 ms
+alt:  h=-0.35 m  P0=95140 Pa  seq=370  age=27 ms
+apogee: h=-0.35 m  v=-0.347  slope=-0.056  cov=1550 ms  n=32  state=ready  seq=378
+[     19.01 s] seq=380  P=95141 Pa  T=23.00 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=380  age=27 ms
+apogee: h=0.00 m  v=0.120  slope=0.239  cov=1550 ms  n=32  state=ready  seq=388
+[     19.51 s] seq=390  P=95141 Pa  T=22.99 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=390  age=27 ms
+stats: 200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  recoveries=0 failed=0  seq=390
+apogee: h=-0.09 m  v=0.000  slope=-0.079  cov=1550 ms  n=32  state=ready  seq=398
+[     20.01 s] seq=400  P=95141 Pa  T=22.99 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=400  age=27 ms
+apogee: h=-0.27 m  v=-0.120  slope=-0.103  cov=1550 ms  n=32  state=ready  seq=408
+[     20.51 s] seq=410  P=95143 Pa  T=22.99 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=410  age=27 ms
+apogee: h=-0.18 m  v=0.000  slope=-0.066  cov=1550 ms  n=32  state=ready  seq=418
+[     21.01 s] seq=420  P=95141 Pa  T=22.99 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=420  age=27 ms
+apogee: h=-0.27 m  v=-0.120  slope=-0.068  cov=1550 ms  n=32  state=ready  seq=428
+[     21.51 s] seq=430  P=95143 Pa  T=22.99 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=430  age=27 ms
+apogee: h=-0.27 m  v=-0.360  slope=0.147  cov=1550 ms  n=32  state=ready  seq=438
+[     22.01 s] seq=440  P=95140 Pa  T=22.98 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=440  age=27 ms
+apogee: h=-0.35 m  v=-0.227  slope=-0.035  cov=1550 ms  n=32  state=ready  seq=448
+[     22.51 s] seq=450  P=95146 Pa  T=22.98 C  age=27 ms
+alt:  h=-0.53 m  P0=95140 Pa  seq=450  age=27 ms
+apogee: h=-0.18 m  v=0.000  slope=0.015  cov=1550 ms  n=32  state=ready  seq=458
+[     23.01 s] seq=460  P=95145 Pa  T=22.99 C  age=27 ms
+alt:  h=-0.44 m  P0=95140 Pa  seq=460  age=27 ms
+apogee: h=0.00 m  v=0.360  slope=0.024  cov=1550 ms  n=32  state=ready  seq=468
+[     23.51 s] seq=470  P=95141 Pa  T=22.98 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=470  age=27 ms
+apogee: h=-0.27 m  v=-0.240  slope=0.026  cov=1550 ms  n=32  state=ready  seq=478
+[     24.01 s] seq=480  P=95142 Pa  T=22.99 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=480  age=27 ms
+apogee: h=-0.18 m  v=-0.120  slope=0.216  cov=1550 ms  n=32  state=ready  seq=488
+[     24.51 s] seq=490  P=95139 Pa  T=22.98 C  age=27 ms
+alt:  h=0.09 m  P0=95140 Pa  seq=490  age=27 ms
+apogee: h=-0.35 m  v=-0.227  slope=-0.152  cov=1550 ms  n=32  state=ready  seq=498
+[     25.01 s] seq=500  P=95143 Pa  T=22.98 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=500  age=27 ms
+apogee: h=-0.09 m  v=-0.360  slope=-0.362  cov=1550 ms  n=32  state=ready  seq=508
+[     25.51 s] seq=510  P=95139 Pa  T=22.97 C  age=27 ms
+alt:  h=0.09 m  P0=95140 Pa  seq=510  age=27 ms
+apogee: h=-0.09 m  v=0.467  slope=0.000  cov=1550 ms  n=32  state=ready  seq=518
+[     26.01 s] seq=520  P=95138 Pa  T=22.97 C  age=27 ms
+alt:  h=0.18 m  P0=95140 Pa  seq=520  age=27 ms
+apogee: h=-0.18 m  v=0.000  slope=0.249  cov=1550 ms  n=32  state=ready  seq=528
+[     26.51 s] seq=530  P=95141 Pa  T=22.97 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=530  age=27 ms
+apogee: h=-0.09 m  v=0.000  slope=-0.158  cov=1550 ms  n=32  state=ready  seq=538
+[     27.01 s] seq=540  P=95143 Pa  T=22.97 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=540  age=27 ms
+apogee: h=-0.18 m  v=0.467  slope=0.054  cov=1550 ms  n=32  state=ready  seq=548
+[     27.51 s] seq=550  P=95142 Pa  T=22.96 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=550  age=27 ms
+apogee: h=0.18 m  v=0.480  slope=0.368  cov=1550 ms  n=32  state=ready  seq=558
+[     28.01 s] seq=560  P=95139 Pa  T=22.97 C  age=27 ms
+alt:  h=0.09 m  P0=95140 Pa  seq=560  age=27 ms
+apogee: h=0.09 m  v=0.360  slope=0.132  cov=1550 ms  n=32  state=ready  seq=568
+[     28.51 s] seq=570  P=95139 Pa  T=22.96 C  age=27 ms
+alt:  h=0.09 m  P0=95140 Pa  seq=570  age=27 ms
+apogee: h=-0.18 m  v=-0.120  slope=-0.210  cov=1550 ms  n=32  state=ready  seq=578
+[     29.01 s] seq=580  P=95143 Pa  T=22.95 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=580  age=27 ms
+apogee: h=-0.09 m  v=0.467  slope=0.318  cov=1550 ms  n=32  state=ready  seq=588
+[     29.51 s] seq=590  P=95144 Pa  T=22.97 C  age=27 ms
+alt:  h=-0.35 m  P0=95140 Pa  seq=590  age=27 ms
+stats: 400 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  recoveries=0 failed=0  seq=590
+apogee: h=-0.18 m  v=-0.240  slope=-0.436  cov=1550 ms  n=32  state=ready  seq=598
+[     30.01 s] seq=600  P=95138 Pa  T=22.96 C  age=27 ms
+alt:  h=0.18 m  P0=95140 Pa  seq=600  age=27 ms
+apogee: h=-0.27 m  v=-0.240  slope=-0.067  cov=1550 ms  n=32  state=ready  seq=608
+[     30.51 s] seq=610  P=95143 Pa  T=22.96 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=610  age=27 ms
+apogee: h=-0.09 m  v=0.240  slope=0.177  cov=1550 ms  n=32  state=ready  seq=618
+[     31.01 s] seq=620  P=95141 Pa  T=22.96 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=620  age=27 ms
+apogee: h=0.00 m  v=0.240  slope=0.238  cov=1550 ms  n=32  state=ready  seq=628
+[     31.51 s] seq=630  P=95143 Pa  T=22.96 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=630  age=27 ms
+apogee: h=-0.18 m  v=-0.240  slope=-0.288  cov=1550 ms  n=32  state=ready  seq=638
+[     32.01 s] seq=640  P=95138 Pa  T=22.95 C  age=27 ms
+alt:  h=0.18 m  P0=95140 Pa  seq=640  age=27 ms
+apogee: h=-0.44 m  v=-0.467  slope=-0.166  cov=1550 ms  n=32  state=ready  seq=648
+[     32.51 s] seq=650  P=95141 Pa  T=22.95 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=650  age=27 ms
+apogee: h=-0.18 m  v=-0.360  slope=-0.048  cov=1550 ms  n=32  state=ready  seq=658
+[     33.01 s] seq=660  P=95145 Pa  T=22.94 C  age=27 ms
+alt:  h=-0.44 m  P0=95140 Pa  seq=660  age=27 ms
+apogee: h=-0.35 m  v=-0.227  slope=-0.145  cov=1550 ms  n=32  state=ready  seq=668
+[     33.51 s] seq=670  P=95141 Pa  T=22.95 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=670  age=27 ms
+apogee: h=-0.35 m  v=-0.227  slope=0.150  cov=1550 ms  n=32  state=ready  seq=678
+[     34.01 s] seq=680  P=95143 Pa  T=22.96 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=680  age=27 ms
+apogee: h=-0.18 m  v=0.227  slope=-0.027  cov=1550 ms  n=32  state=ready  seq=688
+[     34.51 s] seq=690  P=95141 Pa  T=22.94 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=690  age=27 ms
+apogee: h=0.00 m  v=0.467  slope=0.448  cov=1550 ms  n=32  state=ready  seq=698
+[     35.01 s] seq=700  P=95144 Pa  T=22.95 C  age=27 ms
+alt:  h=-0.35 m  P0=95140 Pa  seq=700  age=27 ms
+apogee: h=0.00 m  v=0.120  slope=0.119  cov=1550 ms  n=32  state=ready  seq=708
+[     35.51 s] seq=710  P=95140 Pa  T=22.95 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=710  age=27 ms
+apogee: h=0.00 m  v=0.240  slope=-0.227  cov=1550 ms  n=32  state=ready  seq=718
+[     36.01 s] seq=720  P=95143 Pa  T=22.95 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=720  age=27 ms
+apogee: h=-0.18 m  v=-0.240  slope=-0.196  cov=1550 ms  n=32  state=ready  seq=728
+[     36.51 s] seq=730  P=95140 Pa  T=22.95 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=730  age=27 ms
+apogee: h=-0.09 m  v=0.000  slope=0.334  cov=1550 ms  n=32  state=ready  seq=738
+[     37.01 s] seq=740  P=95137 Pa  T=22.94 C  age=27 ms
+alt:  h=0.27 m  P0=95140 Pa  seq=740  age=27 ms
+apogee: h=-0.09 m  v=-0.240  slope=-0.235  cov=1550 ms  n=32  state=ready  seq=748
+[     37.51 s] seq=750  P=95138 Pa  T=22.94 C  age=27 ms
+alt:  h=0.18 m  P0=95140 Pa  seq=750  age=27 ms
+apogee: h=0.00 m  v=0.240  slope=0.053  cov=1550 ms  n=32  state=ready  seq=758
+[     38.01 s] seq=760  P=95140 Pa  T=22.94 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=760  age=27 ms
+apogee: h=-0.44 m  v=-0.467  slope=-0.276  cov=1550 ms  n=32  state=ready  seq=768
+[     38.51 s] seq=770  P=95140 Pa  T=22.94 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=770  age=27 ms
+apogee: h=-0.18 m  v=0.120  slope=-0.028  cov=1550 ms  n=32  state=ready  seq=778
+[     39.01 s] seq=780  P=95139 Pa  T=22.94 C  age=27 ms
+alt:  h=0.09 m  P0=95140 Pa  seq=780  age=27 ms
+apogee: h=0.00 m  v=0.000  slope=0.175  cov=1550 ms  n=32  state=ready  seq=788
+[     39.51 s] seq=790  P=95138 Pa  T=22.94 C  age=27 ms
+alt:  h=0.18 m  P0=95140 Pa  seq=790  age=27 ms
+stats: 600 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  recoveries=0 failed=0  seq=790
+apogee: h=0.00 m  v=0.120  slope=0.209  cov=1550 ms  n=32  state=ready  seq=798
+[     40.01 s] seq=800  P=95142 Pa  T=22.94 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=800  age=27 ms
+apogee: h=-0.18 m  v=-0.240  slope=-0.449  cov=1550 ms  n=32  state=ready  seq=808
+[     40.51 s] seq=810  P=95143 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=810  age=27 ms
+apogee: h=0.00 m  v=0.000  slope=0.181  cov=1550 ms  n=32  state=ready  seq=818
+[     41.01 s] seq=820  P=95141 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=820  age=27 ms
+apogee: h=0.18 m  v=0.000  slope=0.241  cov=1550 ms  n=32  state=ready  seq=828
+[     41.51 s] seq=830  P=95139 Pa  T=22.93 C  age=27 ms
+alt:  h=0.09 m  P0=95140 Pa  seq=830  age=27 ms
+apogee: h=0.00 m  v=-0.120  slope=-0.319  cov=1550 ms  n=32  state=ready  seq=838
+[     42.01 s] seq=840  P=95139 Pa  T=22.94 C  age=27 ms
+alt:  h=0.09 m  P0=95140 Pa  seq=840  age=27 ms
+apogee: h=0.00 m  v=0.467  slope=0.046  cov=1550 ms  n=32  state=ready  seq=848
+[     42.51 s] seq=850  P=95142 Pa  T=22.94 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=850  age=27 ms
+apogee: h=0.00 m  v=0.120  slope=0.286  cov=1550 ms  n=32  state=ready  seq=858
+[     43.01 s] seq=860  P=95142 Pa  T=22.94 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=860  age=27 ms
+apogee: h=-0.18 m  v=-0.240  slope=-0.146  cov=1550 ms  n=32  state=ready  seq=868
+[     43.51 s] seq=870  P=95141 Pa  T=22.94 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=870  age=27 ms
+apogee: h=-0.18 m  v=-0.120  slope=0.190  cov=1550 ms  n=32  state=ready  seq=878
+[     44.01 s] seq=880  P=95141 Pa  T=22.94 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=880  age=27 ms
+apogee: h=-0.09 m  v=-0.240  slope=-0.101  cov=1550 ms  n=32  state=ready  seq=888
+[     44.51 s] seq=890  P=95142 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=890  age=27 ms
+apogee: h=-0.27 m  v=-0.480  slope=-0.385  cov=1550 ms  n=32  state=ready  seq=898
+[     45.01 s] seq=900  P=95142 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=900  age=27 ms
+apogee: h=0.00 m  v=0.467  slope=0.259  cov=1550 ms  n=32  state=ready  seq=908
+[     45.51 s] seq=910  P=95143 Pa  T=22.94 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=910  age=27 ms
+apogee: h=0.00 m  v=0.360  slope=-0.157  cov=1550 ms  n=32  state=ready  seq=918
+[     46.01 s] seq=920  P=95142 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=920  age=27 ms
+apogee: h=-0.27 m  v=-0.360  slope=0.133  cov=1550 ms  n=32  state=ready  seq=928
+[     46.51 s] seq=930  P=95145 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.44 m  P0=95140 Pa  seq=930  age=27 ms
+apogee: h=0.00 m  v=-0.120  slope=-0.258  cov=1550 ms  n=32  state=ready  seq=938
+[     47.01 s] seq=940  P=95142 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=940  age=27 ms
+apogee: h=-0.18 m  v=0.000  slope=-0.005  cov=1550 ms  n=32  state=ready  seq=948
+[     47.51 s] seq=950  P=95141 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=950  age=27 ms
+apogee: h=-0.18 m  v=0.227  slope=-0.016  cov=1550 ms  n=32  state=ready  seq=958
+[     48.01 s] seq=960  P=95144 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.35 m  P0=95140 Pa  seq=960  age=27 ms
+apogee: h=-0.35 m  v=-0.227  slope=-0.340  cov=1550 ms  n=32  state=ready  seq=968
+[     48.51 s] seq=970  P=95144 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.35 m  P0=95140 Pa  seq=970  age=27 ms
+apogee: h=-0.27 m  v=0.000  slope=0.051  cov=1550 ms  n=32  state=ready  seq=978
+[     49.01 s] seq=980  P=95145 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.44 m  P0=95140 Pa  seq=980  age=27 ms
+apogee: h=-0.44 m  v=0.000  slope=0.205  cov=1550 ms  n=32  state=ready  seq=988
+[     49.51 s] seq=990  P=95145 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.44 m  P0=95140 Pa  seq=990  age=27 ms
+stats: 800 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  recoveries=0 failed=0  seq=990
+apogee: h=-0.18 m  v=0.000  slope=0.299  cov=1550 ms  n=32  state=ready  seq=998
+[     50.01 s] seq=1000  P=95142 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=1000  age=27 ms
+apogee: h=-0.44 m  v=-0.120  slope=-0.453  cov=1550 ms  n=32  state=ready  seq=1008
+[     50.51 s] seq=1010  P=95145 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.44 m  P0=95140 Pa  seq=1010  age=27 ms
+apogee: h=-0.27 m  v=0.227  slope=0.356  cov=1550 ms  n=32  state=ready  seq=1018
+[     51.01 s] seq=1020  P=95144 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.35 m  P0=95140 Pa  seq=1020  age=27 ms
+apogee: h=-0.18 m  v=0.000  slope=0.094  cov=1550 ms  n=32  state=ready  seq=1028
+[     51.51 s] seq=1030  P=95148 Pa  T=22.94 C  age=27 ms
+alt:  h=-0.71 m  P0=95140 Pa  seq=1030  age=27 ms
+apogee: h=-0.18 m  v=-0.120  slope=0.139  cov=1550 ms  n=32  state=ready  seq=1038
+[     52.01 s] seq=1040  P=95144 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.35 m  P0=95140 Pa  seq=1040  age=27 ms
+apogee: h=-0.09 m  v=0.120  slope=-0.079  cov=1550 ms  n=32  state=ready  seq=1048
+[     52.51 s] seq=1050  P=95143 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=1050  age=27 ms
+apogee: h=-0.18 m  v=-0.120  slope=-0.281  cov=1550 ms  n=32  state=ready  seq=1058
+[     53.01 s] seq=1060  P=95147 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.62 m  P0=95140 Pa  seq=1060  age=27 ms
+apogee: h=0.00 m  v=0.240  slope=0.202  cov=1550 ms  n=32  state=ready  seq=1068
+[     53.51 s] seq=1070  P=95141 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=1070  age=27 ms
+apogee: h=-0.09 m  v=-0.120  slope=0.034  cov=1550 ms  n=32  state=ready  seq=1078
+[     54.01 s] seq=1080  P=95142 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=1080  age=27 ms
+apogee: h=-0.09 m  v=0.120  slope=0.154  cov=1550 ms  n=32  state=ready  seq=1088
+[     54.51 s] seq=1090  P=95141 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=1090  age=27 ms
+apogee: h=0.00 m  v=0.240  slope=0.037  cov=1550 ms  n=32  state=ready  seq=1098
+[     55.01 s] seq=1100  P=95142 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=1100  age=27 ms
+apogee: h=-0.18 m  v=-0.120  slope=-0.058  cov=1550 ms  n=32  state=ready  seq=1108
+[     55.51 s] seq=1110  P=95140 Pa  T=22.92 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=1110  age=27 ms
+apogee: h=-0.18 m  v=0.000  slope=-0.204  cov=1550 ms  n=32  state=ready  seq=1118
+[     56.01 s] seq=1120  P=95143 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=1120  age=27 ms
+apogee: h=-0.27 m  v=0.107  slope=0.215  cov=1550 ms  n=32  state=ready  seq=1128
+[     56.51 s] seq=1130  P=95142 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=1130  age=27 ms
+apogee: h=-0.35 m  v=-0.107  slope=-0.128  cov=1550 ms  n=32  state=ready  seq=1138
+[     57.01 s] seq=1140  P=95145 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.44 m  P0=95140 Pa  seq=1140  age=27 ms
+apogee: h=-0.35 m  v=-0.227  slope=0.077  cov=1550 ms  n=32  state=ready  seq=1148
+[     57.51 s] seq=1150  P=95141 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=1150  age=27 ms
+apogee: h=-0.09 m  v=0.120  slope=0.192  cov=1550 ms  n=32  state=ready  seq=1158
+[     58.01 s] seq=1160  P=95143 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=1160  age=27 ms
+apogee: h=0.09 m  v=-0.120  slope=0.130  cov=1550 ms  n=32  state=ready  seq=1168
+[     58.51 s] seq=1170  P=95140 Pa  T=22.92 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=1170  age=27 ms
+apogee: h=0.09 m  v=0.360  slope=-0.092  cov=1550 ms  n=32  state=ready  seq=1178
+[     59.01 s] seq=1180  P=95140 Pa  T=22.92 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=1180  age=27 ms
+apogee: h=0.09 m  v=0.240  slope=-0.085  cov=1550 ms  n=32  state=ready  seq=1188
+[     59.51 s] seq=1190  P=95138 Pa  T=22.93 C  age=27 ms
+alt:  h=0.18 m  P0=95140 Pa  seq=1190  age=27 ms
+stats: 1000 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  recoveries=0 failed=0  seq=1190
+apogee: h=-0.44 m  v=-0.347  slope=-0.194  cov=1550 ms  n=32  state=ready  seq=1198
+[     60.01 s] seq=1200  P=95141 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=1200  age=27 ms
+apogee: h=-0.18 m  v=-0.360  slope=0.101  cov=1550 ms  n=32  state=ready  seq=1208
+[     60.51 s] seq=1210  P=95139 Pa  T=22.92 C  age=27 ms
+alt:  h=0.09 m  P0=95140 Pa  seq=1210  age=27 ms
+apogee: h=0.00 m  v=-0.120  slope=-0.008  cov=1550 ms  n=32  state=ready  seq=1218
+[     61.01 s] seq=1220  P=95140 Pa  T=22.92 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=1220  age=27 ms
+apogee: h=0.00 m  v=0.120  slope=-0.003  cov=1550 ms  n=32  state=ready  seq=1228
+[     61.51 s] seq=1230  P=95143 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=1230  age=27 ms
+apogee: h=-0.35 m  v=-0.347  slope=-0.089  cov=1550 ms  n=32  state=ready  seq=1238
+[     62.01 s] seq=1240  P=95140 Pa  T=22.92 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=1240  age=27 ms
+apogee: h=-0.27 m  v=0.227  slope=-0.158  cov=1550 ms  n=32  state=ready  seq=1248
+[     62.51 s] seq=1250  P=95142 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=1250  age=27 ms
+apogee: h=-0.27 m  v=0.227  slope=-0.066  cov=1550 ms  n=32  state=ready  seq=1258
+[     63.01 s] seq=1260  P=95142 Pa  T=22.91 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=1260  age=27 ms
+apogee: h=-0.35 m  v=-0.227  slope=0.120  cov=1550 ms  n=32  state=ready  seq=1268
+[     63.51 s] seq=1270  P=95142 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=1270  age=27 ms
+apogee: h=-0.35 m  v=-0.347  slope=-0.365  cov=1550 ms  n=32  state=ready  seq=1278
+[     64.01 s] seq=1280  P=95141 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=1280  age=27 ms
+apogee: h=-0.27 m  v=0.000  slope=0.053  cov=1550 ms  n=32  state=ready  seq=1288
+[     64.51 s] seq=1290  P=95142 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=1290  age=27 ms
+apogee: h=-0.09 m  v=0.000  slope=0.256  cov=1550 ms  n=32  state=ready  seq=1298
+[     65.01 s] seq=1300  P=95142 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=1300  age=27 ms
+apogee: h=-0.09 m  v=0.240  slope=0.219  cov=1550 ms  n=32  state=ready  seq=1308
+[     65.51 s] seq=1310  P=95141 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=1310  age=27 ms
+apogee: h=0.18 m  v=0.827  slope=0.311  cov=1550 ms  n=32  state=ready  seq=1318
+[     66.01 s] seq=1320  P=95141 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=1320  age=27 ms
+apogee: h=-0.27 m  v=-0.240  slope=-0.100  cov=1550 ms  n=32  state=ready  seq=1328
+[     66.51 s] seq=1330  P=95142 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=1330  age=27 ms
+apogee: h=0.09 m  v=0.360  slope=0.171  cov=1550 ms  n=32  state=ready  seq=1338
+[     67.01 s] seq=1340  P=95143 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=1340  age=27 ms
+apogee: h=-0.18 m  v=-0.120  slope=-0.281  cov=1550 ms  n=32  state=ready  seq=1348
+[     67.51 s] seq=1350  P=95143 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=1350  age=27 ms
+apogee: h=-0.18 m  v=-0.120  slope=0.091  cov=1550 ms  n=32  state=ready  seq=1358
+[     68.01 s] seq=1360  P=95140 Pa  T=22.92 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=1360  age=27 ms
+apogee: h=0.09 m  v=0.360  slope=0.146  cov=1550 ms  n=32  state=ready  seq=1368
+[     68.51 s] seq=1370  P=95140 Pa  T=22.92 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=1370  age=27 ms
+apogee: h=-0.44 m  v=-0.467  slope=-0.308  cov=1550 ms  n=32  state=ready  seq=1378
+[     69.01 s] seq=1380  P=95141 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=1380  age=27 ms
+apogee: h=-0.09 m  v=-0.360  slope=0.026  cov=1550 ms  n=32  state=ready  seq=1388
+[     69.51 s] seq=1390  P=95140 Pa  T=22.92 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=1390  age=27 ms
+stats: 1200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  recoveries=0 failed=0  seq=1390
+apogee: h=-0.18 m  v=-0.707  slope=-0.236  cov=1550 ms  n=32  state=ready  seq=1398
+[     70.01 s] seq=1400  P=95142 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=1400  age=27 ms
+apogee: h=-0.27 m  v=-0.360  slope=-0.236  cov=1550 ms  n=32  state=ready  seq=1408
+[     70.51 s] seq=1410  P=95143 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=1410  age=27 ms
+apogee: h=0.00 m  v=-0.240  slope=0.148  cov=1550 ms  n=32  state=ready  seq=1418
+[     71.01 s] seq=1420  P=95140 Pa  T=22.93 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=1420  age=27 ms
+apogee: h=0.00 m  v=0.240  slope=-0.161  cov=1550 ms  n=32  state=ready  seq=1428
+[     71.51 s] seq=1430  P=95140 Pa  T=22.92 C  age=27 ms
+alt:  h=0.00 m  P0=95140 Pa  seq=1430  age=27 ms
+apogee: h=0.09 m  v=0.480  slope=0.326  cov=1550 ms  n=32  state=ready  seq=1438
+[     72.01 s] seq=1440  P=95142 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.18 m  P0=95140 Pa  seq=1440  age=27 ms
+apogee: h=-0.09 m  v=-0.240  slope=0.009  cov=1550 ms  n=32  state=ready  seq=1448
+[     72.51 s] seq=1450  P=95141 Pa  T=22.92 C  age=27 ms
+alt:  h=-0.09 m  P0=95140 Pa  seq=1450  age=27 ms
+apogee: h=-0.35 m  v=-0.587  slope=-0.229  cov=1550 ms  n=32  state=ready  seq=1458
+[     73.01 s] seq=1460  P=95145 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.44 m  P0=95140 Pa  seq=1460  age=27 ms
+apogee: h=-0.18 m  v=-0.120  slope=-0.234  cov=1550 ms  n=32  state=ready  seq=1468
+[     73.51 s] seq=1470  P=95143 Pa  T=22.93 C  age=27 ms
+alt:  h=-0.27 m  P0=95140 Pa  seq=1470  age=27 ms
