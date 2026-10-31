@@ -132,6 +132,31 @@ int main()
 		check(d.request.active, "still alarming inside the band");
 	}
 
+	/* 8a. Still inside the hysteresis band at expiry: the alarm renews, so
+	 *     "hot" and "alarm active" can never disagree. */
+	{
+		heat::Monitor monitor;
+		monitor.on_sample(kHot, 1000, 1);
+		const heat::Decision d = monitor.on_sample(kBand, 5950, 2);
+
+		check(d.changed, "a band sample just before expiry renews");
+		check(d.request.active, "the alarm stays active inside the band");
+		check(d.request.deadline_ms == 11000, "the window advances by 5 s");
+	}
+
+	/* 8b. The window had already lapsed while in the band: a full new window,
+	 *     not the four seconds that are left of the old grid. */
+	{
+		heat::Monitor monitor;
+		monitor.on_sample(kHot, 1000, 1);
+		const heat::Decision d = monitor.on_sample(kBand, 7000, 2);
+
+		check(d.changed, "a band sample after expiry restarts the window");
+		check(d.request.deadline_ms == 12000,
+		      "a lapsed window restarts in full");
+		check(monitor.state() == heat::State::hot, "state stays hot");
+	}
+
 	/* 9. Threshold equality counts as hot. */
 	{
 		heat::Monitor monitor;

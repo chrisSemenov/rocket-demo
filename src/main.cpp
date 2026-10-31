@@ -1,6 +1,7 @@
 #include "app_config.hpp"
 #include "altitude_task.hpp"
 #include "apogee_task.hpp"
+#include "bus_recovery.hpp"
 
 #include "heat_task.hpp"
 #include "led_manager.hpp"
@@ -29,7 +30,10 @@ const device *const kSensorBus = DEVICE_DT_GET(DT_BUS(DT_NODELABEL(bmp280)));
  * When the sensor does not answer, probe the two addresses the breakout can
  * take and read the chip ID register. Distinguishes "wrong address strap" from
  * "nothing on the bus at all", instead of guessing at wiring.
+ *
+ * Replay mode never touches the bus, so this is compiled out there.
  */
+#if !defined(CONFIG_APP_REPLAY)
 void probe_sensor_addresses()
 {
 	struct {
@@ -56,6 +60,7 @@ void probe_sensor_addresses()
 		}
 	}
 }
+#endif /* !CONFIG_APP_REPLAY */
 
 } // namespace
 
@@ -83,14 +88,20 @@ int main(void)
 	replay_task_start();
 #else
 	/*
-	 * A bus left latched by an interrupted transfer (SDA held low) is
-	 * recoverable in software: nine clocks plus a STOP. Harmless on a healthy
-	 * bus, and it removes the "unplug the board after every flash" step.
+	 * A latched bus is cleared by bus_recovery.cpp, which runs as a POST_KERNEL
+	 * init step: after the I2C controller exists and, crucially, before the
+	 * BMP280 driver initialises. Doing it here would be too late, because a
+	 * device whose init failed stays not-ready for the rest of the boot.
+	 *
+	 * It runs before the console exists, so its result is reported now. A
+	 * non-zero value means the bus was latched and the recovery failed.
 	 */
-	const int recover_rc = i2c_recover_bus(kSensorBus);
+	const int boot_recovery = bus_recovery_status();
 
-	if (recover_rc != 0) {
-		printk("WARNING: I2C bus recovery returned %d\n", recover_rc);
+	if (boot_recovery == 0) {
+		printk("i2c: boot recovery ok (ran before the sensor driver)\n");
+	} else {
+		printk("WARNING: I2C boot recovery failed (%d)\n", boot_recovery);
 	}
 
 	if (!sensor_task_start()) {

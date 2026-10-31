@@ -32,8 +32,9 @@ void print_metres(int32_t centimetres)
 	const bool negative = centimetres < 0;
 	const int32_t magnitude = negative ? -centimetres : centimetres;
 
-	printk("%s%ld.%02ld", negative ? "-" : "", magnitude / 100,
-	       magnitude % 100);
+	printk("%s%ld.%02ld", negative ? "-" : "",
+	       static_cast<long>(magnitude / 100),
+	       static_cast<long>(magnitude % 100));
 }
 
 void print_mm_s(int32_t mm_s)
@@ -41,8 +42,9 @@ void print_mm_s(int32_t mm_s)
 	const bool negative = mm_s < 0;
 	const int32_t magnitude = negative ? -mm_s : mm_s;
 
-	printk("%s%ld.%03ld", negative ? "-" : "", magnitude / 1000,
-	       magnitude % 1000);
+	printk("%s%ld.%03ld", negative ? "-" : "",
+	       static_cast<long>(magnitude / 1000),
+	       static_cast<long>(magnitude % 1000));
 }
 
 /*
@@ -59,6 +61,20 @@ apogee::Config make_config()
 	config.min_drop_cm = CONFIG_APP_APOGEE_MIN_DROP_CM;
 
 	return config;
+}
+
+/* "v=-0.495 slope=-0.470" or "v=n/a slope=n/a" once the value is frozen. */
+void print_velocities(const apogee::Detector &detector)
+{
+	if (detector.state() == apogee::State::deployed) {
+		printk("  v=n/a  slope=n/a");
+		return;
+	}
+
+	printk("  v=");
+	print_mm_s(detector.velocity_mm_s());
+	printk("  slope=");
+	print_mm_s(detector.slope_mm_s());
 }
 
 void apogee_entry(void *, void *, void *)
@@ -109,7 +125,9 @@ void apogee_entry(void *, void *, void *)
 				print_metres(altitude.altitude_cm);
 				printk(" m, v=");
 				print_mm_s(detector.velocity_mm_s());
-				printk(" m/s; LED on until %lld ms (seq=%u)\n",
+				printk(" m/s (slope=");
+				print_mm_s(detector.slope_mm_s());
+				printk("); LED on until %lld ms (seq=%u)\n",
 				       static_cast<long long>(event.deadline_ms),
 				       altitude.source_sequence);
 			}
@@ -119,7 +137,8 @@ void apogee_entry(void *, void *, void *)
 
 			if (ready && !last_ready) {
 				printk("apogee: armed; threshold %d cm, drop %d cm,"
-				       " margin %d mm/s, window %lld ms\n",
+				       " margin %d mm/s, window %lld ms (endpoint"
+				       " average; slope is diagnostic)\n",
 				       config.min_altitude_cm, config.min_drop_cm,
 				       config.min_descent_mm_s,
 				       static_cast<long long>(config.window_ms));
@@ -140,20 +159,16 @@ void apogee_entry(void *, void *, void *)
 			++invalid_reports;
 		}
 
-		/* Periodic insight, not a decision: altitude, velocity and coverage. */
-		if (now >= next_report && altitude.valid) {
+		/*
+		 * Periodic insight, not a decision. Skipped once data is stale, so a
+		 * dead sensor cannot leave a frozen height scrolling past as if it
+		 * were live.
+		 */
+		if (now >= next_report && usable) {
 			printk("apogee: h=");
 			print_metres(altitude.altitude_cm);
 			printk(" m");
-
-			if (detector.state() == apogee::State::deployed) {
-				/* Velocity is frozen at the event; do not present it as live. */
-				printk("  v=n/a  ");
-			} else {
-				printk("  v=");
-				print_mm_s(detector.velocity_mm_s());
-			}
-
+			print_velocities(detector);
 			printk("  cov=%lld ms  n=%d  state=%s  seq=%u\n",
 			       static_cast<long long>(detector.coverage_ms()),
 			       detector.samples(), state_name(detector.state()),
@@ -168,9 +183,9 @@ void apogee_entry(void *, void *, void *)
 
 		if (k_uptime_get() > next) {
 			next = k_uptime_get() + cfg::kApogeePeriodMs;
-		} else {
-			k_sleep(K_TIMEOUT_ABS_MS(next));
 		}
+
+		k_sleep(K_TIMEOUT_ABS_MS(next));
 	}
 }
 

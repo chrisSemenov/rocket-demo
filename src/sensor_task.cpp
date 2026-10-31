@@ -14,8 +14,13 @@ namespace {
 const device *const kBmp280 = DEVICE_DT_GET(DT_NODELABEL(bmp280));
 const device *const kBus = DEVICE_DT_GET(DT_BUS(DT_NODELABEL(bmp280)));
 
-/* Try a bus recovery after this many consecutive failed fetches. */
+/*
+ * Try a bus recovery after three consecutive failed fetches, then again every
+ * kRecoveryRetryErrors failures. Retrying only at exactly three meant a
+ * permanently wedged bus got one attempt per boot and then silence.
+ */
 constexpr uint32_t kRecoverAfterErrors = 3;
+constexpr uint32_t kRecoveryRetryErrors = 60; /* ~3 s at 20 Hz */
 
 K_THREAD_STACK_DEFINE(sensor_stack, cfg::kSensorStackBytes);
 struct k_thread sensor_thread;
@@ -72,6 +77,18 @@ struct Timing {
 	}
 };
 
+bool recovery_due(uint32_t consecutive_errors)
+{
+	if (consecutive_errors == kRecoverAfterErrors) {
+		return true;
+	}
+
+	return consecutive_errors > kRecoverAfterErrors &&
+	       (consecutive_errors - kRecoverAfterErrors) %
+			       kRecoveryRetryErrors ==
+		       0;
+}
+
 void sensor_entry(void *, void *, void *)
 {
 	Timing fetch_time;
@@ -82,6 +99,7 @@ void sensor_entry(void *, void *, void *)
 	uint32_t sequence = 0;
 	uint32_t errors = 0;
 	uint32_t recoveries = 0;
+	uint32_t recovery_failures = 0;
 	uint32_t consecutive_errors = 0;
 	uint32_t overruns = 0;
 	unsigned int since_stats = 0;
@@ -123,15 +141,26 @@ void sensor_entry(void *, void *, void *)
 
 			/*
 			 * A latched bus (a device holding SDA low) does not clear by
-			 * itself. After a few failures, bit-bang nine clocks and a STOP
-			 * once, then let the next period try again.
+			 * itself. Bit-bang nine clocks and a STOP, then let the next
+			 * period try again.
 			 */
-			if (consecutive_errors == kRecoverAfterErrors) {
+			if (recovery_due(consecutive_errors)) {
 				const int recover_rc = i2c_recover_bus(kBus);
 
-				++recoveries;
-				printk("sensor: bus recovery after %u failures (%d)\n",
-				       consecutive_errors, recover_rc);
+				if (recover_rc == 0) {
+					++recoveries;
+				} else {
+					++recovery_failures;
+				}
+
+				const uint32_t attempts = recoveries + recovery_failures;
+
+				if (attempts <= 5 || attempts % 20 == 0) {
+					printk("sensor: bus recovery %u after %u"
+					       " consecutive failures (%d)\n",
+					       attempts, consecutive_errors,
+					       recover_rc);
+				}
 			}
 
 			sensor_data().publish(sample);
@@ -165,6 +194,7 @@ void sensor_entry(void *, void *, void *)
 			stats.samples = sequence;
 			stats.errors = errors;
 			stats.recoveries = recoveries;
+			stats.recovery_failures = recovery_failures;
 			stats.overruns = overruns;
 			stats.fetch_min_ms = fetch_time.min_ms();
 			stats.fetch_avg_ms = static_cast<int32_t>(fetch_time.average());
@@ -184,7 +214,8 @@ void sensor_entry(void *, void *, void *)
 		/*
 		 * Absolute deadlines: sleep until the next slot rather than
 		 * "work + 50 ms", which would silently stretch the period. On a missed
-		 * deadline, count it and re-anchor instead of bursting to catch up.
+		 * deadline, count it and re-anchor, then still sleep to the new slot so
+		 * the next interval is a full period instead of an immediate catch-up.
 		 */
 		next += cfg::kSamplePeriodMs;
 
@@ -193,9 +224,9 @@ void sensor_entry(void *, void *, void *)
 		if (now > next) {
 			++overruns;
 			next = now + cfg::kSamplePeriodMs;
-		} else {
-			k_sleep(K_TIMEOUT_ABS_MS(next));
 		}
+
+		k_sleep(K_TIMEOUT_ABS_MS(next));
 	}
 }
 

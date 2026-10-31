@@ -6,13 +6,17 @@
  * Overheat policy, with no Zephyr or hardware dependency.
  *
  * Policy (documented in docs/decisions.md):
- *   - hot at or above the threshold;
- *   - a heat window starts when the state becomes hot, lasting 5 s;
- *   - while still hot at or after expiry, the window is renewed for another
- *     5 s, keeping the original start so the LED blink phase does not jump;
- *   - cooling clears the alarm immediately, below the threshold minus the
- *     hysteresis band;
+ *   - hot at or above the threshold, which starts a 5 s alarm window;
+ *   - the alarm is renewed for another 5 s while the temperature is still above
+ *     the release threshold (threshold - hysteresis), keeping the original start
+ *     so the LED blink phase does not jump. A window that has already lapsed
+ *     restarts in full from the current sample;
+ *   - cooling below the release threshold clears the alarm immediately;
  *   - missing data never counts as cool: the state is left unchanged.
+ *
+ * Renewing on the release threshold rather than the trigger threshold keeps
+ * state() and request().active in agreement: the LED never quietly falls back to
+ * the deployment indication while the monitor still calls the sensor hot.
  */
 namespace heat {
 
@@ -34,6 +38,7 @@ struct Request {
 struct Decision {
 	bool changed;
 	Request request;
+	bool started; /* true only on the cool -> hot transition */
 };
 
 constexpr Config kDefaultConfig{

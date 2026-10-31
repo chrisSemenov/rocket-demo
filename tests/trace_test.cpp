@@ -68,19 +68,42 @@ int main()
 		check(in_range, label);
 	}
 
-	/* The first sample of every trace is the stationary baseline at P0. */
+	/*
+	 * Every trace must open with a stationary baseline long enough for the
+	 * 2 s calibration window. Checking the first sample alone proves nothing:
+	 * its altitude against itself is 0 by construction. Every sample up to
+	 * 2 s has to sit on the reference pressure.
+	 */
 	for (unsigned int t = 0; t < kTraceCount; ++t) {
 		const Trace &trace = kTraces[t];
-
-		check(trace.count > 40, "trace starts with a 2 s baseline");
-
 		const double p0 = static_cast<double>(trace.samples[0].pressure_pa);
-		const double height = altitude_m(trace.samples[0].pressure_pa, p0);
+		const bool long_enough =
+			trace.samples[trace.count - 1].time_ms >= 2000;
+		double worst = 0.0;
 
-		if (std::fabs(height) > 0.01) {
-			std::printf("FAIL %s: baseline is not the reference\n",
-				    trace.name);
-			++failures;
+		for (unsigned int i = 0; i < trace.count; ++i) {
+			if (trace.samples[i].time_ms > 2000) {
+				break;
+			}
+
+			const double height =
+				altitude_m(trace.samples[i].pressure_pa, p0);
+
+			if (std::fabs(height) > worst) {
+				worst = std::fabs(height);
+			}
+		}
+
+		char label[96];
+
+		std::snprintf(label, sizeof(label),
+			      "%s: first 2 s are stationary at the reference",
+			      trace.name);
+		check(long_enough && worst <= 0.10, label);
+
+		if (!long_enough || worst > 0.10) {
+			std::printf("     worst deviation in the first 2 s: %.3f m\n",
+				    worst);
 		}
 	}
 
@@ -111,6 +134,8 @@ int main()
 			}
 
 			check(peak > 5.0, "at05 reaches about 6 m");
+			check(at05->samples[at05->count - 1].time_ms >= 21000,
+			      "at05 continues at least 15 s after the deployment");
 		}
 	}
 

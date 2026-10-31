@@ -22,6 +22,7 @@ $suites = @(
     @{ Name = 'heat'; Test = 'heat_test.cpp'; Sources = @('src\heat.cpp') }
     @{ Name = 'led_pulse'; Test = 'led_pulse_test.cpp'; Sources = @('src\led_pulse.cpp') }
     @{ Name = 'trace'; Test = 'trace_test.cpp'; Sources = @() }
+    @{ Name = 'replay_sim'; Test = 'replay_sim_test.cpp'; Sources = @('src\altitude.cpp', 'src\apogee.cpp', 'src\heat.cpp', 'src\led_logic.cpp') }
 )
 
 $failed = 0

@@ -72,26 +72,28 @@ TRACES = {
         "temp": [],
         "note": "above the minimum but not descending: no deployment",
     },
-    # AT-05 / AT-06: baseline, ascent, peak, sustained descent.
+    # AT-05 / AT-06: baseline, ascent, peak, then 19 s of sustained descent.
     "at05": {
         "points": [(0, 0.0), (2000, 0.0), (5000, 6.0), (5300, 6.0),
-                   (9000, -1.4), (19000, -9.4)],
+                   (9000, -1.4), (25000, -17.4)],
         "temp": [],
-        "note": "one deployment ~0.4 s after the peak, then no retrigger",
+        "note": "one deployment after the peak, then 19 s of continued descent",
     },
-    # at08: deployment, heat starts 2 s later, cools 5 s after that.
+    # at08: deployment, heat 2.4 s later, cooling 5 s after that (before the
+    # 10 s deadline). Times are trace-relative; the deployment lands near 5.6 s.
     "at08": {
         "points": [(0, 0.0), (2000, 0.0), (5000, 6.0), (5300, 6.0),
-                   (9000, -1.4), (19000, -9.4)],
-        "temp": [(0, T0), (7300, 32.0), (11000, 24.0)],
+                   (9000, -1.4), (20000, -12.4)],
+        "temp": [(0, T0), (8000, 32.0), (13000, 24.0)],
         "note": "ON, blink from ~2 s after deploy, steady for the remainder",
     },
-    # at09: heat starts late, after the 10 s deployment deadline.
+    # at09: heat starts before the deployment deadline and runs across it, then
+    # cools while the deployment indication has already expired.
     "at09": {
         "points": [(0, 0.0), (2000, 0.0), (5000, 6.0), (5300, 6.0),
-                   (9000, -1.4), (22000, -12.4)],
-        "temp": [(0, T0), (17500, 32.0), (22500, 24.0)],
-        "note": "blink overrides an expired deployment: no steady ON afterwards",
+                   (9000, -1.4), (18000, -10.4)],
+        "temp": [(0, T0), (12000, 32.0), (17000, 24.0)],
+        "note": "blink spans the deadline; cooling afterwards gives off, not steady ON",
     },
     # at07a: heat only, one complete 5 s window, then cooling.
     "at07a": {
@@ -138,6 +140,21 @@ def main():
     for name, spec in TRACES.items():
         samples = profile(spec["points"])
         temp_at = temperature(spec["temp"])
+
+        end_ms = samples[-1][0]
+        last_when = -1
+
+        for when, _ in spec["temp"]:
+            if when > end_ms:
+                raise ValueError(
+                    f"{name}: temperature step at {when} ms is past the trace "
+                    f"end at {end_ms} ms, so it would never be published"
+                )
+            if when <= last_when:
+                raise ValueError(
+                    f"{name}: temperature steps are not strictly increasing"
+                )
+            last_when = when
 
         rows = []
         for t, h in samples:

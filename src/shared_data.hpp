@@ -39,7 +39,8 @@ struct Altitude {
 struct SensorStats {
 	uint32_t samples;
 	uint32_t errors;
-	uint32_t recoveries;
+	uint32_t recoveries;        /* bus recoveries that returned success */
+	uint32_t recovery_failures; /* bus recoveries that returned an error */
 	uint32_t overruns;
 	int32_t fetch_min_ms;
 	int32_t fetch_avg_ms;

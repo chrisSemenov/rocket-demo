@@ -3,11 +3,24 @@
 /* Zephyr's minimal C++ library has no <cstring>; the C header is available. */
 #include <string.h>
 
+namespace {
+
+int32_t to_mm_s(double velocity_ms)
+{
+	const double scaled = velocity_ms * 1000.0;
+
+	/* Round half away from zero without depending on llround(). */
+	return static_cast<int32_t>(scaled >= 0.0 ? scaled + 0.5 : scaled - 0.5);
+}
+
+} // namespace
+
 namespace apogee {
 
 Detector::Detector(const Config &config)
 	: config_(config), count_(0), last_sequence_valid_(0), last_sequence_(0),
-	  state_(State::filling), velocity_mm_s_(0), peak_cm_(INT32_MIN)
+	  state_(State::filling), velocity_mm_s_(0), slope_mm_s_(0),
+	  peak_cm_(INT32_MIN)
 {
 }
 
@@ -40,8 +53,90 @@ void Detector::evict_older_than(int64_t newest_ms)
 	memmove(&samples_[0], &samples_[keep_from], sizeof(Sample) * count_);
 }
 
-bool Detector::velocity_over_window(int64_t &out_target_ms,
-				    double &out_velocity_ms) const
+bool Detector::interpolate_altitude(int64_t at_ms, double &out_cm) const
+{
+	if (count_ < 2) {
+		return false;
+	}
+
+	int i = 0;
+
+	while (i < count_ && samples_[i].timestamp_ms < at_ms) {
+		++i;
+	}
+
+	if (i == 0) {
+		/* at_ms is at or before the oldest sample: exact only on equality. */
+		if (samples_[0].timestamp_ms == at_ms) {
+			out_cm = static_cast<double>(samples_[0].altitude_cm);
+			return true;
+		}
+
+		return false;
+	}
+
+	if (i >= count_) {
+		/* at_ms is after the newest sample: there is nothing to interpolate. */
+		return false;
+	}
+
+	const Sample &before = samples_[i - 1];
+	const Sample &after = samples_[i];
+	const int64_t span = after.timestamp_ms - before.timestamp_ms;
+
+	if (span <= 0) {
+		out_cm = static_cast<double>(after.altitude_cm);
+		return true;
+	}
+
+	const double fraction =
+		static_cast<double>(at_ms - before.timestamp_ms) /
+		static_cast<double>(span);
+
+	out_cm = static_cast<double>(before.altitude_cm) +
+		 fraction * (static_cast<double>(after.altitude_cm) -
+			     static_cast<double>(before.altitude_cm));
+
+	return true;
+}
+
+bool Detector::average_velocity(int64_t &out_target_ms,
+				double &out_velocity_ms) const
+{
+	if (count_ < 2 || config_.window_ms <= 0) {
+		return false;
+	}
+
+	const Sample &newest = samples_[count_ - 1];
+	const int64_t start_ts = newest.timestamp_ms - config_.window_ms;
+
+	if (start_ts < samples_[0].timestamp_ms) {
+		/* History does not reach back a full window yet. */
+		return false;
+	}
+
+	double start_cm = 0.0;
+
+	if (!interpolate_altitude(start_ts, start_cm)) {
+		return false;
+	}
+
+	const double seconds = static_cast<double>(config_.window_ms) / 1000.0;
+
+	if (!(seconds > 0.0)) {
+		return false;
+	}
+
+	out_velocity_ms =
+		(static_cast<double>(newest.altitude_cm) - start_cm) / 100.0 /
+		seconds;
+	out_target_ms = start_ts;
+
+	return true;
+}
+
+bool Detector::slope_over_window(int64_t &out_target_ms,
+				 double &out_slope_ms) const
 {
 	if (count_ < 2) {
 		return false;
@@ -51,11 +146,9 @@ bool Detector::velocity_over_window(int64_t &out_target_ms,
 	const int64_t start_ts = newest.timestamp_ms - config_.window_ms;
 
 	if (samples_[0].timestamp_ms > start_ts) {
-		/* History does not reach back a full window yet. */
 		return false;
 	}
 
-	/* First sample inside the window. */
 	int first = 0;
 
 	while (first < count_ && samples_[first].timestamp_ms < start_ts) {
@@ -68,11 +161,6 @@ bool Detector::velocity_over_window(int64_t &out_target_ms,
 		return false;
 	}
 
-	/*
-	 * Least-squares fit of altitude versus time over the window. The slope is
-	 * the average vertical velocity across those 750 ms, but it uses every
-	 * sample instead of two endpoints, which is roughly twice as quiet.
-	 */
 	const double t_ref = static_cast<double>(newest.timestamp_ms) / 1000.0;
 	double sum_x = 0.0;
 	double sum_y = 0.0;
@@ -98,8 +186,8 @@ bool Detector::velocity_over_window(int64_t &out_target_ms,
 		return false;
 	}
 
-	out_velocity_ms = (static_cast<double>(n) * sum_xy - sum_x * sum_y) /
-			  denominator;
+	out_slope_ms = (static_cast<double>(n) * sum_xy - sum_x * sum_y) /
+		       denominator;
 	out_target_ms = start_ts;
 
 	return true;
@@ -149,14 +237,18 @@ Event Detector::on_sample(const Sample &sample)
 	int64_t target = 0;
 	double velocity_ms = 0.0;
 
-	if (!velocity_over_window(target, velocity_ms)) {
+	if (!average_velocity(target, velocity_ms)) {
 		state_ = State::filling;
 		return event;
 	}
 
-	velocity_mm_s_ = static_cast<int32_t>(velocity_ms * 1000.0 >= 0.0
-						     ? velocity_ms * 1000.0 + 0.5
-						     : velocity_ms * 1000.0 - 0.5);
+	velocity_mm_s_ = to_mm_s(velocity_ms);
+
+	double slope_ms = 0.0;
+
+	if (slope_over_window(target, slope_ms)) {
+		slope_mm_s_ = to_mm_s(slope_ms);
+	}
 
 	if (state_ == State::filling) {
 		state_ = State::ready;
@@ -209,6 +301,11 @@ int32_t Detector::velocity_mm_s() const
 	return velocity_mm_s_;
 }
 
+int32_t Detector::slope_mm_s() const
+{
+	return slope_mm_s_;
+}
+
 int64_t Detector::coverage_ms() const
 {
 	if (count_ < 2) {
@@ -231,6 +328,7 @@ void Detector::reset()
 	last_sequence_ = 0;
 	state_ = State::filling;
 	velocity_mm_s_ = 0;
+	slope_mm_s_ = 0;
 }
 
 } // namespace apogee

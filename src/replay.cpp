@@ -89,9 +89,9 @@ void replay_entry(void *, void *, void *)
 
 		if (k_uptime_get() > next) {
 			next = k_uptime_get() + (step > 0 ? step : cfg::kSamplePeriodMs);
-		} else {
-			k_sleep(K_TIMEOUT_ABS_MS(next));
 		}
+
+		k_sleep(K_TIMEOUT_ABS_MS(next));
 	}
 
 	/*

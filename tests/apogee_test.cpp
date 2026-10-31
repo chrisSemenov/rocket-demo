@@ -247,7 +247,8 @@ int main()
 
 	/* 12c. The estimator itself: 3 cm per 50 ms is exactly 0.6 m/s. The
 	 *      altitude gate is raised out of reach so the detector cannot latch
-	 *      and keep updating the velocity. */
+	 *      and keep updating the velocity. The endpoint average and the
+	 *      diagnostic slope agree on a straight ramp. */
 	{
 		apogee::Config config = apogee::kDefaultConfig;
 		config.min_altitude_cm = 10000;
@@ -257,7 +258,10 @@ int main()
 		f.descend(20, 300, 50, 3);
 
 		const int32_t v = f.detector.velocity_mm_s();
-		check(v <= -595 && v >= -605, "slope of a uniform ramp is 0.6 m/s");
+		check(v <= -595 && v >= -605, "endpoint average of a uniform ramp is 0.6 m/s");
+
+		const int32_t s = f.detector.slope_mm_s();
+		check(s <= -595 && s >= -605, "the diagnostic slope agrees on a straight ramp");
 	}
 
 	/* 12d. Exactly at the margin deploys: 3 cm per 100 ms is 0.3 m/s. */
@@ -342,6 +346,30 @@ int main()
 		f.descend(10, 500, 50, 2); /* 20 cm, below the 25 cm confirmation */
 
 		check(f.events == 0, "a gap resets the peak");
+	}
+
+	/* 19. The case the two estimators disagree on: a jump up, then a fall back
+	 *     to just above the starting height inside one window. The endpoint
+	 *     average is positive (net climb) while the slope reads a steep
+	 *     descent. The documented rule must wait, not fire. */
+	{
+		apogee::Config config = apogee::kDefaultConfig;
+		config.min_descent_mm_s = 0;
+		config.min_drop_cm = 0;
+
+		Feeder f(config);
+		f.step(500);
+
+		for (int i = 0; i < 15; ++i) {
+			f.step(700 - i * 14); /* 700 cm down to 504 cm */
+		}
+
+		check(f.detector.velocity_mm_s() > 0,
+		      "endpoint average of a spike-and-fall is still positive");
+		check(f.detector.slope_mm_s() < -1000,
+		      "the slope reads that window as a steep descent");
+		check(f.events == 0,
+		      "the trigger follows the endpoint average, not the slope");
 	}
 
 	std::printf("\n%s (%d failure%s)\n", failures != 0 ? "FAILED" : "PASSED",

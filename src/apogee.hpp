@@ -8,7 +8,13 @@
  *
  * Trigger: the current altitude is at or above the configured minimum AND the
  * average vertical velocity over the preceding 750 ms is negative by at least a
- * configured margin. The event latches for the rest of the flight.
+ * configured margin.
+ *
+ * That average is the textbook one, (h(now) - h(now - 750 ms)) / 0.750 s, with
+ * the start height linearly interpolated between the two samples that bracket
+ * the window edge. A least-squares slope over the same window is also computed
+ * and exposed as a diagnostic, but it is not what arms the trigger: the two
+ * disagree in sign whenever the path is not close to a straight line.
  *
  * A negative *average* only means the endpoint is lower than 750 ms ago; it does
  * not mean every intermediate sample descended, and it does not mean apogee was
@@ -60,7 +66,13 @@ public:
 
 	State state() const;
 	bool deployed() const;
+
+	/* The value the trigger uses: window endpoint average. */
 	int32_t velocity_mm_s() const;
+
+	/* Diagnostic only: least-squares slope over the same window. */
+	int32_t slope_mm_s() const;
+
 	int64_t coverage_ms() const;
 	int samples() const;
 
@@ -70,7 +82,15 @@ public:
 private:
 	void push(const Sample &sample);
 	void evict_older_than(int64_t newest_ms);
-	bool velocity_over_window(int64_t &out_target_ms, double &out_velocity_ms) const;
+
+	/* Linear interpolation of the stored altitude at an arbitrary time. */
+	bool interpolate_altitude(int64_t at_ms, double &out_cm) const;
+
+	/* (h(now) - h(now - window)) / window, as documented in the README. */
+	bool average_velocity(int64_t &out_target_ms, double &out_velocity_ms) const;
+
+	/* Least-squares slope over the same window; diagnostic, not the trigger. */
+	bool slope_over_window(int64_t &out_target_ms, double &out_slope_ms) const;
 
 	Config config_;
 	Sample samples_[kCapacity];
@@ -79,6 +99,7 @@ private:
 	uint32_t last_sequence_;
 	State state_;
 	int32_t velocity_mm_s_;
+	int32_t slope_mm_s_;
 	int32_t peak_cm_;
 };
 

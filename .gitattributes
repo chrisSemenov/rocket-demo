@@ -1,0 +1,9 @@
+# Generated artefacts. tools/make-traces.py writes LF and the firmware embeds
+# src/traces_data.hpp verbatim, so pin the work-tree line ending. Without this a
+# Windows checkout with core.autocrlf=true converts both to CRLF and
+# tools/check-traces.ps1 compares two different byte streams.
+traces/*.csv text eol=lf
+src/traces_data.hpp text eol=lf
+
+# Captured console output is evidence: keep the exact bytes that were captured.
+tests/evidence/**/*.log text eol=lf

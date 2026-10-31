@@ -40,8 +40,9 @@ constexpr int kLedUpdatePeriodMs = 10;
 constexpr int kBaselineWindowMs = 2000;
 constexpr unsigned int kBaselineMinSamples = 38;
 /*
- * The window must span this much wall time, not just hold 38 samples: 2 s minus
- * one sample period, so a burst of samples cannot calibrate faster than 2 s.
+ * The window must span this much wall time, not just hold 38 samples: 2 s with
+ * 200 ms of slack (four sample periods), so a late sample cannot shrink the
+ * evidence and a burst of samples cannot calibrate faster than 1.8 s.
  */
 constexpr int64_t kBaselineMinCoverageMs = 1800;
 constexpr int kBaselineMaxSpreadPa = 20;

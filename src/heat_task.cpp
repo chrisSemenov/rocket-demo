@@ -28,8 +28,9 @@ void print_celsius(int32_t milli_celsius)
 	const bool negative = milli_celsius < 0;
 	const int32_t magnitude = negative ? -milli_celsius : milli_celsius;
 
-	printk("%s%ld.%03ld", negative ? "-" : "", magnitude / 1000,
-	       magnitude % 1000);
+	printk("%s%ld.%03ld", negative ? "-" : "",
+	       static_cast<long>(magnitude / 1000),
+	       static_cast<long>(magnitude % 1000));
 }
 
 void heat_entry(void *, void *, void *)
@@ -76,12 +77,28 @@ void heat_entry(void *, void *, void *)
 						decision.request.start_ms,
 						decision.request.deadline_ms);
 
-					printk("heat: HOT at ");
-					print_celsius(measurement.temperature_mc);
-					printk(" C; alarm until %lld ms (seq=%u)\n",
-					       static_cast<long long>(
-						       decision.request.deadline_ms),
-					       measurement.sequence);
+					/*
+					 * Distinguish a new alarm from a renewal: the
+					 * renewal keeps the same five-second grid and
+					 * only moves the deadline, so calling it "HOT"
+					 * again would read like a second event.
+					 */
+					if (decision.started) {
+						printk("heat: HOT at ");
+						print_celsius(measurement.temperature_mc);
+						printk(" C; alarm until %lld ms (seq=%u)\n",
+						       static_cast<long long>(
+							       decision.request.deadline_ms),
+						       measurement.sequence);
+					} else {
+						printk("heat: still hot at ");
+						print_celsius(measurement.temperature_mc);
+						printk(" C; alarm extended to %lld ms"
+						       " (seq=%u)\n",
+						       static_cast<long long>(
+							       decision.request.deadline_ms),
+						       measurement.sequence);
+					}
 				} else {
 					led_requests().clear_heat();
 
@@ -109,9 +126,9 @@ void heat_entry(void *, void *, void *)
 
 		if (k_uptime_get() > next) {
 			next = k_uptime_get() + cfg::kHeatPeriodMs;
-		} else {
-			k_sleep(K_TIMEOUT_ABS_MS(next));
 		}
+
+		k_sleep(K_TIMEOUT_ABS_MS(next));
 	}
 }
 

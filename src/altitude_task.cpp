@@ -244,9 +244,9 @@ void altitude_entry(void *, void *, void *)
 
 		if (k_uptime_get() > next) {
 			next = k_uptime_get() + cfg::kAltitudePeriodMs;
-		} else {
-			k_sleep(K_TIMEOUT_ABS_MS(next));
 		}
+
+		k_sleep(K_TIMEOUT_ABS_MS(next));
 	}
 }
 

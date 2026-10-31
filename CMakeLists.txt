@@ -11,6 +11,7 @@ option(APP_LED_SELFTEST "Run the LED request self-test sequence" OFF)
 target_sources(app PRIVATE
     src/main.cpp
     src/shared_data.cpp
+    src/bus_recovery.cpp
     src/altitude.cpp
     src/led_logic.cpp
     src/led_pulse.cpp

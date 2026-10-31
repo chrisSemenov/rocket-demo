@@ -15,6 +15,9 @@ struct k_thread led_thread;
 
 const gpio_dt_spec kLed = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
 
+/* Report a persistent write failure at most this often. */
+constexpr uint32_t kWriteErrorReportEvery = 200;
+
 const char *output_name(led::Output output)
 {
 	switch (output) {
@@ -38,9 +41,14 @@ bool output_is_on(led::Output output)
 
 void led_entry(void *, void *, void *)
 {
-	led::Output previous = led::Output::off;
+	/* What the policy wants now, and what the pin actually holds. */
+	led::Output requested = led::Output::off;
+	led::Output applied = led::Output::off;
+	bool have_requested = false;
+	bool have_applied = false;
+
 	uint32_t write_errors = 0;
-	bool have_previous = false;
+
 	led::ReadyPulse pulse;
 
 	int64_t next = k_uptime_get();
@@ -81,36 +89,50 @@ void led_entry(void *, void *, void *)
 		}
 
 		/*
-		 * Log and write only on a transition. A 10 ms cadence of identical
-		 * writes would be harmless for the pin but useless in the console.
+		 * Log on a change of what is *wanted*. Logging on a change of what
+		 * was written would repeat the same line every period while a write
+		 * kept failing.
 		 */
-		if (!have_previous || output != previous) {
-			const int rc = gpio_pin_set_dt(&kLed,
-						       output_is_on(output) ? 1 : 0);
-
-			if (rc != 0) {
-				++write_errors;
-
-				if (write_errors == 1) {
-					printk("led: gpio write failed (%d)\n", rc);
-				}
-			}
-
+		if (!have_requested || output != requested) {
 			printk("led:  [%7lld.%03lld] %s\n",
 			       static_cast<long long>(now / 1000),
 			       static_cast<long long>(now % 1000), label);
 
-			previous = output;
-			have_previous = true;
+			requested = output;
+			have_requested = true;
+		}
+
+		/*
+		 * Write whenever the pin does not match the request, which includes
+		 * retrying after a failed write. A 10 ms cadence of identical writes
+		 * costs one register store and keeps a failed transition from being
+		 * remembered as a success.
+		 */
+		if (!have_applied || output != applied) {
+			const int rc = gpio_pin_set_dt(&kLed,
+						       output_is_on(output) ? 1 : 0);
+
+			if (rc == 0) {
+				applied = output;
+				have_applied = true;
+			} else {
+				++write_errors;
+
+				if (write_errors == 1 ||
+				    write_errors % kWriteErrorReportEvery == 0) {
+					printk("led: gpio write failed (%d), %u so far\n",
+					       rc, write_errors);
+				}
+			}
 		}
 
 		next += cfg::kLedUpdatePeriodMs;
 
 		if (k_uptime_get() > next) {
 			next = k_uptime_get() + cfg::kLedUpdatePeriodMs;
-		} else {
-			k_sleep(K_TIMEOUT_ABS_MS(next));
 		}
+
+		k_sleep(K_TIMEOUT_ABS_MS(next));
 	}
 }
 
