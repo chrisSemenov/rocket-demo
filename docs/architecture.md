@@ -113,3 +113,31 @@ re-anchors instead of bursting to catch up, so the reported period stays honest.
 
 Measured on hardware: fetch 24 ms every period, inter-sample interval 50 ms,
 zero overruns (`docs/verification/`).
+
+## Stack usage (measured)
+
+High-water marks from `CONFIG_THREAD_ANALYZER` after ~45 s of live operation
+(2026-10-31). The analyzer itself costs a thread, so these are upper bounds:
+
+| Thread | Used / size | Headroom |
+|---|---|---|
+| `sensor` | 576 / 2048 (28 %) | 1 472 B |
+| `altitude` | 1 056 / 2048 (51 %) | 992 B |
+| `apogee` | 1 032 / 2048 (50 %) | 1 016 B |
+| `heat` | 488 / 1024 (47 %) | 536 B |
+| `led` | 400 / 1024 (39 %) | 624 B |
+| `telemetry` | 480 / 1024 (46 %) | 544 B |
+| `main` | 416 / 1024 (40 %) | 608 B |
+
+Every thread keeps at least half a kilobyte free. The tightest are `heat` and
+`telemetry`; if either grows, raise its stack rather than relying on the margin.
+
+Reproduce with:
+
+```powershell
+west build -p always -b olimex_stm32_h407 -d build/analyzer . -- `
+  "-DCONFIG_THREAD_ANALYZER=y" "-DCONFIG_THREAD_ANALYZER_USE_PRINTK=y" `
+  "-DCONFIG_THREAD_ANALYZER_AUTO=y" "-DCONFIG_THREAD_ANALYZER_AUTO_INTERVAL=30"
+```
+
+The analyzer is not part of the release configuration.

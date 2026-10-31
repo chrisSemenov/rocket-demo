@@ -2,6 +2,10 @@
 
 A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/temperature sensor, and Zephyr RTOS. Sensor acquisition, altitude, apogee detection and temperature monitoring are separate threads; measurement data moves through synchronized shared memory, and a single LED manager owns the output priority. Acquisition, the shared-memory contract, relative altitude and the LED arbitration are implemented and verified; apogee detection and the temperature alarm are not yet. Deployment is simulated **only by the board LED**; this is not flight-ready or safety-certified firmware.
 
+The task and its mandatory requirements are included in the repository:
+[docs/assignment.md](docs/assignment.md) and [docs/requirements.md](docs/requirements.md).
+Every acceptance row is recorded in [docs/acceptance-matrix.md](docs/acceptance-matrix.md).
+
 ## Current status
 
 - Zephyr 4.4.2 and Zephyr SDK 1.0.1 are installed and have built firmware for `olimex_stm32_h407`.
@@ -15,11 +19,13 @@ A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/tempe
 - **The LED has a single owner (M7, verified on hardware):** `led_manager` is the only writer of PC13. It arbitrates heat blink > deployment ON > off from a pure function, and the deployment deadline is latched once. Measured: 250 ms half-period, 10 s indication, 11–21 ms request latency. Evidence: [docs/verification/led-manager.md](docs/verification/led-manager.md).
 - **Apogee detection is implemented (M8):** the `apogee` thread keeps its own 750 ms altitude window, triggers when the least-squares slope over that window is at or below -0.30 m/s while above 1.5 m, and publishes exactly one deployment request per flight. 37 host checks cover the trigger, gaps, duplicates, the peak confirmation and the latch; the live run shows no false trigger. Evidence: [docs/verification/at-04-at-06-apogee.md](docs/verification/at-04-at-06-apogee.md).
 - **The temperature alarm is implemented (M9):** the `heat` thread applies a 5 s window that renews while still hot and clears on cooling, with hysteresis and a fail-safe that never treats missing data as cool. 31 host checks; the live heat run is captured (the I²C bus latched after a mid-transfer reset). Evidence: [docs/verification/at-07-heat.md](docs/verification/at-07-heat.md).
-- **Not implemented yet:** the acceptance test suite, the replay harness and the demonstration video.
+- **Acceptance evidence:** every mandatory scenario is recorded in [docs/acceptance-matrix.md](docs/acceptance-matrix.md), with the action taken and the observed console values.
+- **Not implemented:** the demonstration video and a physical (non-replayed) apogee descent.
 
 ## Hardware and known board detail
 
-- Target: Olimex STM32-H407 with STM32F407ZGT6; debugger: ST-Link V2 connected over SWD.
+- Target: Olimex STM32-H407 (revision B) with STM32F407ZGT6; debugger: ST-Link V2 over SWD; power: 5 V from the ST-Link/USB while tethered, or the board's 6–16 V DC jack for untethered runs. No USB-UART adapter is used at any point: the console is RTT over SWD.
+- The BMP280 breakout model is not recorded; the straps were verified from the chip ID read at `0x76` (`0x58`), with `CSB` tied to 3.3 V and `SDO` to GND.
 - The green **user** LED on the Olimex revision B schematic is **PC13, active-low**; the red power LED is not the application output. In Zephyr 4.4.2, the `olimex_stm32_h407` board definition instead maps `led0` to PA0. This project's `app.overlay` corrects it to PC13.
 - The board's default OpenOCD file expects an Olimex FTDI JTAG adapter, not ST-Link. This project's `openocd-stlink.cfg` selects ST-Link/SWD at 1000 kHz, matching the working reference. `.vscode/settings.json` selects it for Workbench flashing.
 - The BMP280 is wired to the PF header as in the table below and reads correctly on hardware. The ~94.9 kPa result corresponds to roughly 550 m elevation; the driver only reports the device ready after reading and validating the chip ID over I²C at `0x76`.
@@ -346,11 +352,18 @@ powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
 renewal after a gap, immediate cooling, hysteresis, threshold equality, missing
 data and reset.
 
+## Acceptance status
+
+Every mandatory scenario from the requirements is recorded in
+[docs/acceptance-matrix.md](docs/acceptance-matrix.md): the action taken and the
+observed console values for AT-01 to AT-11. Two things remain open there: the
+demonstration video, and a physical (non-replayed) apogee descent.
+
 ## Replay mode (acceptance testing)
 
 The acceptance scenarios cannot be flown on a desk, so finished traces are
 played into the **same measurement store** the sensor writes to. Everything
-downstream � altitude, apogee, heat, LED � runs unmodified; only the source of
+downstream � altitude, apogee, heat, LED � runs unmodified; only the source of
 the samples differs.
 
 ```
@@ -428,6 +441,32 @@ The decision itself is a pure function, `led::decide(now_ms, request)`, in
 ```powershell
 powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
 ```
+
+### Overlap timing
+
+Two timelines, both measured from the deployment event at `t = 0`:
+
+```text
+AT-08  heat starts 2 s in, cools at 7 s
+
+LED   ██████████▓▓▓▓▓▓▓▓▓▓██████
+      0         2          7    10  s
+      steady ON  blink      steady ON
+                 (250/250)  (the remaining 3 s, not a new window)
+                             off at 10 exactly
+
+AT-09  heat starts at 8 s and runs past the deadline
+
+LED   ██████████▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+      0         8    10      13  s
+      steady ON  blink (deadline passes while blinking)
+                        cooling at 13 gives OFF, not steady ON
+```
+
+### Ready flash
+
+The boot indication is not an assignment behaviour; `demo.conf` disables it for
+the recorded demonstration so the LED shows only deployment and overheating.
 
 ### Watching the sequence without flight logic
 
@@ -535,17 +574,17 @@ and **[docs/decisions.md](docs/decisions.md)**.
 - Workbench application board: `olimex_stm32_h407`; configuration name: `primary`.
 - C++ sources live in `src/`: `main.cpp` (startup), `shared_data.cpp` (the stores), the pure units `altitude.cpp` and `led_logic.cpp`, and one file per thread (`sensor_task.cpp`, `altitude_task.cpp`, `apogee_task.cpp`, `heat_task.cpp`, `led_manager.cpp`, `telemetry_task.cpp`), plus `replay.cpp` for the trace player; `app_config.hpp` holds the timing, stack and priority constants. `led_selftest.cpp` is only compiled when `APP_LED_SELFTEST=ON`. Host tests live in `tests/` and need no board. `prj.conf` enables `CONFIG_CPP=y` and `CONFIG_STD_CPP17=y`.
 - Zephyr builds C++ with `-nostdinc++` against its minimal C++ library, so `<cmath>` is unavailable; `altitude.cpp` uses picolibc's `<math.h>` (`expm1`, `log1p`).
-- This repository is a freestanding application: it uses the separate West workspace and SDK; it does not contain Zephyr itself. `.vscode/settings.json` currently includes machine-specific relative paths, so a different machine must select its own workspace and SDK.
+- This repository is a freestanding application: it uses the separate West workspace and SDK; it does not contain Zephyr itself. `west-manifest.yml` is the workspace snapshot this project was built against (`west init` from it if you are starting from nothing). `.vscode/settings.json` contains a machine-specific workspace path — point it at your own checkout of that workspace, or ignore it and use the terminal below.
 - The existing build output under `build/` is ignored by Git and should be regenerated locally.
 
-With the Zephyr workspace and host tools installed, build from an activated VS Code PowerShell terminal:
+With the Zephyr workspace and host tools installed, build from an activated VS Code PowerShell terminal. Replace `<path-to-your-clone>` with this repository's location; nothing depends on `C:\SCAE`:
 
 ```powershell
 . "$env:USERPROFILE\.zinstaller\env.ps1"
 $env:ZEPHYR_BASE = "$env:USERPROFILE\zephyrproject\deps\zephyr"
-$env:ZEPHYR_SDK_INSTALL_DIR = 'C:\zephyr-sdk-1.0.1'
+$env:ZEPHYR_SDK_INSTALL_DIR = "$env:USERPROFILE\zephyr-sdk-1.0.1"
 $env:ZEPHYR_TOOLCHAIN_VARIANT = 'zephyr'
-cd C:\SCAE\projects\rocket-demo
+cd <path-to-your-clone>
 west build -p always -b olimex_stm32_h407 -d build/primary .
 ```
 
@@ -561,19 +600,26 @@ For debugging, select **Zephyr Workbench Debug [primary]** in VS Code's Run and 
 
 ## Next steps
 
-Live acquisition, the shared-memory path, relative altitude, the LED arbitration, apogee
-detection and the temperature alarm are implemented. **The next milestone is the acceptance
-matrix**, backed by a replay harness.
+All six requirements are implemented, the replay harness is in place, and every mandatory
+scenario is recorded in [docs/acceptance-matrix.md](docs/acceptance-matrix.md). What remains:
 
-1. Build the replay harness so synthetic traces enter at the measurement publisher; that is
-   what makes AT-04/05/06 reproducible, since a real ascent cannot be produced on a desk.
-2. Run the overlap cases (heat over deployment, cooling before and after the deployment
-   deadline) as labelled tests.
-3. Record the acceptance matrix and the demonstration video.
+1. Record the demonstration video: live readings, a replay deployment with the 10 s light, the
+   heat alarm and the overlap case.
+2. Tag the commit that matches the video and publish it.
 
-Known limitation: there is no persistent run log. An SD-card attempt was built and abandoned � the card never mounted reliably and the STM32 SD read path faulted; it is recorded in [docs/verification/sd-log-attempt.md](docs/verification/sd-log-attempt.md). Run evidence therefore comes from RTT captures. Also: no real ascent/descent has been flown — apogee is proven by unit tests and
-a live no-false-trigger run. The live heat transition is pending a board power cycle, after
-the I²C bus latched during a flash. `Detector::reset()` exists and is tested, but the
-firmware still resets a flight only on power cycle.
+Known limitations, stated rather than hidden:
+
+- No real ascent or descent has been flown. Apogee behaviour is proven by the replay traces and
+  by a live run that shows no false trigger; a genuine flight profile is untested.
+- A "flight reset" is a power cycle. `Detector::reset()` exists and is unit-tested, but there is
+  no button or console command to re-arm.
+- Thresholds are bench values (1.5 m, 0.3 m/s, 25 cm, 30 C), chosen against measured noise and
+  configurable in Kconfig; they are not flight values.
+- There is no persistent run log. An SD-card attempt was built and abandoned: the card never
+  mounted reliably and the STM32 SD read path faulted. It is recorded in
+  [docs/verification/sd-log-attempt.md](docs/verification/sd-log-attempt.md); evidence comes
+  from RTT captures.
+- The temperature alarm was exercised with replayed and lowered-threshold temperatures, not by
+  warming the real sensor to 30 C.
 
 The detailed work plan and assignment/requirements currently live outside this repository at `G:\My Drive\Engineering\SCAE\Interview Test\`.

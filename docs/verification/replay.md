@@ -40,15 +40,19 @@ readable) and `src/traces_data.hpp` (embedded) are committed.
 | `at04b` | climb to 4 m and hold | no deployment |
 | `at05` | baseline, climb to 6 m, peak, descend at 2 m/s | one deployment ~0.6 s after the peak |
 | `at08` | at05 + heat 7.3–11.0 s | ON → blink → ON until the deadline |
-| `at09` | at05 + heat 17.5–22.5 s | blink after the deadline; no steady ON afterwards |
+| `at09` | at05 + heat 17.5-22.5 s | blink after the deadline; no steady ON afterwards |
+| `at07a` | flat, heat 4.0-9.0 s | blink 5 s, then off; no deployment |
+| `at07b` | flat, heat 4.0-14.0 s | two renewals, then cooling clears it |
 
-17 host checks (`tests/trace_test.cpp`) verify the embedded data: timestamps
+23 host checks (`tests/trace_test.cpp`) verify the embedded data: timestamps
 increase, pressures are within the sensor's range, every trace starts with a 2 s
 baseline, and `at05` really reaches ~6 m.
 
 ## 3. Acceptance results
 
-Each run: build, flash, attach RTT, no breakpoints, continuous.
+Each run: build, flash, attach RTT, no breakpoints, continuous. Timing tolerance
+on the LED is the 10 ms update period plus logging, so 5.000 s and 10.000 s are
+quoted to the millisecond the transition was recorded.
 
 ### AT-04a — descending but below the minimum
 
@@ -64,7 +68,23 @@ deploys: 0
 apogee: h=3.99 m  v=0.000 m/s  cov=1550 ms  state=ready
 ```
 
-### AT-05 / AT-06 — one deployment, 10 s, no retrigger
+### AT-05b - literal thresholds
+
+Same trace, built with `MIN_DESCENT_MM_S=0` and `MIN_DROP_CM=0`, i.e. the
+assignment's rule with no added guards:
+
+```
+REPLAY TEST: at05
+apogee: DEPLOY at 5.50 m, v=-0.167 m/s; LED on until 15561 ms
+led:  [      5.561] on (deployment)
+led:  [     15.561] off
+```
+
+One event, 10.000 s of steady light. The shipped default (0.3 m/s margin, 25 cm
+drop) triggers slightly later, at 5.41 m and v=-0.495 m/s; both are correct, and
+the strict one exists to stop air drift from firing it.
+
+### AT-05 / AT-06 - one deployment, 10 s, no retrigger
 
 ```
 apogee: DEPLOY at 5.41 m, v=-0.495 m/s; LED on until 15611 ms (seq=113)
@@ -76,6 +96,36 @@ REPLAY TEST: done, 381 samples published
 - One deployment, at 5.41 m — 0.61 s after the 6 m peak.
 - LED on for **exactly 10.000 s**.
 - Continued descent (−9 m) produced no second event.
+
+### AT-07a — heat only, one 5 s window
+
+```
+TEST MODE: REPLAY at07a (live sensor not used)
+heat: HOT at 32.000 C; alarm until 9011 ms (seq=81)
+led:  [      4.011] blink on (heat)
+led:  [      4.261] blink off (heat)
+…
+led:  [      9.011] off
+heat: cooled at 24.000 C; alarm cleared
+```
+
+Blink from 4.011 to 9.011 = **exactly 5.000 s**, 250 ms half-period, and **no
+deployment** anywhere in the run (altitude stays at 0, so the apogee detector
+never arms a drop).
+
+### AT-07b — heat across renewals, then cooling
+
+```
+heat: HOT at 32.000 C; alarm until 9011 ms
+heat: HOT at 32.000 C; alarm until 14011 ms   ← renewal 1
+heat: HOT at 32.000 C; alarm until 19011 ms   ← renewal 2
+heat: cooled at 24.000 C; alarm cleared
+led:  [     14.011] off
+```
+
+Blink ran 4.011 → 14.011 (10 s) with two 5 s renewals and no gap, then cooling
+cleared it immediately. There is no deployment to fall back to, so the output is
+off, not steady ON.
 
 ### AT-08 — heat during deployment, cooling before the deadline
 

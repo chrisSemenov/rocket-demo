@@ -1,6 +1,7 @@
 #include "led_manager.hpp"
 
 #include "app_config.hpp"
+#include "led_pulse.hpp"
 #include "shared_data.hpp"
 
 #include <zephyr/drivers/gpio.h>
@@ -35,63 +36,12 @@ bool output_is_on(led::Output output)
 	return output == led::Output::on || output == led::Output::blink_on;
 }
 
-/*
- * Boot indication: two short flashes once the chain is armed. Deliberately
- * 100 ms on / 120 ms off, not 250/250, so it cannot be mistaken for the heat
- * alarm, and it happens once per boot.
- */
-constexpr int64_t kReadyOnMs = 100;
-constexpr int64_t kReadyGapMs = 120;
-
-struct ReadyPulse {
-	bool active;
-	unsigned int step;
-	int64_t next_at;
-	bool lit;
-};
-
-void start_ready_pulse(ReadyPulse &pulse, int64_t now)
-{
-	pulse.active = true;
-	pulse.step = 0;
-	pulse.next_at = now;
-	pulse.lit = false;
-}
-
-void advance_ready_pulse(ReadyPulse &pulse, int64_t now)
-{
-	if (!pulse.active || now < pulse.next_at) {
-		return;
-	}
-
-	switch (pulse.step) {
-	case 0:
-		pulse.lit = true;
-		pulse.next_at = now + kReadyOnMs;
-		++pulse.step;
-		break;
-	case 1:
-		pulse.lit = false;
-		pulse.next_at = now + kReadyGapMs;
-		++pulse.step;
-		break;
-	case 2:
-		pulse.lit = true;
-		pulse.next_at = now + kReadyOnMs;
-		++pulse.step;
-		break;
-	default:
-		pulse.lit = false;
-		pulse.active = false;
-		break;
-	}
-}
-
 void led_entry(void *, void *, void *)
 {
 	led::Output previous = led::Output::off;
+	uint32_t write_errors = 0;
 	bool have_previous = false;
-	ReadyPulse pulse{false, 0, 0, false};
+	led::ReadyPulse pulse;
 
 	int64_t next = k_uptime_get();
 
@@ -102,28 +52,28 @@ void led_entry(void *, void *, void *)
 		const int64_t now = k_uptime_get();
 		const led::Output decided = led::decide(now, request);
 
-		if (IS_ENABLED(CONFIG_APP_READY_INDICATION) && !pulse.active &&
+		if (IS_ENABLED(CONFIG_APP_READY_INDICATION) && !pulse.active() &&
 		    led_requests().take_ready() && decided == led::Output::off) {
-			start_ready_pulse(pulse, now);
+			pulse.start(now);
 			printk("led:  ready signal\n");
 		}
 
 		/* A real request always wins over the boot flash. */
-		if (pulse.active && decided != led::Output::off) {
-			pulse.active = false;
+		if (pulse.active() && decided != led::Output::off) {
+			pulse.cancel();
 		}
 
-		const bool was_pulsing = pulse.active;
+		const bool was_pulsing = pulse.active();
 
-		advance_ready_pulse(pulse, now);
+		pulse.advance(now);
 
 		const led::Output output =
-			pulse.active ? (pulse.lit ? led::Output::on : led::Output::off)
+			pulse.active() ? (pulse.lit() ? led::Output::on : led::Output::off)
 				     : decided;
 		const char *label;
 
-		if (pulse.active) {
-			label = pulse.lit ? "ready flash on" : "ready flash off";
+		if (pulse.active()) {
+			label = pulse.lit() ? "ready flash on" : "ready flash off";
 		} else if (was_pulsing) {
 			label = "ready flash end";
 		} else {
@@ -135,7 +85,16 @@ void led_entry(void *, void *, void *)
 		 * writes would be harmless for the pin but useless in the console.
 		 */
 		if (!have_previous || output != previous) {
-			(void)gpio_pin_set_dt(&kLed, output_is_on(output) ? 1 : 0);
+			const int rc = gpio_pin_set_dt(&kLed,
+						       output_is_on(output) ? 1 : 0);
+
+			if (rc != 0) {
+				++write_errors;
+
+				if (write_errors == 1) {
+					printk("led: gpio write failed (%d)\n", rc);
+				}
+			}
 
 			printk("led:  [%7lld.%03lld] %s\n",
 			       static_cast<long long>(now / 1000),

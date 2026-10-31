@@ -23,6 +23,10 @@ constexpr const char *kTraceName = "at04b";
 constexpr const char *kTraceName = "at08";
 #elif defined(CONFIG_APP_TRACE_AT09)
 constexpr const char *kTraceName = "at09";
+#elif defined(CONFIG_APP_TRACE_AT07A)
+constexpr const char *kTraceName = "at07a";
+#elif defined(CONFIG_APP_TRACE_AT07B)
+constexpr const char *kTraceName = "at07b";
 #else
 constexpr const char *kTraceName = "at05";
 #endif
@@ -62,8 +66,8 @@ void replay_entry(void *, void *, void *)
 		/*
 		 * The timestamp is the replay moment, not the trace time: consumers
 		 * measure staleness and the 750 ms window against k_uptime_get().
-		 * The cadence is the trace's 50 ms, held in real time so the 10 s
-		 * indication and the 250 ms blink are genuine.
+		 * The cadence comes from the trace itself, held in real time so the
+		 * 10 s indication and the 250 ms blink are genuine.
 		 */
 		measurement.timestamp_ms = k_uptime_get();
 		measurement.pressure_pa = sample.pressure_pa;
@@ -75,10 +79,16 @@ void replay_entry(void *, void *, void *)
 
 		sensor_data().publish(measurement);
 
-		next += cfg::kSamplePeriodMs;
+		const int64_t step =
+			(i + 1 < trace->count)
+				? static_cast<int64_t>(trace->samples[i + 1].time_ms) -
+					  static_cast<int64_t>(sample.time_ms)
+				: static_cast<int64_t>(cfg::kSamplePeriodMs);
+
+		next += step > 0 ? step : cfg::kSamplePeriodMs;
 
 		if (k_uptime_get() > next) {
-			next = k_uptime_get() + cfg::kSamplePeriodMs;
+			next = k_uptime_get() + (step > 0 ? step : cfg::kSamplePeriodMs);
 		} else {
 			k_sleep(K_TIMEOUT_ABS_MS(next));
 		}

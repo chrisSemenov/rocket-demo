@@ -93,7 +93,18 @@ TRACES = {
         "temp": [(0, T0), (17500, 32.0), (22500, 24.0)],
         "note": "blink overrides an expired deployment: no steady ON afterwards",
     },
-}
+    # at07a: heat only, one complete 5 s window, then cooling.
+    "at07a": {
+        "points": [(0, 0.0), (9000, 0.0)],
+        "temp": [(0, T0), (4000, 32.0), (9000, 24.0)],
+        "note": "blink for 5 s, then off: no deployment involved",
+    },
+    # at07b: heat persists past the first window, cools early in the renewal.
+    "at07b": {
+        "points": [(0, 0.0), (16000, 0.0)],
+        "temp": [(0, T0), (4000, 32.0), (14000, 24.0)],
+        "note": "two renewals while hot, then cooling clears it",
+    },}
 
 
 def main():

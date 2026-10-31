@@ -4,6 +4,7 @@
 #include "shared_data.hpp"
 
 #include <zephyr/device.h>
+#include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
@@ -11,6 +12,10 @@
 namespace {
 
 const device *const kBmp280 = DEVICE_DT_GET(DT_NODELABEL(bmp280));
+const device *const kBus = DEVICE_DT_GET(DT_BUS(DT_NODELABEL(bmp280)));
+
+/* Try a bus recovery after this many consecutive failed fetches. */
+constexpr uint32_t kRecoverAfterErrors = 3;
 
 K_THREAD_STACK_DEFINE(sensor_stack, cfg::kSensorStackBytes);
 struct k_thread sensor_thread;
@@ -76,6 +81,8 @@ void sensor_entry(void *, void *, void *)
 	int64_t last_sample = next;
 	uint32_t sequence = 0;
 	uint32_t errors = 0;
+	uint32_t recoveries = 0;
+	uint32_t consecutive_errors = 0;
 	uint32_t overruns = 0;
 	unsigned int since_stats = 0;
 
@@ -112,8 +119,24 @@ void sensor_entry(void *, void *, void *)
 			}
 
 			++errors;
+			++consecutive_errors;
+
+			/*
+			 * A latched bus (a device holding SDA low) does not clear by
+			 * itself. After a few failures, bit-bang nine clocks and a STOP
+			 * once, then let the next period try again.
+			 */
+			if (consecutive_errors == kRecoverAfterErrors) {
+				const int recover_rc = i2c_recover_bus(kBus);
+
+				++recoveries;
+				printk("sensor: bus recovery after %u failures (%d)\n",
+				       consecutive_errors, recover_rc);
+			}
+
 			sensor_data().publish(sample);
 		} else {
+			consecutive_errors = 0;
 			sample.pressure_pa = static_cast<int32_t>(pressure_pa(pressure));
 			sample.temperature_mc =
 				static_cast<int32_t>(temperature_mc(temperature));
@@ -141,6 +164,7 @@ void sensor_entry(void *, void *, void *)
 
 			stats.samples = sequence;
 			stats.errors = errors;
+			stats.recoveries = recoveries;
 			stats.overruns = overruns;
 			stats.fetch_min_ms = fetch_time.min_ms();
 			stats.fetch_avg_ms = static_cast<int32_t>(fetch_time.average());

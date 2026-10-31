@@ -144,9 +144,17 @@ void apogee_entry(void *, void *, void *)
 		if (now >= next_report && altitude.valid) {
 			printk("apogee: h=");
 			print_metres(altitude.altitude_cm);
-			printk(" m  v=");
-			print_mm_s(detector.velocity_mm_s());
-			printk(" m/s  cov=%lld ms  n=%d  state=%s  seq=%u\n",
+			printk(" m");
+
+			if (detector.state() == apogee::State::deployed) {
+				/* Velocity is frozen at the event; do not present it as live. */
+				printk("  v=n/a  ");
+			} else {
+				printk("  v=");
+				print_mm_s(detector.velocity_mm_s());
+			}
+
+			printk("  cov=%lld ms  n=%d  state=%s  seq=%u\n",
 			       static_cast<long long>(detector.coverage_ms()),
 			       detector.samples(), state_name(detector.state()),
 			       altitude.source_sequence);

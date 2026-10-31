@@ -77,12 +77,13 @@ void telemetry_entry(void *, void *, void *)
 			if (stats.samples != 0) {
 				printk("stats: %u samples  fetch %d/%d/%d ms (min/avg/max)"
 				       "  dt %d/%d/%d ms  overruns=%u  errors=%u"
-				       "  seq=%u\n",
+				       "  recoveries=%u  seq=%u\n",
 				       stats.samples, stats.fetch_min_ms,
 				       stats.fetch_avg_ms, stats.fetch_max_ms,
 				       stats.interval_min_ms, stats.interval_avg_ms,
 				       stats.interval_max_ms, stats.overruns,
-				       stats.errors, sensor_data().publish_count());
+				       stats.errors, stats.recoveries,
+				       sensor_data().publish_count());
 			}
 		}
 

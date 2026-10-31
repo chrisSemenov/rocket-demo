@@ -20,6 +20,7 @@ $suites = @(
     @{ Name = 'led'; Test = 'led_logic_test.cpp'; Sources = @('src\led_logic.cpp') },
     @{ Name = 'apogee'; Test = 'apogee_test.cpp'; Sources = @('src\apogee.cpp') }
     @{ Name = 'heat'; Test = 'heat_test.cpp'; Sources = @('src\heat.cpp') }
+    @{ Name = 'led_pulse'; Test = 'led_pulse_test.cpp'; Sources = @('src\led_pulse.cpp') }
     @{ Name = 'trace'; Test = 'trace_test.cpp'; Sources = @() }
 )
 

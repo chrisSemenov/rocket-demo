@@ -34,7 +34,7 @@ double altitude_m(int32_t pressure_pa, double p0)
 
 int main()
 {
-	check(kTraceCount == 5, "five traces are embedded");
+	check(kTraceCount == 7, "seven traces are embedded");
 
 	for (unsigned int t = 0; t < kTraceCount; ++t) {
 		const Trace &trace = kTraces[t];

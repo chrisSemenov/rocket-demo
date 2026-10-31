@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 
 /*
  * Named timing, sizing and priority constants for the whole application.
@@ -38,6 +39,11 @@ constexpr int kLedUpdatePeriodMs = 10;
  */
 constexpr int kBaselineWindowMs = 2000;
 constexpr unsigned int kBaselineMinSamples = 38;
+/*
+ * The window must span this much wall time, not just hold 38 samples: 2 s minus
+ * one sample period, so a burst of samples cannot calibrate faster than 2 s.
+ */
+constexpr int64_t kBaselineMinCoverageMs = 1800;
 constexpr int kBaselineMaxSpreadPa = 20;
 constexpr unsigned int kBaselineMaxSamples = 64;
 

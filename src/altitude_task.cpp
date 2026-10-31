@@ -150,12 +150,18 @@ void altitude_entry(void *, void *, void *)
 
 		if (!fresh) {
 			/*
-			 * A gap breaks any claim of "stationary": drop the window and
-			 * publish an invalid altitude. Flight decisions are inhibited
-			 * upstream rather than fed a last-known height.
+			 * While calibrating, a gap breaks the "stationary" claim, so the
+			 * window restarts. Once P0 is frozen it is kept: a missed sample
+			 * must not force a recalibration that blacks out altitude for
+			 * another two seconds, and must not move the reference mid-flight.
+			 * Only the published altitude goes invalid.
 			 */
-			window.reset();
-			publish_invalid(measurement, reference_pa, calibrated, 0);
+			if (!calibrated) {
+				window.reset();
+			}
+
+			publish_invalid(measurement, reference_pa, calibrated,
+					calibrated ? 0 : window.count());
 		} else if (is_new) {
 			have_sequence = true;
 			last_sequence = measurement.sequence;
@@ -175,7 +181,7 @@ void altitude_entry(void *, void *, void *)
 				int32_t spread = 0;
 
 				if (window.count() >= cfg::kBaselineMinSamples &&
-				    window.coverage_ms() >= cfg::kBaselineWindowMs - 200 &&
+				    window.coverage_ms() >= cfg::kBaselineMinCoverageMs &&
 				    window.stats(mean, spread)) {
 					if (spread <= cfg::kBaselineMaxSpreadPa) {
 						calibrated = true;

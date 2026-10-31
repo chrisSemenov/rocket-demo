@@ -93,6 +93,10 @@ config APP_TRACE_AT08
 	bool "at08 - deployment then heat, cooling before the deadline"
 config APP_TRACE_AT09
 	bool "at09 - heat starts after the deployment deadline"
+config APP_TRACE_AT07A
+	bool "at07a - heat only, one 5 s window"
+config APP_TRACE_AT07B
+	bool "at07b - heat across renewals, then cooling"
 endchoice
 
 config APP_READY_INDICATION

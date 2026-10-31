@@ -13,6 +13,7 @@ target_sources(app PRIVATE
     src/shared_data.cpp
     src/altitude.cpp
     src/led_logic.cpp
+    src/led_pulse.cpp
     src/apogee.cpp
     src/heat.cpp
     src/sensor_task.cpp
