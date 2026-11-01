@@ -8,17 +8,39 @@
  *
  * Trigger: the current altitude is at or above the configured minimum AND the
  * average vertical velocity over the preceding 750 ms is negative by at least a
- * configured margin.
+ * configured margin, AND the least-squares slope over the same window is also
+ * at least that margin below zero.
  *
  * That average is the textbook one, (h(now) - h(now - 750 ms)) / 0.750 s, with
  * the start height linearly interpolated between the two samples that bracket
- * the window edge. A least-squares slope over the same window is also computed
- * and exposed as a diagnostic, but it is not what arms the trigger: the two
- * disagree in sign whenever the path is not close to a straight line.
+ * the window edge. It is the quantity the assignment names, but it depends on
+ * exactly two points, so one bad sample at either edge moves it by
+ * sample_error / 0.75 s -- easily more than the margin.
  *
- * A negative *average* only means the endpoint is lower than 750 ms ago; it does
- * not mean every intermediate sample descended, and it does not mean apogee was
- * the exact peak. This is what FLT-03 asks for, no more.
+ * The slope is the second opinion. For a quadratic (constant acceleration) the
+ * two are mathematically identical, so requiring both costs nothing on a real
+ * descent; they only disagree when the window is not a steady fall, which is
+ * exactly the case a bench lift produces. The assignment's "indicating
+ * constant descent" is that linearity check, not a separate rule.
+ *
+ * Peak estimate (the drop confirmation and the reported flight result):
+ * every new sample produces one filtered altitude, the median of that sample
+ * and its two neighbours, and the median is associated with the timestamp of
+ * the *middle* of the three (so it is available 50 ms after that time at
+ * 20 Hz, not 150 ms). The peak is the maximum of those filtered values. An
+ * isolated spike cannot raise it, because the median ignores the extreme of
+ * the three. A genuine peak is not preserved exactly: if it falls on a sample,
+ * the two neighbours are about 1.2 cm lower at 20 Hz, and the median reports
+ * that lower value. The error is one sample of curvature, not one sample of
+ * climb: during a monotone climb the median of three is the middle sample's
+ * own altitude, so the same timestamp and value are recorded, only one sample
+ * later.
+ *
+ * The peak feeds two different things and they are not the same obligation:
+ *   - the drop confirmation needs a reference that a fault cannot manufacture,
+ *     so a history gap rebuilds it from fresh samples;
+ *   - the reported flight result is a measurement, so it survives a gap and is
+ *     reset only by reset() (a new simulated flight).
  */
 namespace apogee {
 
@@ -43,6 +65,15 @@ struct Event {
 	bool deployed;
 	int64_t event_ms;    /* timestamp of the sample that satisfied both conditions */
 	int64_t deadline_ms; /* event + 10 s, set once */
+
+	/*
+	 * Frozen when the decision is taken, so a later sample cannot move the
+	 * flight result. drop_cm is the estimated peak minus the altitude at the
+	 * decision; event_ms - apogee_ms is the decision delay from the peak.
+	 */
+	int32_t apogee_cm;
+	int64_t apogee_ms;
+	int32_t drop_cm;
 };
 
 constexpr int kCapacity = 32;
@@ -76,7 +107,19 @@ public:
 	int64_t coverage_ms() const;
 	int samples() const;
 
-	/* New simulated flight: clears history and the latch. */
+	/*
+	 * Peak altitude estimate so far (median-of-three, middle-sample time).
+	 * Before the decision this is "the highest estimate yet"; after it, the
+	 * frozen flight result, because on_sample() stops updating once latched.
+	 */
+	bool have_apogee() const;
+	int32_t apogee_cm() const;
+	int64_t apogee_ms() const;
+
+	/* apogee_cm() - the newest altitude, in cm; 0 before there is an estimate. */
+	int32_t drop_cm() const;
+
+	/* New simulated flight: clears history, the latch and the peak record. */
 	void reset();
 
 private:
@@ -85,6 +128,12 @@ private:
 
 	/* Linear interpolation of the stored altitude at an arbitrary time. */
 	bool interpolate_altitude(int64_t at_ms, double &out_cm) const;
+
+	/*
+	 * Median of the newest n altitudes (n <= 3, and only when n samples are
+	 * present), associated with the timestamp of the middle sample of those n.
+	 */
+	int32_t median_recent(int n, int64_t &out_timestamp_ms) const;
 
 	/* (h(now) - h(now - window)) / window, as documented in the README. */
 	bool average_velocity(int64_t &out_target_ms, double &out_velocity_ms) const;
@@ -100,7 +149,14 @@ private:
 	State state_;
 	int32_t velocity_mm_s_;
 	int32_t slope_mm_s_;
+
+	/* Drop confirmation reference: median peak since the last history gap. */
 	int32_t peak_cm_;
+
+	/* Peak altitude estimate for the flight: survives gaps, reset by reset(). */
+	int32_t apogee_cm_;
+	int64_t apogee_ms_;
+	int32_t drop_cm_;
 };
 
 } // namespace apogee

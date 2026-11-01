@@ -1,2 +1,5 @@
 /build/
 /tests/build/
+
+# Working captures for analysis; promote anything worth keeping to docs/verification.
+/temp_log/

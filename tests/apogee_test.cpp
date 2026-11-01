@@ -372,6 +372,136 @@ int main()
 		      "the trigger follows the endpoint average, not the slope");
 	}
 
+	/* 20. The shape the bench produced: one high sample at the window start,
+	 *     then a flat hold 45 cm lower. The endpoint average passes the margin
+	 *     but the fit over the same window does not, so the trigger must
+	 *     refuse it. Without the slope confirmation this deploys. */
+	{
+		Feeder f;
+
+		f.run(20, 575);   /* arm and fill the window */
+		f.step(620);      /* the spike a hand lift leaves behind */
+		f.run(15, 575);   /* hold, until the window starts on the spike */
+
+		check(f.detector.velocity_mm_s() <= -595,
+		      "spike shape: endpoint average passes the margin");
+		check(f.detector.slope_mm_s() > -300,
+		      "spike shape: slope stays above the margin");
+		check(f.events == 0,
+		      "spike shape does not deploy: the estimators disagree");
+	}
+
+	/* 21. The literal rule (AT-05b): zero margin and zero drop, so neither our
+	 *     noise guard nor the peak confirmation is present. The spike shape
+	 *     still fires because a negative average is all that was asked. */
+	{
+		apogee::Config config = apogee::kDefaultConfig;
+
+		config.min_descent_mm_s = 0;
+		config.min_drop_cm = 0;
+
+		Feeder f(config);
+
+		f.run(20, 575);
+		f.step(620);
+		f.run(15, 575);
+
+		check(f.events == 1,
+		      "spike shape still deploys with the margin and drop at zero");
+	}
+
+	/* 22. The median peak estimate: one bad sample cannot raise it, so it
+	 *     cannot inflate the drop either. This is what the raw maximum got
+	 *     wrong on the bench (a 1.87 m sample that was never a real peak). */
+	{
+		Feeder f;
+
+		f.ramp(0, 600);
+		f.run(4, 600);
+		f.step(900);    /* the single high sample */
+		f.run(4, 600);  /* back to the hold */
+
+		check(f.detector.apogee_cm() == 600,
+		      "a single spike does not become the peak estimate");
+		check(f.detector.drop_cm() == 0,
+		      "a single spike does not inflate the drop");
+		check(f.events == 0, "a single spike cannot confirm a drop");
+	}
+
+	/* 23. The documented working: A = 1.70 m, B = 2.40 m (a spike), C = 1.75 m.
+	 *     The median is 1.75 m, stamped with B's timestamp, and it becomes
+	 *     available when C arrives -- 50 ms after B, not 150 ms of history. */
+	{
+		Feeder f;
+
+		f.run(20, 100); /* fill the window at 1.00 m */
+
+		f.step(170);                 /* A */
+		const int64_t middle = f.now_ms;
+		f.step(240);                 /* B: the spike */
+		f.step(175);                 /* C: B's estimate becomes available */
+
+		check(f.detector.apogee_cm() == 175,
+		      "the median of A, B and C is 1.75 m");
+		check(f.detector.apogee_ms() == middle,
+		      "the estimate carries the middle sample's timestamp");
+		check(f.detector.apogee_ms() == f.now_ms - 100,
+		      "the estimate is 50 ms old when it becomes available");
+	}
+
+	/* 24. A deployment freezes the flight result in the event, so the log can
+	 *     state peak, drop and decision delay without reconstructing them. */
+	{
+		Feeder f;
+
+		f.ramp(0, 600);
+		f.run(4, 600);
+		f.descend(20, 600, 50, 3); /* 0.6 m/s, triggers */
+
+		check(f.events == 1, "the descent deploys with the filtered peak");
+		check(f.last.apogee_cm >= 598 && f.last.apogee_cm <= 600,
+		      "the frozen apogee is within a sample of curvature");
+		check(f.last.apogee_ms > 0 && f.last.apogee_ms < f.last.event_ms,
+		      "the frozen apogee predates the decision");
+		check(f.last.drop_cm >= 25,
+		      "the drop is measured from the estimated peak");
+		check(f.detector.apogee_cm() == f.last.apogee_cm &&
+		      f.detector.drop_cm() == f.last.drop_cm,
+		      "the live record keeps the frozen value");
+	}
+
+	/* 25. The flight result survives a history gap, while the deployment
+	 *     reference is rebuilt: a fault may erase the window, not the flight. */
+	{
+		Feeder f;
+
+		f.ramp(0, 600);
+		f.run(4, 600);
+		f.now_ms += 1000;
+
+		f.step(900); /* first sample after the gap: no filter across the hole */
+		check(f.detector.apogee_cm() == 600,
+		      "a post-gap sample does not update the estimate alone");
+
+		f.run(20, 500);
+		check(f.detector.apogee_cm() == 600,
+		      "the peak estimate survives a gap");
+		check(f.events == 0,
+		      "a gap still clears the deployment reference");
+	}
+
+	/* 26. reset() is the only thing that clears the flight result. */
+	{
+		Feeder f;
+
+		f.ramp(0, 600);
+		f.run(4, 600);
+		check(f.detector.have_apogee(), "an estimate exists once armed");
+
+		f.detector.reset();
+		check(!f.detector.have_apogee(), "reset clears the flight result");
+	}
+
 	std::printf("\n%s (%d failure%s)\n", failures != 0 ? "FAILED" : "PASSED",
 		    failures, failures == 1 ? "" : "s");
 

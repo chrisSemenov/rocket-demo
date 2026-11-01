@@ -20,7 +20,7 @@ namespace apogee {
 Detector::Detector(const Config &config)
 	: config_(config), count_(0), last_sequence_valid_(0), last_sequence_(0),
 	  state_(State::filling), velocity_mm_s_(0), slope_mm_s_(0),
-	  peak_cm_(INT32_MIN)
+	  peak_cm_(INT32_MIN), apogee_cm_(INT32_MIN), apogee_ms_(0), drop_cm_(0)
 {
 }
 
@@ -98,6 +98,49 @@ bool Detector::interpolate_altitude(int64_t at_ms, double &out_cm) const
 			     static_cast<double>(before.altitude_cm));
 
 	return true;
+}
+
+int32_t Detector::median_recent(int n, int64_t &out_timestamp_ms) const
+{
+	if (n > count_) {
+		n = count_;
+	}
+
+	if (n <= 0) {
+		out_timestamp_ms = 0;
+		return 0;
+	}
+
+	const int first = count_ - n;
+
+	/*
+	 * Selection sort over at most three values: no allocation and no copy of
+	 * the sample array. Ties keep their original order, so the middle value is
+	 * stable.
+	 */
+	int order[3] = {0, 1, 2};
+
+	for (int i = 0; i < n; ++i) {
+		for (int j = i + 1; j < n; ++j) {
+			if (samples_[first + order[j]].altitude_cm <
+			    samples_[first + order[i]].altitude_cm) {
+				const int swap = order[i];
+
+				order[i] = order[j];
+				order[j] = swap;
+			}
+		}
+	}
+
+	/*
+	 * The filtered value is the middle altitude, but its time is the middle
+	 * sample's time: a median filter is centred on the middle of its window,
+	 * so the estimate for that instant is only available once the newest
+	 * sample has arrived.
+	 */
+	out_timestamp_ms = samples_[first + n / 2].timestamp_ms;
+
+	return samples_[first + order[n / 2]].altitude_cm;
 }
 
 bool Detector::average_velocity(int64_t &out_target_ms,
@@ -245,8 +288,9 @@ Event Detector::on_sample(const Sample &sample)
 	velocity_mm_s_ = to_mm_s(velocity_ms);
 
 	double slope_ms = 0.0;
+	const bool slope_valid = slope_over_window(target, slope_ms);
 
-	if (slope_over_window(target, slope_ms)) {
+	if (slope_valid) {
 		slope_mm_s_ = to_mm_s(slope_ms);
 	}
 
@@ -255,17 +299,51 @@ Event Detector::on_sample(const Sample &sample)
 	}
 
 	/*
-	 * Peak tracking: the trigger requires a drop below the highest altitude seen
-	 * since arming. A lift sets a new peak every sample, so its drop is always
-	 * zero and it cannot fire no matter how noisy the pressure is.
+	 * Peak estimate. Each sample produces one filtered altitude: the median
+	 * of itself and its two neighbours, stamped with the middle sample's time.
+	 * Taking the maximum of that series means an isolated spike cannot become
+	 * the peak, and a genuine peak is reported within about one sample of
+	 * curvature (1.2 cm at 20 Hz) rather than one sample of climb: on a
+	 * monotone climb the median of three is the middle sample's own value.
+	 *
+	 * Two references, deliberately different:
+	 *   peak_cm_   - the drop confirmation. A history gap rebuilds it, because
+	 *                a fault must not be able to manufacture a deployment.
+	 *   apogee_cm_ - the flight result. It survives a gap and is reset only by
+	 *                reset(), so an outage cannot erase the measured peak.
+	 *
+	 * Fewer than three samples after a gap means the filter window would
+	 * straddle the hole, so nothing is estimated until it is valid again.
 	 */
-	if (newest.altitude_cm > peak_cm_) {
-		peak_cm_ = newest.altitude_cm;
+	if (count_ >= 3) {
+		int64_t filtered_ms = 0;
+		const int32_t filtered_cm = median_recent(3, filtered_ms);
+
+		if (filtered_cm > peak_cm_) {
+			peak_cm_ = filtered_cm;
+		}
+
+		if (filtered_cm > apogee_cm_) {
+			apogee_cm_ = filtered_cm;
+			apogee_ms_ = filtered_ms;
+		}
 	}
 
-	const int32_t drop_cm = peak_cm_ - newest.altitude_cm;
+	int32_t drop_cm = 0;
+
+	if (peak_cm_ != INT32_MIN) {
+		drop_cm = peak_cm_ - newest.altitude_cm;
+	}
+
 	const bool high_enough = newest.altitude_cm >= config_.min_altitude_cm;
-	const bool dropped = drop_cm >= config_.min_drop_cm;
+	const bool dropped = peak_cm_ != INT32_MIN &&
+			     drop_cm >= config_.min_drop_cm;
+
+	/*
+	 * Reported drop, always from the estimated peak, so the log and the
+	 * frozen event describe the same flight result even across a gap.
+	 */
+	drop_cm_ = apogee_cm_ == INT32_MIN ? 0 : apogee_cm_ - newest.altitude_cm;
 
 	/*
 	 * Strictly negative, and at least the configured margin below zero. The
@@ -275,12 +353,24 @@ Event Detector::on_sample(const Sample &sample)
 	const bool descending = velocity_mm_s_ < 0 &&
 				velocity_mm_s_ <= -config_.min_descent_mm_s;
 
-	if (high_enough && dropped && descending) {
+	/*
+	 * Second opinion over the same window. A single bad sample at either edge
+	 * of the average moves it by sample_error / 0.75 s, which is easily more
+	 * than the margin; the fit averages all ~15 samples and only agrees when
+	 * the window is a steady descent rather than a kink.
+	 */
+	const bool slope_descending = slope_valid && slope_mm_s_ < 0 &&
+				      slope_mm_s_ <= -config_.min_descent_mm_s;
+
+	if (high_enough && dropped && descending && slope_descending) {
 		state_ = State::deployed;
 
 		event.deployed = true;
 		event.event_ms = newest.timestamp_ms;
 		event.deadline_ms = newest.timestamp_ms + kDeploymentIndicationMs;
+		event.apogee_cm = apogee_cm_;
+		event.apogee_ms = apogee_ms_;
+		event.drop_cm = drop_cm_;
 	}
 
 	return event;
@@ -320,10 +410,33 @@ int Detector::samples() const
 	return count_;
 }
 
+bool Detector::have_apogee() const
+{
+	return apogee_cm_ != INT32_MIN;
+}
+
+int32_t Detector::apogee_cm() const
+{
+	return apogee_cm_;
+}
+
+int64_t Detector::apogee_ms() const
+{
+	return apogee_ms_;
+}
+
+int32_t Detector::drop_cm() const
+{
+	return drop_cm_;
+}
+
 void Detector::reset()
 {
 	count_ = 0;
 	peak_cm_ = INT32_MIN;
+	apogee_cm_ = INT32_MIN;
+	apogee_ms_ = 0;
+	drop_cm_ = 0;
 	last_sequence_valid_ = 0;
 	last_sequence_ = 0;
 	state_ = State::filling;

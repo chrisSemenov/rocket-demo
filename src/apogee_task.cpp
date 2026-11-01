@@ -47,6 +47,18 @@ void print_mm_s(int32_t mm_s)
 	       static_cast<long>(magnitude % 1000));
 }
 
+/* Milliseconds as seconds with two decimals: 8.90, 15611 -> 15.61. */
+void print_seconds(int64_t milliseconds)
+{
+	const bool negative = milliseconds < 0;
+	const uint64_t magnitude = static_cast<uint64_t>(negative ? -milliseconds
+								  : milliseconds);
+
+	printk("%s%llu.%02llu", negative ? "-" : "",
+	       static_cast<unsigned long long>(magnitude / 1000),
+	       static_cast<unsigned long long>((magnitude % 1000) / 10));
+}
+
 /*
  * The two numbers that decide a deployment. Both come from Kconfig so a test
  * build can change them without touching source; the assignment only requires
@@ -127,7 +139,14 @@ void apogee_entry(void *, void *, void *)
 				print_mm_s(detector.velocity_mm_s());
 				printk(" m/s (slope=");
 				print_mm_s(detector.slope_mm_s());
-				printk("); LED on until %lld ms (seq=%u)\n",
+				printk("); estimated apogee ");
+				print_metres(event.apogee_cm);
+				printk(" m at ");
+				print_seconds(event.apogee_ms);
+				printk(" s (drop %ld cm, delay ",
+				       static_cast<long>(event.drop_cm));
+				print_seconds(event.event_ms - event.apogee_ms);
+				printk(" s); LED on until %lld ms (seq=%u)\n",
 				       static_cast<long long>(event.deadline_ms),
 				       altitude.source_sequence);
 			}
@@ -137,8 +156,8 @@ void apogee_entry(void *, void *, void *)
 
 			if (ready && !last_ready) {
 				printk("apogee: armed; threshold %d cm, drop %d cm,"
-				       " margin %d mm/s, window %lld ms (endpoint"
-				       " average; slope is diagnostic)\n",
+				       " margin %d mm/s, window %lld ms (average"
+				       " velocity, confirmed by least-squares slope)\n",
 				       config.min_altitude_cm, config.min_drop_cm,
 				       config.min_descent_mm_s,
 				       static_cast<long long>(config.window_ms));
@@ -169,6 +188,17 @@ void apogee_entry(void *, void *, void *)
 			print_metres(altitude.altitude_cm);
 			printk(" m");
 			print_velocities(detector);
+
+			if (detector.have_apogee()) {
+				printk("  peak=");
+				print_metres(detector.apogee_cm());
+				printk(" m  drop=");
+				print_metres(detector.drop_cm());
+				printk(" m");
+			} else {
+				printk("  peak=n/a");
+			}
+
 			printk("  cov=%lld ms  n=%d  state=%s  seq=%u\n",
 			       static_cast<long long>(detector.coverage_ms()),
 			       detector.samples(), state_name(detector.state()),
