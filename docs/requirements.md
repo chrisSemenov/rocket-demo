@@ -94,7 +94,7 @@ The assignment does not fully define the following. Record the chosen behavior i
 1. **Five-second alarm versus persistent heat:** decide how the alarm renews or retriggers if temperature remains high after five seconds. Behavior must still honor the requirement to blink while overheating is detected.
 2. **Early cooling:** define how the five-second alarm request is cleared when temperature returns to normal. Honor the stated fallback to an unexpired deployment interval.
 3. **Threshold behavior:** choose actual altitude and temperature thresholds; document any hysteresis, filtering, or descent confirmation margin.
-4. **Velocity calculation:** define how the previous 750 ms is selected/interpolated and how incomplete history is handled. A negative window average shows net descent, not necessarily uninterrupted descent at every sample.
+4. **Velocity calculation:** define how the previous 750 ms is selected/interpolated and how incomplete history is handled. A negative window average shows net descent, not necessarily uninterrupted descent at every sample. The project additionally requires a least-squares slope over the same window to pass the same margin, and estimates the peak as the maximum of a three-sample median.
 5. **Timing tolerance:** specify measurable tolerances for the 500 ms period and 5/10-second windows, based on scheduling and measurement resolution. No tolerance is supplied in the assignment.
 6. **Hardware configuration:** confirm I²C or SPI, sensor address/chip select, connector pins, GPIO polarity, and compatible driver configuration for the selected Zephyr version.
 7. **Failure and reset behavior:** define handling for startup, sensor failures, stale data, and beginning a new simulated flight.

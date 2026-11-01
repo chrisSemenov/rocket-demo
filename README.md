@@ -18,7 +18,7 @@ with the raw console capture it came from in `tests/evidence/m10/`.
 - **Shared memory is synchronized (M5, verified on hardware):** readers copy a `Measurement` out of `SensorDataStore` under a mutex and never consume it, so the 500 ms telemetry consumer and an independent 1 s reader observe the same sequence at their own rates. Evidence: [docs/verification/m5-shared-memory.md](docs/verification/m5-shared-memory.md).
 - **Altitude is calculated and published (M6, verified on hardware):** a separate `altitude` thread reads the measurement snapshot, freezes a baseline `P₀` after 2 s of stationary pressure, and publishes a separate `AltitudeStore`. The maths is unit-tested on the host against independently computed references. Evidence: [docs/verification/at-03-altitude.md](docs/verification/at-03-altitude.md).
 - **The LED has a single owner (M7, verified on hardware):** `led_manager` is the only writer of PC13. It arbitrates heat blink > deployment ON > off from a pure function, and the deployment deadline is latched once. Measured: 250 ms half-period, 10 s indication, 11–21 ms request latency. Evidence: [docs/verification/led-manager.md](docs/verification/led-manager.md).
-- **Apogee detection is implemented and verified on the target (M8):** the `apogee` thread keeps its own 750 ms altitude window and triggers when the **average velocity over that window** is at or below -0.30 m/s while above 1.5 m and at least 25 cm below the peak. A least-squares slope over the same window is logged alongside it as a diagnostic, never as the trigger. 41 host checks cover the trigger, the two estimators, gaps, duplicates, the peak confirmation and the latch; replay runs on the board produce exactly one deployment per flight. Evidence: [docs/verification/at-04-at-06-apogee.md](docs/verification/at-04-at-06-apogee.md).
+- **Apogee detection is implemented and verified on the target (M8):** the `apogee` thread keeps its own 750 ms altitude window and triggers when the **average velocity over that window** is at or below -0.30 m/s **and the least-squares slope over the same window is too**, while above 1.5 m and at least 25 cm below the estimated peak. The peak is the maximum of a three-sample median, printed as `peak=` and frozen into the deployment event as the estimated apogee. 61 host checks cover the trigger, both estimators, the peak estimate, gaps, duplicates, the latch and the frozen flight result; replay runs on the board produce exactly one deployment per flight. Evidence: [docs/verification/at-04-at-06-apogee.md](docs/verification/at-04-at-06-apogee.md).
 - **The temperature alarm is implemented (M9):** the `heat` thread applies a 5 s window that renews while the temperature stays above the release threshold and clears on cooling, with 0.2 C of hysteresis and a fail-safe that never treats missing data as cool. 37 host checks; replay runs on the target cover a single window, two renewals and both overlap cases. Evidence: [docs/verification/at-07-heat.md](docs/verification/at-07-heat.md).
 - **Acceptance evidence:** every mandatory scenario is recorded in [docs/acceptance-matrix.md](docs/acceptance-matrix.md), with the action taken and the observed console values.
 - **Not implemented:** the demonstration video and a physical (non-replayed) apogee descent.
@@ -223,13 +223,21 @@ thread with its own history; it reads the altitude snapshot and publishes at mos
 one request per flight.
 
 ```
-v = (h(now) - h(now - 750 ms)) / 0.750 s     window start interpolated
-deploy when  h(now) >= 1.50 m  and  v <= -0.30 m/s  and  h(now) <= peak - 25 cm
+v     = (h(now) - h(now - 750 ms)) / 0.750 s    window start interpolated
+slope = least-squares fit of altitude against time, same window
+peak  = max of the three-sample median of altitude, middle-sample timestamp
+
+deploy when  h(now) >= 1.50 m
+        and  v     <= -0.30 m/s
+        and  slope <= -0.30 m/s
+        and  h(now) <= peak - 25 cm
 ```
 
-All three conditions are required, and the event latches. A least-squares slope
-over the same window is computed and printed as `slope=`; it is a diagnostic, not
-the trigger.
+All four conditions are required, and the event latches. On a ballistic fall the
+last two are free: the two estimators are mathematically identical for constant
+acceleration, and 0.806 m has already been fallen when the 0.30 m/s average is
+reached. The deployment event freezes the peak, its timestamp and the drop, so the
+log states the apogee separately from the decision.
 
 ### Why each piece exists
 
@@ -237,10 +245,11 @@ the trigger.
 |---|---|
 | **750 ms window** | The assignment's descent criterion. Timestamp-based, so a missed sample does not silently shorten it. |
 | **Average over the window** | `(h(now) - h(now-750 ms)) / 0.75`, with the start height interpolated between the bracketing samples. This is the assignment's wording; the endpoint is what decides. |
-| **Slope diagnostic** | A least-squares fit over the same window is logged as `slope=`. It is smoother on a straight ramp but differs in sign on a bounce, so it does not arm the trigger. |
-| **1.50 m minimum** | About twice the observed altitude noise (0.9 m peak-to-peak). Without it, a bench wobble at "altitude 0" could satisfy a negative velocity. |
-| **−0.30 m/s margin** | A noise guard, not a performance threshold. Falling from rest at apogee, a 0.3 m/s trailing average is reached **~0.41 s and ~0.8 m** below the peak. Larger margins only delay detection. |
-| **25 cm drop confirmation** | A lift sets a new peak every sample, so its drop is always zero and it cannot fire no matter how noisy the pressure is. |
+| **Slope confirmation** | A least-squares fit over the same window must also be at least the margin below zero. It uses all ~15 samples instead of the two edges, so one bad sample cannot pass the trigger on its own. It is joined with `&&`: it can refuse a deployment, never cause one. |
+| **1.50 m minimum** | About 1.7x the observed altitude noise (0.89 m peak-to-peak). Without it, a bench wobble at "altitude 0" could satisfy a negative velocity. |
+| **-0.30 m/s margin** | A noise guard, not a performance threshold. Falling from rest at apogee, a 0.3 m/s trailing average is reached **~0.41 s and ~0.81 m** below the peak. Larger margins only delay detection. |
+| **Peak estimate** | The maximum of a three-sample median, stamped with the middle sample's time, so an isolated spike cannot become the peak. A genuine peak lands about one sample of curvature low (1.2 cm at 20 Hz). |
+| **25 cm drop confirmation** | Measured from that estimate, not from the raw maximum. It is a guard, not a requirement, and it is what the bench exposes: a fast lift settles by 35-44 cm, which passes 25 cm (see `bench.conf`). |
 | **Fixed 32-sample history** | 1.55 s at 20 Hz, which bounds the 750 ms window; the time bound is 2 s but capacity is reached first. Owned by the thread, not a third shared store. |
 | **Duplicate rejection** | The thread polls at 50 ms, but a slow pass can read the same sequence twice. A repeated sequence is ignored, not counted as new flight data. |
 | **Gap handling** | A hole longer than the 250 ms stale timeout clears the window; the next decision needs 750 ms of fresh samples. |
@@ -253,15 +262,17 @@ ago. It does **not** mean every intermediate sample descended - a bounce on the
 way down still satisfies it as long as the net change over the window is
 downward - and it does not identify the exact peak. That is what FLT-03 asks for,
 and the README does not claim more. The logged `slope=` value is a different
-estimate of the same window and is there for comparison, not for the decision.
+estimate of the same window; it is required as well, but it confirms the window
+rather than redefining it.
 
 ### Configuring the trigger
 
-Two numbers are configurable, in `Kconfig` and `prj.conf`:
+Three numbers are configurable, in `Kconfig` and `prj.conf`:
 
 ```conf
 CONFIG_APP_APOGEE_MIN_ALT_CM=150
 CONFIG_APP_APOGEE_MIN_DESCENT_MM_S=300
+CONFIG_APP_APOGEE_MIN_DROP_CM=25
 ```
 
 A different build changes the behaviour without touching source:
@@ -303,26 +314,29 @@ This distinction matters, so it is stated rather than implied:
 | A minimum altitude threshold | **Assignment** (FLT-02: "configurable minimum threshold") |
 | 750 ms averaging window | **Assignment** (FLT-03) |
 | Negative average velocity | **Assignment** (FLT-03) |
-| **1.50 m** | **Ours.** ~2× the measured altitude noise (0.89 m peak-to-peak), so noise alone cannot reach it |
+| **1.50 m** | **Ours.** ~1.7x the measured altitude noise (0.89 m peak-to-peak), so noise alone cannot reach it |
 | **0.30 m/s** margin | **Ours.** A noise guard, deliberately small: it must not delay detection beyond ~0.4 s after apogee. The assignment only says "negative"; 0 is available via Kconfig |
+| **Slope confirmation** | **Ours.** The same margin applied to a least-squares fit over the same window. Free on a ballistic fall; it refuses a deployment when one noisy edge sample moves the average but the window is not a steady descent |
+| **25 cm drop** | **Ours.** A confirmation measured from the three-sample median peak. Free on a ballistic fall (0.81 m has already been fallen at the crossing) |
 
 The margin is a deliberate tightening of the requirement, not a reading of it:
 without it, a stationary sensor would satisfy "negative" on noise. The measured
-numbers behind both choices are in
+numbers behind these choices are in
 [docs/verification/at-04-at-06-apogee.md](docs/verification/at-04-at-06-apogee.md).
 
 ### Testing
 
-The detector is a pure unit in `src/apogee.cpp`, so the window, gaps, duplicates
-and latch are all exercised without hardware:
+The detector is a pure unit in `src/apogee.cpp`, so the window, gaps, duplicates,
+the peak estimate and the latch are all exercised without hardware:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
 ```
 
-41 checks, including the exact threshold (`150 cm` deploys, `149 cm` does not),
-an incomplete window, a 1 s outage, out-of-order timestamps and a second flight
-after `reset()`.
+61 checks, including the exact threshold (`150 cm` deploys, `149 cm` does not),
+an incomplete window, a 1 s outage, out-of-order timestamps, a second flight
+after `reset()`, a single spike that must not become the peak, the peak's
+timestamp, the frozen flight result, and a peak that survives a history gap.
 
 ## Temperature alarm
 
@@ -636,8 +650,8 @@ Known limitations, stated rather than hidden:
   by a live run that shows no false trigger; a genuine flight profile is untested.
 - A "flight reset" is a power cycle. `Detector::reset()` exists and is unit-tested, but there is
   no button or console command to re-arm.
-- Thresholds are bench values (1.5 m, 0.3 m/s, 25 cm, 30 C), chosen against measured noise and
-  configurable in Kconfig; they are not flight values.
+- Thresholds are bench values (1.5 m, 0.3 m/s average and slope, 25 cm, 30 C), chosen against
+  measured noise and configurable in Kconfig; they are not flight values.
 - There is no persistent run log. An SD-card attempt was built and abandoned: the card never
   mounted reliably and the STM32 SD read path faulted. It is recorded in
   [docs/verification/sd-log-attempt.md](docs/verification/sd-log-attempt.md); evidence comes

@@ -52,17 +52,18 @@ root.
 
 | Decision | Value | Why |
 |---|---|---|
-| Trigger | Current altitude at or above the minimum **and** the 750 ms average velocity at or below -0.30 m/s **and** at least 25 cm below the peak | FLT-03 plus a noise guard and a descent confirmation |
+| Trigger | Current altitude at or above the minimum **and** the 750 ms average velocity at or below -0.30 m/s **and** the least-squares slope over the same window at or below -0.30 m/s **and** at least 25 cm below the estimated peak | FLT-03 plus a noise guard, a steady-descent confirmation and a peak confirmation |
 | Velocity | `(h(now) - h(now - 750 ms)) / 0.750 s`, window start linearly interpolated between bracketing samples | This is the assignment's "average vertical velocity over the previous 750 ms". Timestamps, not sample counts |
-| Diagnostic | Least-squares slope over the same window, logged as `slope=` | Useful for comparison, but it is a different function: it disagrees in sign with the endpoint average on any non-monotonic path, so it must not arm the trigger |
+| Slope confirmation | Least-squares slope over the same window, logged as `slope=` and required to pass the same margin | It uses every sample instead of the two edges, so one bad edge sample cannot pass on its own. Joined with `&&`, so it can only refuse a deployment. For constant acceleration the two estimators are identical, so it is free on a ballistic fall |
 | Trigger condition | Strictly negative and at least the margin below zero | `v <= 0` would treat a flat trace as descending, which matters when the margin is 0 |
 | History | Fixed 32 samples, evicted by timestamp after 2 s | Processing state owned by the apogee thread. At 20 Hz the 32-entry capacity (1.55 s) binds first, so "2 s" is an upper bound rather than the working depth |
 | Duplicates | Repeated sequence numbers are ignored | The consumer polls faster than the producer publishes |
 | Gaps | A hole longer than the stale timeout clears the window | A 750 ms estimate cannot be defended across an outage |
-| Threshold | 1.50 m (`CONFIG_APP_APOGEE_MIN_ALT_CM`) | About twice the observed altitude noise; a bench value |
-| Descent margin | 0.30 m/s (`CONFIG_APP_APOGEE_MIN_DESCENT_MM_S`) | Noise guard only: a 0.3 m/s trailing average is reached about 0.41 s / 0.8 m after apogee |
-| Drop confirmation | 25 cm (`CONFIG_APP_APOGEE_MIN_DROP_CM`) | A lift sets a new peak every sample, so its drop is always zero |
-| Bench preset | `bench.conf`: altitude 50 cm, margin 0.60 m/s, drop 15 cm | Room air drift reaches 0.55 m/s, so the bench needs a *larger* margin and a lower gate |
+| Threshold | 1.50 m (`CONFIG_APP_APOGEE_MIN_ALT_CM`) | About 1.7x the observed altitude noise (0.89 m peak-to-peak); a bench value |
+| Descent margin | 0.30 m/s (`CONFIG_APP_APOGEE_MIN_DESCENT_MM_S`) | Noise guard only: a 0.3 m/s trailing average is reached about 0.41 s / 0.81 m after apogee |
+| Peak estimate | Maximum of a three-sample median, stamped with the middle sample's timestamp; logged as `peak=` and frozen into the event | One bad sample must not become the peak, and the flight result must be reportable separately from the decision |
+| Drop confirmation | 25 cm (`CONFIG_APP_APOGEE_MIN_DROP_CM`) | Measured from the estimated peak. A guard, not a requirement: free on a ballistic fall, but passed by a 35-44 cm hand settle, which is why the bench preset raises the margin instead |
+| Bench preset | `bench.conf`: altitude 50 cm, margin 0.60 m/s, drop 15 cm | A hand settle after a fast lift measures about 0.36 m/s and 35-44 cm, so the bench needs a *larger* margin and a lower gate. A deliberate lowering (~0.7 m/s) still triggers |
 | Configuration | Kconfig symbols in `prj.conf`, compiled in | Satisfies "configurable" without a runtime command path or a second writer |
 | Ready indication | Two 100 ms flashes once the window is full, gated on no active request | Without a console this is the only way to know the chain is armed. Disabled by `demo.conf` for the recording |
 | Trigger repeat | Latched in the detector; the store also refuses a second event | FLT-04 and FLT-05 enforced twice |

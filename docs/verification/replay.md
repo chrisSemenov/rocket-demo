@@ -5,8 +5,9 @@ by publishing recorded traces through the same measurement store the sensor uses
 
 **Date:** 2026-10-31
 **Commit:** `db3531c`
-**Build:** 74 248 B flash / 24 128 B RAM (replay image); 74 256 B for the
-literal-threshold build
+**Build:** 74 248 B flash / 24 128 B RAM (replay image at `db3531c`); 74 256 B
+for the literal-threshold build. The 2026-11-01 `at05` re-run with the peak
+estimate is 75 124 B (`build/at05peak`).
 **Raw captures:** `tests/evidence/m10/*.log`
 
 ## 1. How it works
@@ -94,7 +95,16 @@ led:  [     15.611] off
 REPLAY TEST: done, 501 samples published
 ```
 
-- One deployment, at 5.41 m, 0.41 s after the 6 m peak.
+Re-run on 2026-11-01 with the peak estimate, same sample:
+
+```
+apogee: DEPLOY at 5.41 m, v=-0.360 m/s (slope=-0.495); estimated apogee 6.03 m
+        at 5.01 s (drop 62 cm, delay 0.60 s); LED on until 15611 ms (seq=113)
+```
+
+- One deployment, at 5.41 m, 62 cm below the estimated apogee, 0.60 s after it.
+  (The trace holds 6.03 m from 5.00 to 5.30 s; the estimate is timestamped at the
+  start of that plateau, while an earlier version quoted 0.41 s from its middle.)
 - LED on for exactly 10.000 s.
 - Then 19.4 s of further descent to -17.28 m with no second event and no change
   to the deadline.

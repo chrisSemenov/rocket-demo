@@ -18,8 +18,8 @@ config APP_APOGEE_MIN_ALT_CM
 	default 150
 	help
 	  Threshold relative to the baseline P0 captured at start-up, not to sea
-	  level. 150 cm is about twice the altitude noise measured on the bench
-	  (0.9 m peak-to-peak). A bench value, not a flight value: a real vehicle
+	  level. 150 cm is about 1.7x the altitude noise measured on the bench
+	  (0.89 m peak-to-peak). A bench value, not a flight value: a real vehicle
 	  would set this well above the ground handling envelope.
 
 config APP_APOGEE_MIN_DESCENT_MM_S
@@ -31,23 +31,33 @@ config APP_APOGEE_MIN_DESCENT_MM_S
 	  "becomes negative" of the assignment; 300 mm/s is a noise guard above it,
 	  not a performance threshold.
 
+	  The same value is applied to the least-squares slope over the same window.
+	  Both estimators must be at least this far below zero, so a single bad edge
+	  sample cannot pass the trigger on its own. On a ballistic fall the two are
+	  mathematically identical, so the extra condition costs nothing there.
+
 	  Timing: falling from rest at apogee, a 0.3 m/s trailing average is
-	  reached about 0.41 s later, roughly 0.8 m below the peak. Raising this
+	  reached about 0.41 s later, roughly 0.81 m below the peak. Raising this
 	  value delays detection; it does not improve it in flight.
 
-	  Note that a moving vehicle is not a bench: in the lab, room air drift
-	  alone wanders by up to 0.55 m/s, which is why bench.conf needs a *larger*
-	  margin than this default.
+	  Note that a moving vehicle is not a bench: in the lab, a hand settle after
+	  a fast lift reaches about 0.36 m/s, which is why bench.conf needs a
+	  *larger* margin than this default.
 
 config APP_APOGEE_MIN_DROP_CM
 	int "Descent below the peak before deploying (cm)"
 	range 0 500
 	default 25
 	help
-	  How far the altitude must fall from the highest value seen since arming.
-	  A lift keeps setting new peaks, so its drop is always zero and it cannot
-	  trigger; a real descent accumulates drop immediately. 25 cm is about
-	  three times the altitude noise.
+	  How far the altitude must fall below the estimated peak, which is the
+	  maximum of a three-sample median rather than the raw maximum, so an
+	  isolated spike cannot become the peak.
+
+	  25 cm is a confirmation guard, not a requirement. On a ballistic fall it
+	  is free: 0.81 m has already been fallen when the 0.30 m/s average is
+	  reached. On a bench it is the weakest guard, because a hand settle after
+	  a fast lift measures 35-44 cm; bench.conf therefore uses a larger margin
+	  rather than relying on this filter.
 
 config APP_HEAT_THRESHOLD_MC
 	int "Overheat threshold (milli-degrees Celsius)"

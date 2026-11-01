@@ -261,7 +261,7 @@ int main()
 		check(v <= -595 && v >= -605, "endpoint average of a uniform ramp is 0.6 m/s");
 
 		const int32_t s = f.detector.slope_mm_s();
-		check(s <= -595 && s >= -605, "the diagnostic slope agrees on a straight ramp");
+		check(s <= -595 && s >= -605, "the slope agrees on a straight ramp");
 	}
 
 	/* 12d. Exactly at the margin deploys: 3 cm per 100 ms is 0.3 m/s. */
@@ -369,7 +369,7 @@ int main()
 		check(f.detector.slope_mm_s() < -1000,
 		      "the slope reads that window as a steep descent");
 		check(f.events == 0,
-		      "the trigger follows the endpoint average, not the slope");
+		      "a positive average never fires, whatever the slope reads");
 	}
 
 	/* 20. The shape the bench produced: one high sample at the window start,

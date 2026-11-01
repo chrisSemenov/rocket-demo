@@ -7,8 +7,8 @@ and the observed result.
 |---|---|
 | Board | Olimex STM32-H407 rev B, BMP280 on I2C2 (SCL=PF1, SDA=PF0, address 0x76) |
 | Firmware commit | `db3531c` (the tree these captures came from) |
-| Live build | 48 864 B flash / 24 128 B RAM (`build/primary`) |
-| Replay build | 74 248 B flash / 24 128 B RAM (`build/replay`); 74 256 B for the literal-threshold build |
+| Live build | 48 864 B flash / 24 128 B RAM at `db3531c`; **49 740 B** after the 2026-11-01 peak estimate (`build/primary`) |
+| Replay build | 74 248 B flash / 24 128 B RAM (`build/replay`); 74 256 B for the literal-threshold build; **75 124 B** for the 2026-11-01 `at05` re-run (`build/at05peak`) |
 | Captured | 2026-10-31, RTT over ST-Link, no breakpoints, continuous runs |
 | Raw captures | [`tests/evidence/m10/`](../tests/evidence/m10) -- unedited console output, one file per row |
 
@@ -70,7 +70,8 @@ demonstrated, it says so instead of quoting an older run.
 | **Action** | Replay `at05`: baseline, climb to 6 m, peak, descend at 2 m/s |
 | **Expected** | One trigger at the first qualifying sample; steady LED for 10 s |
 | **Observed** | `apogee: DEPLOY at 5.41 m, v=-0.360 m/s (slope=-0.495); LED on until 15611 ms (seq=113)`; `led: [5.611] on (deployment)` to `led: [15.611] off` = **10.000 s** |
-| **Note** | `v` is the trigger value: `(h(now) - h(now-750 ms)) / 0.750 s` with the window start interpolated. `slope` is the least-squares diagnostic. Both are negative here, so the estimator choice does not change the outcome on this trace. |
+| **Note** | `v` is the trigger value: `(h(now) - h(now-750 ms)) / 0.750 s` with the window start interpolated. `slope` is the least-squares fit over the same window and must also pass the margin; both are negative here, so the extra condition does not change the outcome on this trace. |
+| **Re-run 2026-11-01** | The same binary logic with the peak estimate: `apogee: DEPLOY at 5.41 m, v=-0.360 m/s (slope=-0.495); estimated apogee 6.03 m at 5.01 s (drop 62 cm, delay 0.60 s); LED on until 15611 ms (seq=113)` -- same sample, same deadline. The linked capture predates the added fields. |
 | **Evidence** | [at05-2026-10-31.log](../tests/evidence/m10/at05-2026-10-31.log) |
 
 ## AT-05b - the literal rule, with no added guard
@@ -79,8 +80,8 @@ demonstrated, it says so instead of quoting an older run.
 |---|---|
 | **Action** | Replay `at05` built with `CONFIG_APP_APOGEE_MIN_DESCENT_MM_S=0` and `CONFIG_APP_APOGEE_MIN_DROP_CM=0` -- "current altitude above the minimum and the 750 ms average negative", exactly as written |
 | **Expected** | Triggers as soon as the 750 ms average is negative |
-| **Observed** | `apogee: armed; threshold 150 cm, drop 0 cm, margin 0 mm/s`; `apogee: DEPLOY at 5.50 m, v=-0.120 m/s (slope=-0.167); LED on until 15561 ms (seq=112)`; `led: [5.561] on` to `led: [15.561] off` = 10.000 s; one event |
-| **Why it matters** | Shows the implementation runs the assignment's wording unchanged. The shipped defaults add a 0.30 m/s margin and a 25 cm drop confirmation, which move the trigger from 5.50 m to 5.41 m on this trace. |
+| **Observed** | `apogee: armed; threshold 150 cm, drop 0 cm, margin 0 mm/s`; `apogee: DEPLOY at 5.50 m, v=-0.120 m/s (slope=-0.167); LED on until 15561 ms (seq=112)`; `led: [5.561] on` to `led: [15.561] off` = 10.000 s; one event. On the current build the same line also carries `estimated apogee ... (drop ..., delay ...)` |
+| **Why it matters** | Shows the implementation runs the assignment's wording unchanged. The shipped defaults add a 0.30 m/s margin, the same margin on the least-squares slope, and a 25 cm drop confirmation, which move the trigger from 5.50 m to 5.41 m on this trace. |
 | **Evidence** | [at05b-2026-10-31.log](../tests/evidence/m10/at05b-2026-10-31.log) |
 
 ## AT-06 - continue descending after deployment
@@ -158,7 +159,7 @@ i2c: boot recovery ok (ran before the sensor driver)
 input: LIVE BMP280, I2C2 SCL=PF1 SDA=PF0 addr=0x76, forced mode 8x/2x, 50 ms period
 threads: sensor(5) altitude(6) apogee(7) heat(8) led(9) telemetry(10); stale timeout 250 ms
 alt:  baseline frozen P0=95140 Pa after 38 samples (spread 8 Pa)
-apogee: armed; threshold 150 cm, drop 25 cm, margin 300 mm/s, window 750 ms (endpoint average; slope is diagnostic)
+apogee: armed; threshold 150 cm, drop 25 cm, margin 300 mm/s, window 750 ms (average velocity, confirmed by least-squares slope)
 [     73.51 s] seq=1470  P=95143 Pa  T=22.93 C  age=27 ms
 stats: 1200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0  errors=0  recoveries=0 failed=0  seq=1390
 ```
@@ -182,8 +183,8 @@ README:
 | Step | Result |
 |---|---|
 | `git clone` | all sources, overlay, `prj.conf`, `Kconfig`, `CMakeLists.txt`, OpenOCD config, traces present |
-| `west build -p always -b olimex_stm32_h407 -d build/primary .` | 48 864 B flash / 24 128 B RAM, zero warnings |
-| `tests\run-tests.ps1` | 203 checks, 7 suites, 0 failures |
+| `west build -p always -b olimex_stm32_h407 -d build/primary .` | 48 864 B flash / 24 128 B RAM at that commit, zero warnings |
+| `tests\run-tests.ps1` | 203 checks, 7 suites, 0 failures (223 checks after the 2026-11-01 peak-estimate change) |
 | `tools\check-traces.ps1` | `PASS 8 generated files match the generator` |
 | Flash over OpenOCD | `** Verified OK **` |
 | Boot from the cloned image | `i2c: boot recovery ok`, `alt: baseline frozen P0=95137 Pa`, 0 deployments |
