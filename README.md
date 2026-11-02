@@ -658,7 +658,17 @@ With the board correctly powered and the same ST-Link SWD wiring used for the re
 west flash -d build/primary --runner openocd -- --config openocd-stlink.cfg
 ```
 
-For debugging, select **Zephyr Workbench Debug [primary]** in VS Code's Run and Debug view after building. `.vscode/launch.json` is configured to start the SDK's OpenOCD directly, connect GDB on port 3333, program the ELF, and break at `main()`. It does not depend on generated `.debug` helper files. Resume execution to observe blinking; stop any existing debug/OpenOCD session before flashing.
+For debugging, point Zephyr Workbench at your own West workspace and SDK once - Command Palette -> *Zephyr Workbench: Set West Workspace* and *Select SDK*, or add two keys to your **user** settings (`%APPDATA%\Code\User\settings.json`):
+
+```json
+"zephyr-workbench.westWorkspace": "C:/Users/<you>/zephyrproject",
+"zephyr-workbench.sdk": "C:/zephyr-sdk-1.0.1"
+```
+
+They are deliberately not committed, so the repository carries no machine paths. The debug
+launch configuration reads the same location from the `ZEPHYR_SDK_INSTALL_DIR` environment
+variable, so set it for your user (`setx ZEPHYR_SDK_INSTALL_DIR C:\zephyr-sdk-1.0.1`) or start
+VS Code from a shell where the setup script has run. Then select **Zephyr Workbench Debug [primary]** in VS Code's Run and Debug view after building. `.vscode/launch.json` is configured to start the SDK's OpenOCD directly, connect GDB on port 3333, program the ELF, and break at `main()`. It does not depend on generated `.debug` helper files. Resume execution to observe blinking; stop any existing debug/OpenOCD session before flashing.
 
 ## Demonstration videos
 

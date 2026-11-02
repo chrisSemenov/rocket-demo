@@ -5,7 +5,7 @@
       "compileCommands": [
         "${workspaceFolder}/build/primary/compile_commands.json"
       ],
-      "compilerPath": "${workspaceFolder}/../../../zephyr-sdk-1.0.1/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc.exe"
+      "compilerPath": "${env:ZEPHYR_SDK_INSTALL_DIR}/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc.exe"
     }
   ],
   "version": 4

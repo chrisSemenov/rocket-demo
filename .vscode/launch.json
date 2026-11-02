@@ -17,9 +17,9 @@
       "filterStdout": true,
       "serverStarted": "Listening on port 3333 for gdb connections",
       "MIMode": "gdb",
-      "miDebuggerPath": "${workspaceFolder}/../../../zephyr-sdk-1.0.1/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb.exe",
-      "debugServerPath": "${workspaceFolder}/../../../zephyr-sdk-1.0.1/hosttools/openocd/bin/openocd.exe",
-      "debugServerArgs": "-s \"${workspaceFolder}/../../../zephyr-sdk-1.0.1/hosttools/openocd/share/openocd/scripts\" -f \"${workspaceFolder}/openocd-stlink.cfg\"",
+      "miDebuggerPath": "${env:ZEPHYR_SDK_INSTALL_DIR}/gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb.exe",
+      "debugServerPath": "${env:ZEPHYR_SDK_INSTALL_DIR}/hosttools/openocd/bin/openocd.exe",
+      "debugServerArgs": "-s \"${env:ZEPHYR_SDK_INSTALL_DIR}/hosttools/openocd/share/openocd/scripts\" -f \"${workspaceFolder}/openocd-stlink.cfg\"",
       "setupCommands": [
         {
           "text": "-environment-cd ${workspaceFolder}/build/primary/zephyr"

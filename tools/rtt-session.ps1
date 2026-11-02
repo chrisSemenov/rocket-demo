@@ -51,8 +51,11 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $repo = Split-Path -Parent $PSScriptRoot
-$openocd = 'C:\zephyr-sdk-1.0.1\hosttools\openocd\bin\openocd.exe'
-$nm = 'C:\zephyr-sdk-1.0.1\gnu\arm-zephyr-eabi\bin\arm-zephyr-eabi-nm.exe'
+# SDK location: the environment variable if it is set (the standard Zephyr way),
+# otherwise the version this project was built with. Never hard-code a user path.
+$sdk = if ($env:ZEPHYR_SDK_INSTALL_DIR) { $env:ZEPHYR_SDK_INSTALL_DIR } else { 'C:\zephyr-sdk-1.0.1' }
+$openocd = Join-Path $sdk 'hosttools\openocd\bin\openocd.exe'
+$nm = Join-Path $sdk 'gnu\arm-zephyr-eabi\bin\arm-zephyr-eabi-nm.exe'
 $cfg = Join-Path $repo 'openocd-stlink.cfg'
 $elf = Join-Path $repo (Join-Path $BuildDir 'zephyr\zephyr.elf')
 

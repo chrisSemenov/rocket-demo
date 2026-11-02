@@ -8,9 +8,7 @@
       "custom-args": "-- --config \"${workspaceFolder}/openocd-stlink.cfg\""
     }
   ],
-  "zephyr-workbench.westWorkspace": "${workspaceFolder}/../../../Users/ChristianSemenov/zephyrproject",
   "zephyr-workbench.toolchain": "zephyr",
-  "zephyr-workbench.sdk": "${workspaceFolder}/../../../zephyr-sdk-1.0.1",
   "zephyr-workbench.intellisense.provider": "cpptools",
   "cmake.configureOnOpen": false,
   "cmake.enableAutomaticKitScan": false,
