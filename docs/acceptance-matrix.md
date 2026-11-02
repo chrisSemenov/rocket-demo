@@ -144,9 +144,10 @@ demonstrated, it says so instead of quoting an older run.
 
 | | |
 |---|---|
-| **Action** | Reflash the same `at05` image (the documented reset procedure is a power cycle or a reflash; there is no button or console command), then run again |
+| **Action** | Two documented procedures: (a) press the user button (PA0) on the current build, or (b) reflash/reboot. The capture below uses (b), because the replay trace plays only once per boot |
 | **Expected** | Fresh calibration and history; exactly one new deployment |
 | **Observed** | First flight: `baseline frozen P0=95120 Pa after 38 samples (spread 0 Pa)`, `DEPLOY ... until 15611 ms`. Second boot, same image: identical `P0=95120`, `38 samples`, `DEPLOY ... until 15611 ms`, one event |
+| **Re-arm by button (2026-11-02)** | Confirmed on the board. One press prints `apogee: re-armed by button; history, deployment latch and baseline cleared`, then `alt: recalibration requested; baseline cleared`, then the baseline freezes again and `apogee: armed; ...` returns. The LED falls back to off; a heat alarm would keep blinking |
 | **Evidence** | [at05-2026-10-31.log](../tests/evidence/m10/at05-2026-10-31.log) and [at11-run2-2026-10-31.log](../tests/evidence/m10/at11-run2-2026-10-31.log) |
 
 ---
@@ -169,8 +170,10 @@ stats: 1200 samples  fetch 24/24/24 ms (min/avg/max)  dt 50/50/50 ms  overruns=0
 - **A real flight.** No ascent or descent was flown. Apogee behaviour is proven
   by replay traces on the target and by a live run that produces no false
   trigger; a genuine flight profile is untested.
-- **The physical LED on film.** All timings above come from transition logs at
-  10 ms resolution. The demonstration video is still outstanding.
+- **The physical LED on film, frame by frame.** All timings above come from
+  transition logs at 10 ms resolution; the recordings in the
+  [README](../README.md#demonstration-videos) show the LED, but the log remains
+  the timing evidence.
 - **AT-07 with a genuinely warm sensor.** The temperature comes from a replay
   trace. The finger-on-sensor path has not been captured.
 - **An in-flight re-arm.** "Reset" is a power cycle or reflash.

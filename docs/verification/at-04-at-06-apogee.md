@@ -233,10 +233,11 @@ the trigger, which is why a live hand demonstration uses the preset.
 - **AT-04, AT-05, AT-06 on hardware.** Producing a 1.5 m+ ascent and a 0.30 m/s
   descent needs a lift rig or the replay harness. Replay results are in
   `replay.md`; no real flight was flown.
-- **AT-11 (new flight).** `Detector::reset()` is unit-tested, and the firmware now
-  calls it from the user-button path (PA0) together with the request-store clear
-  and a baseline recalibration. The replay capture for AT-11 still uses two boots
-  because the replay trace plays once.
+- **AT-11 (new flight).** `Detector::reset()` is unit-tested, and the firmware calls
+  it from the user-button path (PA0) together with the request-store clear and a
+  baseline recalibration. Pressing the button was confirmed on the board on
+  2026-11-02. The replay capture for AT-11 uses two boots, because the replay
+  trace plays once per boot and a re-arm cannot restart it.
 - **Threshold realism.** 1.5 m is a bench value chosen against noise, not a
   flight value.
 - **Interpolation accuracy under heavy jitter.** Exercised with a 40/70 ms mixed

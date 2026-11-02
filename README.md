@@ -1,6 +1,6 @@
 # Rocket Flight Controller Demo
 
-A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/temperature sensor, and Zephyr RTOS. Sensor acquisition, altitude, apogee detection and temperature monitoring are separate threads; measurement data moves through synchronized shared memory, and a single LED manager owns the output priority. Acquisition, the shared-memory contract, relative altitude, apogee detection, the temperature alarm and the LED arbitration are implemented and verified on the target; the demonstration video is not yet recorded. Deployment is simulated **only by the board LED**; this is not flight-ready or safety-certified firmware.
+A **bench demonstration** for the Olimex STM32-H407, Bosch BMP280 pressure/temperature sensor, and Zephyr RTOS. Sensor acquisition, altitude, apogee detection and temperature monitoring are separate threads; measurement data moves through synchronized shared memory, and a single LED manager owns the output priority. Acquisition, the shared-memory contract, relative altitude, apogee detection, the temperature alarm and the LED arbitration are implemented and verified on the target, and the demonstration is recorded (see [Demonstration videos](#demonstration-videos)). Deployment is simulated **only by the board LED**; this is not flight-ready or safety-certified firmware.
 
 The task and its mandatory requirements are included in the repository:
 [docs/assignment.md](docs/assignment.md) and [docs/requirements.md](docs/requirements.md).
@@ -21,7 +21,7 @@ with the raw console capture it came from in `tests/evidence/m10/`.
 - **Apogee detection is implemented and verified on the target (M8):** the `apogee` thread keeps its own 750 ms altitude window and triggers when the **average velocity over that window** is at or below -0.30 m/s **and the least-squares slope over the same window is too**, while above 1.5 m and at least 25 cm below the estimated peak. The peak is the maximum of a three-sample median, printed as `peak=` and frozen into the deployment event as the estimated apogee. 61 host checks cover the trigger, both estimators, the peak estimate, gaps, duplicates, the latch and the frozen flight result; replay runs on the board produce exactly one deployment per flight. Evidence: [docs/verification/at-04-at-06-apogee.md](docs/verification/at-04-at-06-apogee.md).
 - **The temperature alarm is implemented (M9):** the `heat` thread applies a 5 s window that renews while the temperature stays above the release threshold and clears on cooling, with 0.2 C of hysteresis and a fail-safe that never treats missing data as cool. 37 host checks; replay runs on the target cover a single window, two renewals and both overlap cases. Evidence: [docs/verification/at-07-heat.md](docs/verification/at-07-heat.md).
 - **Acceptance evidence:** every mandatory scenario is recorded in [docs/acceptance-matrix.md](docs/acceptance-matrix.md), with the action taken and the observed console values.
-- **Not implemented:** the demonstration video and a physical (non-replayed) apogee descent.
+- **Not implemented:** a physical (non-replayed) apogee descent.
 
 ## Hardware and known board detail
 
@@ -404,8 +404,8 @@ data and reset.
 
 Every mandatory scenario from the requirements is recorded in
 [docs/acceptance-matrix.md](docs/acceptance-matrix.md): the action taken and the
-observed console values for AT-01 to AT-11. Two things remain open there: the
-demonstration video, and a physical (non-replayed) apogee descent.
+observed console values for AT-01 to AT-11. One thing remains open there: a
+physical (non-replayed) apogee descent. The recordings are linked below.
 
 ## Replay mode (acceptance testing)
 
@@ -660,14 +660,27 @@ west flash -d build/primary --runner openocd -- --config openocd-stlink.cfg
 
 For debugging, select **Zephyr Workbench Debug [primary]** in VS Code's Run and Debug view after building. `.vscode/launch.json` is configured to start the SDK's OpenOCD directly, connect GDB on port 3333, program the ELF, and break at `main()`. It does not depend on generated `.debug` helper files. Resume execution to observe blinking; stop any existing debug/OpenOCD session before flashing.
 
+## Demonstration videos
+
+Three recordings accompany this project, hosted on Google Drive:
+
+| Video | What it shows | Link |
+|---|---|---|
+| `full_demo` | the end-to-end demonstration | <https://drive.google.com/file/d/1g76A6q-zERaOVvxxrO0_S8Q2aulJkXmi/view?usp=drive_link> |
+| `test_run` | a test run of the firmware | <https://drive.google.com/file/d/11n8tXyRO1p0CczU4S3vVoe0fOuYWmksC/view?usp=drive_link> |
+| `blinky` | the LED indication | <https://drive.google.com/file/d/1ULw299N3cnB0ZjaQGf5sC5nHIy-clXVC/view?usp=drive_link> |
+
+These satisfy the deliverable "a working demonstration (pre-recorded)". The console
+in each recording is the RTT stream; timings are visible in the `led:` lines.
+
 ## Next steps
 
-All six requirements are implemented, the replay harness is in place, and every mandatory
-scenario is recorded in [docs/acceptance-matrix.md](docs/acceptance-matrix.md). What remains:
+All six requirements are implemented, the replay harness is in place, every mandatory scenario
+is recorded in [docs/acceptance-matrix.md](docs/acceptance-matrix.md), and the demonstration is
+[recorded](#demonstration-videos). Nothing in the deliverable list is outstanding.
 
-1. Record the demonstration video: live readings, a replay deployment with the 10 s light, the
-   heat alarm and the overlap case.
-2. Tag the commit that matches the video and publish it.
+What a real deployment would need next is not a demo task: a flight profile flown on hardware,
+qualified thresholds (the current ones are bench values), and a persistent log.
 
 Known limitations, stated rather than hidden:
 

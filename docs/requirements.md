@@ -126,6 +126,6 @@ Recommended robustness tests additionally cover incomplete velocity history, noi
 - [ ] The 10-second deployment indication and temperature alarm are demonstrated.
 - [ ] Overlap tests demonstrate temperature priority and correct fallback.
 - [ ] README documents wiring, Zephyr environment setup, build/flash steps, thread architecture, shared-memory design, altitude/descent algorithms, configurable thresholds, and selected ambiguity resolutions.
-- [ ] A pre-recorded working demonstration confirms the required behavior.
+- [x] A pre-recorded working demonstration confirms the required behavior ([videos](../README.md#demonstration-videos)).
 
 This document specifies intended behavior; it does not certify that firmware or hardware verification has been completed.
