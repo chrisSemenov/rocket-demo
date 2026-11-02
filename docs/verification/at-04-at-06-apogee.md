@@ -25,6 +25,7 @@ retrigger or extend the indication (FLT-01-05; AT-04, AT-05, AT-06, AT-11).
 | Latch | Deployed is permanent until a reset; later samples cannot retrigger |
 | Event | Timestamped with the **triggering sample**, deadline = event + 10 s; also freezes the estimated apogee, its time and the drop |
 | Output | One `request_deployment()` call; the LED manager owns the pin |
+| Re-arm | The user button (PA0, 50 ms debounce) clears history, the latch, the deployment request and the baseline |
 
 ## 2. Host tests
 
@@ -101,8 +102,9 @@ Verified by building the same tree twice and reading the resolved `.config`:
 | `build/primary` | 150 | 300 | 25 |
 | `build/bench` | 50 | 600 | 15 |
 
-The bench preset needs a *larger* margin than the flight default because room air
-drift reaches 0.55 m/s; see `bench.conf` for the reasoning.
+The bench preset needs a *larger* margin than the flight default because a hand
+settle after a fast lift measures about 0.36 m/s; see `bench.conf` for the
+reasoning and for what it does not protect against.
 
 The 750 ms window, the 10 s indication, the 5 s alarm and the 500 ms blink are
 not configurable -- they are the specified behaviour.
@@ -231,9 +233,10 @@ the trigger, which is why a live hand demonstration uses the preset.
 - **AT-04, AT-05, AT-06 on hardware.** Producing a 1.5 m+ ascent and a 0.30 m/s
   descent needs a lift rig or the replay harness. Replay results are in
   `replay.md`; no real flight was flown.
-- **AT-11 (new flight).** `Detector::reset()` is implemented and unit-tested, but
-  the running firmware only resets on power cycle or reflash; there is no button
-  or command.
+- **AT-11 (new flight).** `Detector::reset()` is unit-tested, and the firmware now
+  calls it from the user-button path (PA0) together with the request-store clear
+  and a baseline recalibration. The replay capture for AT-11 still uses two boots
+  because the replay trace plays once.
 - **Threshold realism.** 1.5 m is a bench value chosen against noise, not a
   flight value.
 - **Interpolation accuracy under heavy jitter.** Exercised with a 40/70 ms mixed

@@ -90,6 +90,7 @@ void AltitudeStore::init()
 	k_mutex_init(&lock_);
 
 	altitude_ = Altitude{0, 0, 0, 0, 0, false, false};
+	recalibrate_requested_ = false;
 	ready_ = true;
 }
 
@@ -110,6 +111,24 @@ void AltitudeStore::read(Altitude &out)
 	if (!ready) {
 		out = Altitude{0, 0, 0, 0, 0, false, false};
 	}
+}
+
+void AltitudeStore::request_recalibration()
+{
+	k_mutex_lock(&lock_, K_FOREVER);
+	recalibrate_requested_ = true;
+	k_mutex_unlock(&lock_);
+}
+
+bool AltitudeStore::take_recalibration()
+{
+	k_mutex_lock(&lock_, K_FOREVER);
+	const bool requested = recalibrate_requested_;
+
+	recalibrate_requested_ = false;
+	k_mutex_unlock(&lock_);
+
+	return requested;
 }
 
 void LedRequestStore::init()
@@ -136,6 +155,14 @@ void LedRequestStore::request_deployment(int64_t event_ms, int64_t deadline_ms)
 
 	/* event_ms is logged by the caller; the deadline is what arbitrates. */
 	(void)event_ms;
+}
+
+void LedRequestStore::clear_deployment()
+{
+	k_mutex_lock(&lock_, K_FOREVER);
+	request_.deployment_active = false;
+	request_.deployment_deadline_ms = 0;
+	k_mutex_unlock(&lock_);
 }
 
 bool LedRequestStore::request_heat(int64_t start_ms, int64_t deadline_ms)

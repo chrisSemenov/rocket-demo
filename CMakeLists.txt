@@ -16,6 +16,7 @@ target_sources(app PRIVATE
     src/led_logic.cpp
     src/led_pulse.cpp
     src/apogee.cpp
+    src/rearm.cpp
     src/heat.cpp
     src/sensor_task.cpp
     src/altitude_task.cpp

@@ -31,3 +31,29 @@
 		reg = <0x76>;
 	};
 };
+
+/*
+ * Re-arm button.
+ *
+ * PA0 is the board's user button. Zephyr's own devicetree calls that pin
+ * green_led_2, but this project drives the LED on PC13 (see above), so PA0 is
+ * free and the two cannot collide.
+ *
+ * Measured on 2026-11-02: the pin reads LOW at rest with the internal pull-up
+ * enabled and the board's own resistor winning, so the button connects the pin
+ * to 3V3 and the sense is ACTIVE_HIGH with a pull-down. Reading it as active-low
+ * reported a phantom press on every boot.
+ *
+ * Pressing it starts a new simulated flight without a reboot: detector history
+ * and latch cleared, deployment request cleared, baseline recalibrated.
+ */
+/ {
+	rearm_keys {
+		compatible = "gpio-keys";
+
+		rearm_button: button {
+			label = "Re-arm";
+			gpios = <&gpioa 0 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+		};
+	};
+};

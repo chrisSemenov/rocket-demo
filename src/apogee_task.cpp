@@ -2,8 +2,10 @@
 
 #include "apogee.hpp"
 #include "app_config.hpp"
+#include "rearm.hpp"
 #include "shared_data.hpp"
 
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 
@@ -75,6 +77,21 @@ apogee::Config make_config()
 	return config;
 }
 
+#if defined(CONFIG_APP_REARM_BUTTON)
+/*
+ * The re-arm button. Declared in app.overlay on PA0, which the board's own
+ * devicetree calls green_led_2 while this project uses PC13 for the LED, so the
+ * two cannot collide. Active high with a pull-down: measured, the pin rests low.
+ */
+const struct gpio_dt_spec rearm_button =
+	GPIO_DT_SPEC_GET(DT_NODELABEL(rearm_button), gpios);
+
+bool rearm_button_pressed()
+{
+	return gpio_pin_get_dt(&rearm_button) > 0;
+}
+#endif
+
 /* "v=-0.495 slope=-0.470" or "v=n/a slope=n/a" once the value is frozen. */
 void print_velocities(const apogee::Detector &detector)
 {
@@ -94,16 +111,53 @@ void apogee_entry(void *, void *, void *)
 	const apogee::Config config = make_config();
 	apogee::Detector detector(config);
 
+#if defined(CONFIG_APP_REARM_BUTTON)
+	rearm::Button button(CONFIG_APP_REARM_DEBOUNCE_MS);
+	const bool button_ready = device_is_ready(rearm_button.port) &&
+				  gpio_pin_configure_dt(&rearm_button,
+							GPIO_INPUT) == 0;
+
+	if (button_ready) {
+		printk("apogee: re-arm button on %s pin %u (active high, pull-down),"
+		       " level=%d\n",
+		       rearm_button.port->name,
+		       static_cast<unsigned>(rearm_button.pin),
+		       rearm_button_pressed() ? 1 : 0);
+	} else {
+		printk("apogee: re-arm button unavailable; reset requires a reboot\n");
+	}
+#endif
+
 	bool have_sequence = false;
 	uint32_t last_sequence = 0;
 	bool last_ready = false;
-	bool last_deployed = false;
 	unsigned int invalid_reports = 0;
 
 	int64_t next = k_uptime_get();
 	int64_t next_report = next + 500;
 
 	for (;;) {
+#if defined(CONFIG_APP_REARM_BUTTON)
+		/*
+		 * Re-arm: a new simulated flight without a reboot. The detector's
+		 * history and latch go, the deployment request is cleared so the
+		 * LED can fall back to off, and the altitude thread is asked to
+		 * rebuild its baseline. Heat is deliberately untouched: a hot
+		 * sensor is a condition, not a flight artefact.
+		 */
+		if (button_ready &&
+		    button.update(rearm_button_pressed(), k_uptime_get())) {
+			detector.reset();
+			led_requests().clear_deployment();
+			altitude_data().request_recalibration();
+
+			last_ready = false;
+
+			printk("apogee: re-armed by button; history, deployment"
+			       " latch and baseline cleared\n");
+		}
+#endif
+
 		Altitude altitude{};
 		altitude_data().read(altitude);
 
@@ -169,7 +223,6 @@ void apogee_entry(void *, void *, void *)
 			}
 
 			last_ready = ready;
-			last_deployed = state == apogee::State::deployed;
 		} else if (!usable && invalid_reports < 3) {
 			printk("apogee: no usable altitude (valid=%d calibrated=%d"
 			       " age=%lld ms)\n",
@@ -206,8 +259,6 @@ void apogee_entry(void *, void *, void *)
 
 			next_report = now + 500;
 		}
-
-		(void)last_deployed;
 
 		next += cfg::kApogeePeriodMs;
 

@@ -139,6 +139,20 @@ void altitude_entry(void *, void *, void *)
 	int64_t next = k_uptime_get();
 
 	for (;;) {
+		/*
+		 * Re-arm: the operator asked for a new simulated flight. The
+		 * baseline is this thread's state, so it is thrown away here and
+		 * rebuilt from the next 1.5 s of samples. Until then altitude is
+		 * published invalid, which inhibits flight decisions upstream.
+		 */
+		if (altitude_data().take_recalibration()) {
+			window.reset();
+			calibrated = false;
+			reference_pa = 0;
+
+			printk("alt:  recalibration requested; baseline cleared\n");
+		}
+
 		Measurement measurement{};
 		sensor_data().read(measurement);
 

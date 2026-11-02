@@ -91,9 +91,19 @@ public:
 	void publish(const Altitude &sample);
 	void read(Altitude &out);
 
+	/*
+	 * One-shot request to throw the baseline away and calibrate again. Set by
+	 * the re-arm button, consumed by the altitude thread. Kept here rather
+	 * than in the flight logic because the baseline is the altitude thread's
+	 * state.
+	 */
+	void request_recalibration();
+	bool take_recalibration();
+
 private:
 	struct k_mutex lock_;
 	Altitude altitude_;
+	bool recalibrate_requested_;
 	bool ready_;
 };
 
@@ -114,6 +124,14 @@ public:
 	void init();
 
 	void request_deployment(int64_t event_ms, int64_t deadline_ms);
+
+	/*
+	 * Ends the latched deployment indication. Only the re-arm path calls it:
+	 * a new simulated flight must be able to request a deployment again, and
+	 * the latch exists precisely to stop that happening by itself.
+	 */
+	void clear_deployment();
+
 	bool request_heat(int64_t start_ms, int64_t deadline_ms);
 	void clear_heat();
 

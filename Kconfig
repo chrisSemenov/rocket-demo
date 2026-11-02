@@ -59,6 +59,29 @@ config APP_APOGEE_MIN_DROP_CM
 	  a fast lift measures 35-44 cm; bench.conf therefore uses a larger margin
 	  rather than relying on this filter.
 
+config APP_REARM_BUTTON
+	bool "Re-arm a simulated flight from the user button"
+	default y
+	help
+	  Pressing the button clears the detector history and latch, ends the
+	  deployment indication and restarts the baseline calibration, so a new
+	  simulated flight can begin without a reboot. Heat is deliberately left
+	  alone: a hot sensor is a condition, not a flight artefact.
+
+	  The pin is declared in app.overlay as rearm_button (PA0, active low,
+	  pull-up). Disable this if the pin is needed for something else; a reset
+	  is then a power cycle or a reflash.
+
+config APP_REARM_DEBOUNCE_MS
+	int "Re-arm button debounce (ms)"
+	depends on APP_REARM_BUTTON
+	default 50
+	range 5 500
+	help
+	  How long the pressed level must be stable before a press is accepted.
+	  A mechanical button bounces for a few milliseconds; the apogee thread
+	  polls every 50 ms, so 50 ms costs at most one extra poll.
+
 config APP_HEAT_THRESHOLD_MC
 	int "Overheat threshold (milli-degrees Celsius)"
 	range -40000 85000

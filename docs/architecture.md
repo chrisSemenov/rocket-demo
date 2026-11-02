@@ -74,7 +74,7 @@ LedRequestStore -> led manager thread --> PC13              [done]
 | `main` | — | 0 | default | Initialise stores, start the threads, then idle |
 | `sensor` | 50 ms, absolute deadline | 5 | 2048 B | Fetch, timestamp, publish; count errors and overruns; publish timing stats |
 | `altitude` | 50 ms, absolute deadline | 6 | 2048 B | Read a measurement copy, calibrate `P₀`, compute altitude, publish a separate snapshot; never prints |
-| `apogee` | 50 ms | 7 | 2048 B | Keep a 750 ms altitude window, require the average and the least-squares slope to agree on descent above the minimum, estimate the peak, publish one deployment request || `heat` | 50 ms | 8 | 1024 B | Apply the 5 s overheat window, renewal and hysteresis; publish a heat request |
+| `apogee` | 50 ms | 7 | 2048 B | Keep a 750 ms altitude window, require the average and the least-squares slope to agree on descent above the minimum, estimate the peak, publish one deployment request; poll the re-arm button || `heat` | 50 ms | 8 | 1024 B | Apply the 5 s overheat window, renewal and hysteresis; publish a heat request |
 | `led` | 10 ms | 9 | 1024 B | Read the request snapshot, arbitrate, write PC13; prints only on a transition |
 | `telemetry` | 500 ms | 10 | 1024 B | Read the stores, print samples, altitude and the ten-second stats line |
 

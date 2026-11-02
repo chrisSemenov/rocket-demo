@@ -283,8 +283,9 @@ west build -p always -b olimex_stm32_h407 -d build/shortdrop . -- `
 ```
 
 For a hand-performed test there is a ready-made preset, `bench.conf` (50 cm,
-0.60 m/s), which exists because room air drift reaches 0.55 m/s and would
-otherwise mask a hand move:
+0.60 m/s, 15 cm), which exists because a hand settle after a fast lift measures
+about 0.36 m/s and 35-44 cm: the flight default would trigger on lift-and-hold,
+the preset does not, and a deliberate lowering at about 0.7 m/s still does:
 
 ```powershell
 west build -p always -b olimex_stm32_h407 -d build/bench . -- "-DEXTRA_CONF_FILE=bench.conf"
@@ -304,6 +305,30 @@ What is deliberately **not** configurable: the 750 ms window, the 10 s
 deployment indication, the 5 s alarm and the 500 ms blink period. Those are the
 behaviour the assignment specifies; making them tunable would let the demo drift
 away from the requirement.
+
+### Starting a new simulated flight
+
+The board's user button (PA0, active high with a pull-down, 50 ms debounce)
+re-arms without a reboot:
+
+```
+apogee: re-armed by button; history, deployment latch and baseline cleared
+alt:  recalibration requested; baseline cleared
+```
+
+One press does four things:
+
+1. clears the detector's history and its one-shot latch, so a deployment can be
+   requested again;
+2. clears the deployment request in the shared store, so the LED falls back to off
+   immediately (a heat alarm, if one is active, keeps blinking);
+3. asks the altitude thread to discard the baseline and recalibrate from the next
+   1.5 s of samples, because a new flight starts from a new ground level;
+4. re-prints the armed banner once the 750 ms window refills.
+
+`CONFIG_APP_REARM_BUTTON=n` removes the handler and returns the reset procedure to
+a power cycle. The debounce is `CONFIG_APP_REARM_DEBOUNCE_MS` (50 ms by default,
+matching the apogee thread's poll period).
 
 ### Where the numbers came from
 
@@ -648,8 +673,10 @@ Known limitations, stated rather than hidden:
 
 - No real ascent or descent has been flown. Apogee behaviour is proven by the replay traces and
   by a live run that shows no false trigger; a genuine flight profile is untested.
-- A "flight reset" is a power cycle. `Detector::reset()` exists and is unit-tested, but there is
-  no button or console command to re-arm.
+- A "flight reset" is the user button (PA0) or a power cycle. The button clears history, the
+  deployment latch, the LED request and the baseline; there is no console command.
+- The re-arm button is wired to PA0, which the board's own devicetree calls `green_led_2` while
+  this project drives the LED on PC13. That is one line in `app.overlay` if it ever conflicts.
 - Thresholds are bench values (1.5 m, 0.3 m/s average and slope, 25 cm, 30 C), chosen against
   measured noise and configurable in Kconfig; they are not flight values.
 - There is no persistent run log. An SD-card attempt was built and abandoned: the card never

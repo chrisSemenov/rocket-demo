@@ -74,7 +74,7 @@ root.
 | Heat renewal guard | Renew 60 ms before expiry, poll every 50 ms | Renewing at expiry left the LED dark for one poll |
 | Heat and missing data | Missing or stale temperature holds the state, never clears it | "No data" is not "cool"; the window expires on its own deadline |
 | LED priority | Active heat blink > unexpired deployment ON > OFF | LED-04, LED-05 |
-| Reset | One flight per boot; a reset clears calibration, history and the deployment latch | Avoids a partial re-arm |
+| Reset | The user button (PA0) or a reboot; a reset clears calibration, history, the deployment latch and the deployment request | One flight at a time without a power cycle. The latch still refuses a second deployment *within* a flight, so a re-arm is an explicit act |
 | Replay | Traces enter at the measurement publisher, never at the LED | Keeps the tested path identical to live operation |
 
 ## I2C recovery
